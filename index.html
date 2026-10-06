@@ -217,7 +217,7 @@
       <div class="mode-btn" aria-label="單擊標記或取消"><span class="mode-icon"><span class="mini-x"></span></span>單擊：X／取消</div>
       <div class="mode-btn" aria-label="連續雙擊放置貓咪"><span class="mode-icon" id="catModeIcon"></span>連按兩下：放貓</div>
     </section>
-    <p class="footer-note">遊戲開始有 5 顆心並跨關保留；每關可免費使用 2 次提示。錯放貓咪會扣 1 顆心並自動改標 X，心用完遊戲便結束。<span class="version">Version 2026.10.06.6</span></p>
+    <p class="footer-note">遊戲開始有 5 顆心並跨關保留；每關可免費使用 2 次提示。錯放貓咪會扣 1 顆心並自動改標 X；每通過 5 關可補回 1 顆心，最多 5 顆，心用完遊戲便結束。<span class="version">Version 2026.10.06.7</span></p>
   </main>
 
   <dialog id="rulesDialog">
@@ -229,6 +229,7 @@
         <li><span class="rule-number">3</span><div><strong>貓咪不能彼此相鄰</strong><span>連斜角也不行；放好後，周圍八格都可排除。</span></div></li>
         <li><span class="rule-number">4</span><div><strong>錯放貓咪會扣心</strong><span>若放貓後棋面再沒有合法解，會扣 1 顆心，並把該格自動改標為 X；心用完即遊戲結束。</span></div></li>
         <li><span class="rule-number">5</span><div><strong>每關兩次免費提示</strong><span>「推理一步」不會扣心；用完後，到下一關會回復 2 次。</span></div></li>
+        <li><span class="rule-number">6</span><div><strong>每通過五關補回一顆心</strong><span>完成第 5、10、15…關時，若心數少於 5 顆便補回 1 顆；心數最多維持 5 顆。</span></div></li>
       </ol>
       <button class="primary close-rules" type="button">開始動腦</button>
     </div>
@@ -249,7 +250,7 @@
 <script>
 (function(){
   'use strict';
-  var TOTAL=100, sessionSeed=(Date.now()^(Math.random()*0xffffffff))>>>0, variants=new Array(TOTAL).fill(0);
+  var TOTAL=100, MAX_HEARTS=5, sessionSeed=(Date.now()^(Math.random()*0xffffffff))>>>0, variants=new Array(TOTAL).fill(0);
   var palette=['var(--r1)','var(--r2)','var(--r3)','var(--r4)','var(--r5)','var(--r6)','var(--r7)','var(--r8)','var(--r9)','var(--r10)','var(--r11)'];
   var first=['暖陽','月光','毛線','紙箱','星夜','清晨','雨聲','魚乾','雲朵','花影'];
   var second=['角落','小徑','迷宮','窗台','走廊','花園','書架','屋頂','庭院','秘境'];
@@ -264,7 +265,7 @@
     var hues=shuffle(Array.from({length:n},function(_,i){return i%spec.colors}),rand);
     return{name:first[index%10]+second[Math.floor(index/10)],size:n,colors:spec.colors,label:spec.label,regions:regions,regionHues:hues,solution:solution};
   }
-  var puzzles=new Array(TOTAL), state={level:0,cells:[],history:[],hearts:5,hintsRemaining:2,mistakes:0,hintsUsed:0,moves:0,start:Date.now(),locked:false,focus:0};
+  var puzzles=new Array(TOTAL), state={level:0,cells:[],history:[],hearts:MAX_HEARTS,hintsRemaining:2,mistakes:0,hintsUsed:0,moves:0,start:Date.now(),locked:false,focus:0,milestoneRewards:{}};
   var board=document.getElementById('board'),toast=document.getElementById('toast'),logicNote=document.getElementById('logicNote'),clickTimers={};
   var audioCtx=null,masterGain=null,muted=false;
   function ensureAudio(){
@@ -289,7 +290,7 @@
   var catSVG='<svg class="cat" viewBox="0 0 64 64" aria-hidden="true"><path d="M13 25 10 8l15 9a28 28 0 0 1 14 0l15-9-3 17c4 5 6 10 5 16-2 11-11 17-24 17S10 52 8 41c-1-6 1-11 5-16Z" fill="currentColor"/><path d="M18 17 14 12l1 9m31-4 4-5-1 9" fill="none" stroke="var(--panel)" stroke-width="2" stroke-linecap="round" opacity=".55"/><path d="M20 35h.1M44 35h.1" stroke="var(--panel)" stroke-width="5" stroke-linecap="round"/><path d="M29 42c2 2 4 2 6 0m-3-4v4" fill="none" stroke="var(--panel)" stroke-width="2.4" stroke-linecap="round"/><path d="M17 42 7 40m10 7L8 49m39-7 10-2m-10 7 9 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
   document.getElementById('catModeIcon').innerHTML=catSVG;document.getElementById('resultCat').innerHTML=catSVG;
   function heartSVG(){return '<svg class="heart" viewBox="0 0 24 22" fill="currentColor" aria-hidden="true"><path d="M12 21S1 14.5 1 7.4C1 3.8 3.5 1 7 1c2.1 0 4 1.1 5 2.8C13 2.1 14.9 1 17 1c3.5 0 6 2.8 6 6.4C23 14.5 12 21 12 21Z"/></svg>'}
-  function paintHearts(){var h=document.getElementById('hearts');h.innerHTML='';for(var i=0;i<5;i++){var w=document.createElement('span');w.innerHTML=heartSVG();var svg=w.firstChild;if(i>=state.hearts)svg.classList.add('lost');h.appendChild(svg)}h.setAttribute('aria-label','剩餘'+state.hearts+'次機會')}
+  function paintHearts(){state.hearts=Math.min(MAX_HEARTS,Math.max(0,state.hearts));var h=document.getElementById('hearts');h.innerHTML='';for(var i=0;i<MAX_HEARTS;i++){var w=document.createElement('span');w.innerHTML=heartSVG();var svg=w.firstChild;if(i>=state.hearts)svg.classList.add('lost');h.appendChild(svg)}h.setAttribute('aria-label','剩餘'+state.hearts+'次機會')}
   function paintHintButton(){var btn=document.getElementById('hintBtn'),label=document.getElementById('hintLabel'),used=state.hintsRemaining<=0;label.textContent=used?'推理一步 · 已用完':'推理一步 · 剩餘 '+state.hintsRemaining+' 次';btn.setAttribute('aria-label',used?'推理一步，本關提示已用完':'推理一步，本關剩餘'+state.hintsRemaining+'次');btn.classList.toggle('hint-used',used)}
   function edge(p,r,c,dr,dc){var rr=r+dr,cc=c+dc;return rr<0||cc<0||rr>=p.size||cc>=p.size||p.regions[rr][cc]!==p.regions[r][c]}
   function render(){var p=puzzles[state.level];board.innerHTML='';board.style.gridTemplateColumns='repeat('+p.size+',1fr)';board.style.gridTemplateRows='repeat('+p.size+',1fr)';document.getElementById('levelCount').textContent='第 '+(state.level+1)+'／100 關 · '+p.label+' · '+p.size+'×'+p.size+' · '+p.colors+' 色';document.getElementById('levelName').textContent=p.name;for(var r=0;r<p.size;r++)for(var c=0;c<p.size;c++){var i=r*p.size+c,b=document.createElement('button');b.type='button';b.className='cell';b.dataset.i=i;b.setAttribute('role','gridcell');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，空白');b.tabIndex=i===state.focus?0:-1;b.style.setProperty('--cell-bg',palette[p.regionHues[p.regions[r][c]]]);b.style.setProperty('--bt',edge(p,r,c,-1,0)?1:0);b.style.setProperty('--bb',edge(p,r,c,1,0)?1:0);b.style.setProperty('--bl',edge(p,r,c,0,-1)?1:0);b.style.setProperty('--br',edge(p,r,c,0,1)?1:0);b.addEventListener('click',onCell);b.addEventListener('keydown',onKey);board.appendChild(b)}paintHearts();paintHintButton()}
@@ -316,7 +317,15 @@
   function updateAll(animate){for(var i=0;i<state.cells.length;i++)updateCell(i,animate&&state.cells[i]==='cat')}
   function setLogic(title,text,symbol){logicNote.innerHTML='<b>'+symbol+'</b><p><strong>'+title+'</strong>'+text+'</p>'}
   function checkWin(){var p=puzzles[state.level],cats=[],rows=new Array(p.size).fill(0),cols=new Array(p.size).fill(0),regions=new Array(p.size).fill(0);for(var i=0;i<state.cells.length;i++)if(state.cells[i]==='cat'){var r=Math.floor(i/p.size),c=i%p.size;cats.push(i);rows[r]++;cols[c]++;regions[p.regions[r][c]]++}if(cats.length!==p.size)return false;for(var n=0;n<p.size;n++)if(rows[n]!==1||cols[n]!==1||regions[n]!==1)return false;for(var a=0;a<cats.length;a++)for(var b=a+1;b<cats.length;b++)if(conflicts(cats[a],cats[b],p))return false;setTimeout(function(){finish(true)},350);return true}
-  function finish(win){state.locked=true;Object.keys(clickTimers).forEach(function(k){clearTimeout(clickTimers[k])});clickTimers={};var d=document.getElementById('resultDialog'),elapsed=Math.max(1,Math.floor((Date.now()-state.start)/1000));document.getElementById('timeStat').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');document.getElementById('mistakeStat').textContent=state.mistakes;document.getElementById('hintStat').textContent=state.hintsUsed;document.getElementById('moveStat').textContent=state.moves;document.getElementById('resultTitle').textContent='遊戲完結';document.getElementById('resultText').textContent=win?'恭喜完成第 '+(state.level+1)+' 關！':'5 顆心已用完；你來到第 '+(state.level+1)+' 關。';document.getElementById('nextBtn').textContent=win?(state.level===99?'再玩一輪':'下一關'):'重新開始遊戲';document.getElementById('retryBtn').style.display=win?'block':'none';d.dataset.win=win?'1':'0';d.showModal();if(win)burst()}
+  function finish(win){
+    state.locked=true;Object.keys(clickTimers).forEach(function(k){clearTimeout(clickTimers[k])});clickTimers={};
+    var completed=state.level+1,recovered=false;
+    if(win&&completed%5===0&&!state.milestoneRewards[completed]){
+      state.milestoneRewards[completed]=true;
+      if(state.hearts<MAX_HEARTS){state.hearts=Math.min(MAX_HEARTS,state.hearts+1);recovered=true;paintHearts()}
+    }
+    var d=document.getElementById('resultDialog'),elapsed=Math.max(1,Math.floor((Date.now()-state.start)/1000));document.getElementById('timeStat').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');document.getElementById('mistakeStat').textContent=state.mistakes;document.getElementById('hintStat').textContent=state.hintsUsed;document.getElementById('moveStat').textContent=state.moves;document.getElementById('resultTitle').textContent='遊戲完結';document.getElementById('resultText').textContent=win?(recovered?'通過 '+completed+' 關！補回 1 顆心。':'恭喜完成第 '+completed+' 關！'):'5 顆心已用完；你來到第 '+completed+' 關。';document.getElementById('nextBtn').textContent=win?(state.level===99?'再玩一輪':'下一關'):'重新開始遊戲';document.getElementById('retryBtn').style.display=win?'block':'none';d.dataset.win=win?'1':'0';d.showModal();if(win)burst()
+  }
   function newLevel(index){state.level=index;variants[index]++;puzzles[index]=makePuzzle(index);var p=puzzles[index];state.cells=new Array(p.size*p.size).fill('');state.history=[];state.hintsRemaining=2;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.start=Date.now();state.locked=false;state.focus=0;render();setLogic('新版圖已生成','單擊放 X，快速連按兩下放貓；本關有 2 次免費提示，心數會跨關保留。','↻')}
   function restartLevel(){
     if(state.locked)return;
@@ -408,7 +417,7 @@
   function burst(){var box=document.getElementById('confetti'),colors=['#ec6f5c','#f2b84b','#4aa98e','#6b8fd8'];box.innerHTML='';for(var i=0;i<26;i++){var x=document.createElement('i');x.style.left=(5+Math.random()*90)+'%';x.style.background=colors[i%colors.length];x.style.setProperty('--drift',(Math.random()*160-80)+'px');x.style.animationDelay=(Math.random()*.45)+'s';box.appendChild(x)}setTimeout(function(){box.innerHTML=''},2400)}
   function toggleSound(){ensureAudio();muted=!muted;var btn=document.getElementById('soundBtn');btn.setAttribute('aria-pressed',muted?'true':'false');btn.setAttribute('aria-label',muted?'開啟音效':'靜音');btn.title=muted?'開啟音效':'靜音';showToast(muted?'音效已關閉':'音效已開啟')}
   document.addEventListener('pointerdown',ensureAudio,{once:true,capture:true});document.addEventListener('keydown',ensureAudio,{once:true,capture:true});
-  var rules=document.getElementById('rulesDialog'),result=document.getElementById('resultDialog');document.getElementById('soundBtn').onclick=toggleSound;document.getElementById('rulesBtn').onclick=function(){rules.showModal()};rules.querySelectorAll('.close-btn,.close-rules').forEach(function(b){b.onclick=function(){rules.close()}});document.getElementById('undoBtn').onclick=undo;document.getElementById('restartBtn').onclick=restartLevel;document.getElementById('hintBtn').onclick=hint;document.getElementById('nextBtn').onclick=function(){var won=result.dataset.win==='1',finishedAll=won&&state.level===99;result.close();if(!won||finishedAll){state.hearts=5;newLevel(0);return}newLevel(state.level+1)};document.getElementById('retryBtn').onclick=function(){result.close();newLevel(state.level)};[rules,result].forEach(function(d){d.addEventListener('click',function(e){if(e.target===d&&d===rules)d.close()})});newLevel(0);
+  var rules=document.getElementById('rulesDialog'),result=document.getElementById('resultDialog');document.getElementById('soundBtn').onclick=toggleSound;document.getElementById('rulesBtn').onclick=function(){rules.showModal()};rules.querySelectorAll('.close-btn,.close-rules').forEach(function(b){b.onclick=function(){rules.close()}});document.getElementById('undoBtn').onclick=undo;document.getElementById('restartBtn').onclick=restartLevel;document.getElementById('hintBtn').onclick=hint;document.getElementById('nextBtn').onclick=function(){var won=result.dataset.win==='1',finishedAll=won&&state.level===99;result.close();if(!won||finishedAll){state.hearts=MAX_HEARTS;state.milestoneRewards={};newLevel(0);return}newLevel(state.level+1)};document.getElementById('retryBtn').onclick=function(){result.close();newLevel(state.level)};[rules,result].forEach(function(d){d.addEventListener('click',function(e){if(e.target===d&&d===rules)d.close()})});newLevel(0);
 })();
 </script>
 </body>

@@ -87,6 +87,7 @@
     .quiet-btn svg { width:18px; height:18px; }
     .quiet-btn:first-child { margin-left:-8px; }
     #openingBtn { background:var(--panel-2); color:var(--ink); }
+    #openingBtn[hidden] { display:none; }
     #openingBtn svg { color:var(--good); }
     #openingBtn.guide-used { opacity:.68; cursor:default; }
     #hintBtn { margin-left:auto; }
@@ -260,7 +261,7 @@
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </section>
 
-    <p class="footer-note"><span class="version">Version 2026.10.07.29</span></p>
+    <p class="footer-note"><span class="version">Version 2026.10.07.30</span></p>
   </main>
 
   <dialog id="rulesDialog">
@@ -547,7 +548,7 @@
     return out;
   }
   var puzzles=buildVariantPuzzles();validateFirstFive(puzzles);
-  var state={level:0,variant:0,cells:[],history:[],hearts:MAX_HEARTS,hintsRemaining:2,mistakes:0,hintsUsed:0,moves:0,score:0,mode:'x',start:Date.now(),locked:false,pendingCells:{},resultShown:false,levelAwarded:false,focus:0,milestoneRewards:{},openingAvailable:true,openingGuide:null};
+  var state={level:0,variant:0,cells:[],history:[],hearts:MAX_HEARTS,hintsRemaining:2,mistakes:0,hintsUsed:0,moves:0,score:0,mode:'x',start:Date.now(),locked:false,pendingCells:{},resultShown:false,levelAwarded:false,focus:0,milestoneRewards:{},openingAvailable:true,openingGuide:null,restoredEntry:false};
   function currentPuzzle(){return puzzles[state.level][state.variant]}
   var board=document.getElementById('board'),toast=document.getElementById('toast'),logicNote=document.getElementById('logicNote');
   function encodeProgress(){
@@ -573,7 +574,7 @@
       if(score<0||bytes[7]<1||bytes[7]>MAX_HEARTS||bytes[8]>2)return false;
       var cells=[],power=[1,3,9,27,81];
       for(var n=0;n<needed;n++){var packed=bytes[10+n];if(packed>242)return false;for(var j=0;j<5&&cells.length<p.size*p.size;j++){var value=Math.floor(packed/power[j])%3;cells.push(value===1?'x':(value===2?'cat':''))}}
-      state.level=level;state.variant=variant;state.cells=cells;state.score=score;state.hearts=bytes[7];state.hintsRemaining=bytes[8];state.levelAwarded=!!(bytes[9]&1);state.history=[];state.pendingCells={};state.mistakes=0;state.hintsUsed=2-state.hintsRemaining;state.moves=0;state.start=Date.now();state.locked=false;state.resultShown=false;state.focus=0;state.openingAvailable=false;state.openingGuide=null;
+      state.level=level;state.variant=variant;state.cells=cells;state.score=score;state.hearts=bytes[7];state.hintsRemaining=bytes[8];state.levelAwarded=!!(bytes[9]&1);state.history=[];state.pendingCells={};state.mistakes=0;state.hintsUsed=2-state.hintsRemaining;state.moves=0;state.start=Date.now();state.locked=false;state.resultShown=false;state.focus=0;state.openingAvailable=false;state.openingGuide=null;state.restoredEntry=true;
       return true;
     }catch(err){return false}
   }
@@ -644,7 +645,7 @@
   function paintMode(){document.getElementById('xModeBtn').setAttribute('aria-pressed',state.mode==='x'?'true':'false');document.getElementById('catModeBtn').setAttribute('aria-pressed',state.mode==='cat'?'true':'false')}
   function chooseMode(mode){state.mode=mode;paintMode();setLogic(mode==='cat'?'已選擇放貓':'已選擇標 X',mode==='cat'?'單擊空白格放貓；單擊已有標記可取消。':'單擊空白格標 X；單擊已有標記可取消。',mode==='cat'?'●':'×')}
   function paintHintButton(){var btn=document.getElementById('hintBtn'),label=document.getElementById('hintLabel'),used=state.hintsRemaining<=0;label.textContent=used?'找貓提示 · 已用完':'找貓提示 · 剩餘 '+state.hintsRemaining+' 次';btn.setAttribute('aria-label',used?'找貓提示，本關已用完':'找貓提示，本關剩餘'+state.hintsRemaining+'次');btn.classList.toggle('hint-used',used)}
-  function paintOpeningButton(){var btn=document.getElementById('openingBtn'),label=document.getElementById('openingLabel');label.textContent=state.openingAvailable?'開局指引 · 免費':'開局指引 · 已看';btn.disabled=!state.openingAvailable;btn.classList.toggle('guide-used',!state.openingAvailable);btn.setAttribute('aria-label',state.openingAvailable?'查看本關免費開局指引':'本關開局指引已看')}
+  function paintOpeningButton(){var btn=document.getElementById('openingBtn'),label=document.getElementById('openingLabel');btn.hidden=state.restoredEntry;if(state.restoredEntry){btn.disabled=true;return}label.textContent=state.openingAvailable?'開局指引 · 免費':'開局指引 · 已看';btn.disabled=!state.openingAvailable;btn.classList.toggle('guide-used',!state.openingAvailable);btn.setAttribute('aria-label',state.openingAvailable?'查看本關免費開局指引':'本關開局指引已看')}
   function render(){var p=currentPuzzle();board.innerHTML='';board.style.gridTemplateColumns='repeat('+p.size+',1fr)';board.style.gridTemplateRows='repeat('+p.size+',1fr)';document.getElementById('levelCount').textContent='第 '+(state.level+1)+'／'+TOTAL+' 關 · '+p.label+' · '+p.size+'×'+p.size+' · '+p.colors+' 色';document.getElementById('levelName').textContent=p.name;for(var r=0;r<p.size;r++)for(var c=0;c<p.size;c++){var i=r*p.size+c,b=document.createElement('button');b.type='button';b.className='cell';b.dataset.i=i;b.setAttribute('role','gridcell');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，空白');b.tabIndex=i===state.focus?0:-1;b.style.setProperty('--cell-bg',palette[p.regionHues[p.regions[r][c]]]);b.addEventListener('click',onCell);b.addEventListener('keydown',onKey);board.appendChild(b)}paintHearts();paintScore();paintMode();paintHintButton();paintOpeningButton()}
   function updateCell(i,animate){var b=board.children[i],p=currentPuzzle(),r=Math.floor(i/p.size),c=i%p.size,v=state.cells[i];b.innerHTML=v==='cat'?catSVG:(v==='x'?'<span class="cross" aria-hidden="true"></span>':'');if(v==='cat'&&animate)b.querySelector('.cat').classList.add('pop');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，'+(v==='cat'?'貓咪':v==='x'?'已排除':'空白'))}
   function snapshot(){state.history.push(state.cells.slice());if(state.history.length>100)state.history.shift()}
@@ -726,7 +727,7 @@
     }
     var d=document.getElementById('resultDialog'),elapsed=Math.max(1,Math.floor((Date.now()-state.start)/1000));document.getElementById('timeStat').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');document.getElementById('mistakeStat').textContent=state.mistakes;document.getElementById('hintStat').textContent=state.hintsUsed;document.getElementById('moveStat').textContent=state.moves;document.getElementById('scoreStat').textContent=state.score.toLocaleString('zh-Hant');document.getElementById('resultTitle').textContent=win?(state.level===TOTAL-1?'階段完成':'完成第 '+completed+' 關'):'遊戲完結';document.getElementById('resultText').textContent=win?(state.level===TOTAL-1?('你已完成現階段全部 50 關'+(earned?'，本關獲得 1000 分':'')+(recovered?'，並補回 1 顆心':'')+'。'):('本關完成'+(earned?'，獲得 1000 分':'')+(recovered?'，並補回 1 顆心':'')+'。')):'5 顆心已用完；你來到第 '+completed+' 關，累計 '+state.score.toLocaleString('zh-Hant')+' 分。繼續玩：本關重玩、心回滿、積分 −5000（最低 0 分）。重新開始：回到第 1 關、積分歸 0，開始新遊戲。';document.getElementById('nextBtn').textContent=win?(state.level===TOTAL-1?'再玩一輪':'下一關'):'重新開始';document.getElementById('retryBtn').textContent=win?'重新挑戰':'繼續玩';document.getElementById('retryBtn').style.display='block';d.dataset.win=win?'1':'0';d.showModal();if(win){soundComplete();burst()}
   }
-  function newLevel(index,skipSave,preserveVariant){state.level=index;if(!preserveVariant)state.variant=Math.floor(Math.random()*3);var p=currentPuzzle();state.cells=new Array(p.size*p.size).fill('');state.history=[];state.pendingCells={};state.hintsRemaining=2;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.start=Date.now();state.locked=false;state.resultShown=false;state.levelAwarded=false;state.focus=0;state.openingAvailable=true;state.openingGuide=null;render();setLogic('本關版圖已準備','先查看免費「開局指引」，或直接選「標 X」／「放貓」開始；本關另有 2 次找貓提示。','↻');if(!skipSave)persistProgress()}
+  function newLevel(index,skipSave,preserveVariant){state.level=index;if(!preserveVariant)state.variant=Math.floor(Math.random()*3);var p=currentPuzzle();state.cells=new Array(p.size*p.size).fill('');state.history=[];state.pendingCells={};state.hintsRemaining=2;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.start=Date.now();state.locked=false;state.resultShown=false;state.levelAwarded=false;state.focus=0;state.openingAvailable=true;state.openingGuide=null;state.restoredEntry=false;render();setLogic('本關版圖已準備','先查看免費「開局指引」，或直接選「標 X」／「放貓」開始；本關另有 2 次找貓提示。','↻');if(!skipSave)persistProgress()}
   function restartLevel(){
     if(state.locked)return;if(Object.keys(state.pendingCells).length){showToast('請先等待錯誤提示完成');return}
     var p=currentPuzzle();state.cells=new Array(p.size*p.size).fill('');state.history=[];state.focus=0;render();setLogic('已清除所有標記','版圖、積分、心數、失誤數及計時保持不變；可由空白棋盤重新推理。','↻');showToast('已清除所有標記');persistProgress()

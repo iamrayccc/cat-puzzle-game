@@ -56,6 +56,9 @@
     .statusbar { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:16px; }
     .level-meta { min-width:0; }
     .status-actions { display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+    .score { min-height:42px; display:flex; flex-direction:column; justify-content:center; align-items:flex-end; background:var(--panel); border:1px solid var(--soft-line); padding:5px 11px; border-radius:13px; box-shadow:0 5px 16px rgba(26,60,66,.08); font-variant-numeric:tabular-nums; }
+    .score span { color:var(--muted); font-size:.65rem; font-weight:900; line-height:1; }
+    .score b { font-size:1rem; line-height:1.15; }
     .sound-btn { width:42px; height:42px; border:1px solid var(--soft-line); border-radius:50%; background:var(--panel); color:var(--ink); display:grid; place-items:center; cursor:pointer; box-shadow:0 5px 16px rgba(26,60,66,.08); }
     .sound-btn:hover, .sound-btn:focus-visible { background:var(--panel-2); outline:2px solid var(--line); outline-offset:2px; }
     .sound-btn svg { width:20px; height:20px; }
@@ -82,7 +85,7 @@
     }
     .cell {
       position:relative; border:0; margin:0; padding:0; min-width:0; cursor:pointer;
-      background:var(--cell-bg); outline:0; display:grid; place-items:center;
+      background:var(--cell-bg); outline:0; display:grid; place-items:center; touch-action:manipulation;
       box-shadow:inset calc(var(--bl)*2px) 0 0 var(--line), inset calc(var(--br)*-2px) 0 0 var(--line), inset 0 calc(var(--bt)*2px) 0 var(--line), inset 0 calc(var(--bb)*-2px) 0 var(--line);
     }
     .cell::after { content:""; position:absolute; inset:3px; border:2px solid transparent; border-radius:7px; pointer-events:none; }
@@ -108,7 +111,8 @@
     .logic-note p { margin:0; font-size:.82rem; line-height:1.38; font-weight:700; }
     .logic-note strong { display:block; color:var(--ink); font-size:.88rem; }
     .controls { margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .mode-btn { min-height:58px; border:2px solid var(--soft-line); background:var(--panel); border-radius:16px; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:10px; font-weight:900; box-shadow:0 5px 13px rgba(26,60,66,.06); }
+    .mode-btn { min-height:58px; border:2px solid var(--soft-line); background:var(--panel); border-radius:16px; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:10px; font-weight:900; box-shadow:0 5px 13px rgba(26,60,66,.06); touch-action:manipulation; }
+    .mode-btn:hover, .mode-btn:focus-visible { border-color:var(--line); outline:2px solid var(--line); outline-offset:2px; }
     .mode-btn[aria-pressed="true"] { border-color:var(--line); background:var(--line); color:var(--panel); box-shadow:0 6px 0 color-mix(in srgb,var(--line) 35%, transparent); transform:translateY(-2px); }
     .mode-icon { width:28px; height:28px; display:grid; place-items:center; }
     .mini-x { width:18px; height:18px; position:relative; }
@@ -134,7 +138,7 @@
     .result { text-align:center; padding-top:28px; }
     .result-cat { width:110px; height:110px; margin:0 auto 16px; color:var(--accent); animation:celebrate .7s ease; }
     @keyframes celebrate { 0%{transform:translateY(20px) scale(.6);opacity:0} 70%{transform:translateY(-8px) scale(1.05)} 100%{transform:none;opacity:1} }
-    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:22px 0; }
+    .stats { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin:22px 0; }
     .stat { background:var(--panel-2); padding:12px 6px; border-radius:14px; }
     .stat b { display:block; font-size:1.2rem; font-variant-numeric:tabular-nums; }
     .stat span { display:block; margin-top:3px; font-size:.78rem; color:var(--muted); font-weight:800; line-height:1.25; }
@@ -153,10 +157,17 @@
       .status-actions { gap:6px; }
       .hearts { padding:9px 10px; }
       .sound-btn { width:40px; height:40px; }
+      .score { min-height:40px; padding:5px 9px; }
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .stat:last-child { grid-column:1/-1; }
       .top-actions { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
       .quiet-btn { justify-content:center; padding:8px 5px; font-size:.78rem; }
       .quiet-btn:first-child, #hintBtn { margin-left:0; }
       #hintBtn { grid-column:1/-1; background:var(--panel-2); }
+    }
+    @media (max-width:400px) {
+      .statusbar { display:grid; grid-template-columns:1fr auto; }
+      .status-actions { grid-column:1/-1; justify-content:flex-end; width:100%; }
     }
     @media (max-height:720px) and (orientation:landscape) { 
       .app { width:100%; max-width:980px; display:grid; grid-template-columns:minmax(300px,520px) 1fr; grid-template-rows:auto 1fr; gap:0 28px; padding:12px 24px; }
@@ -175,6 +186,7 @@
     <section class="statusbar" aria-label="遊戲狀態">
       <div class="level-meta"><small id="levelCount">第 1／100 關</small><h1 id="levelName">午睡角落</h1></div>
       <div class="status-actions">
+        <div class="score" aria-live="polite"><span>積分</span><b id="scoreValue">0</b></div>
         <button class="sound-btn" id="soundBtn" type="button" aria-label="靜音" aria-pressed="false" title="靜音">
           <svg class="sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4Z"/><path d="M15 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12"/></svg>
           <svg class="sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4Z"/><path d="m16 9 5 5m0-5-5 5"/></svg>
@@ -213,23 +225,23 @@
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </section>
 
-    <section class="controls" aria-label="操作方式">
-      <div class="mode-btn" aria-label="單擊標記或取消"><span class="mode-icon"><span class="mini-x"></span></span>單擊：X／取消</div>
-      <div class="mode-btn" aria-label="連續雙擊放置貓咪"><span class="mode-icon" id="catModeIcon"></span>連按兩下：放貓</div>
+    <section class="controls" aria-label="選擇放置標記">
+      <button class="mode-btn" id="xModeBtn" type="button" aria-pressed="true"><span class="mode-icon"><span class="mini-x"></span></span>標 X</button>
+      <button class="mode-btn" id="catModeBtn" type="button" aria-pressed="false"><span class="mode-icon" id="catModeIcon"></span>放貓</button>
     </section>
-    <p class="footer-note">遊戲開始有 5 顆心並跨關保留；每關可免費使用 2 次提示。錯放貓咪會扣 1 顆心並自動改標 X；每通過 5 關可補回 1 顆心，最多 5 顆，心用完遊戲便結束。<span class="version">Version 2026.10.06.7</span></p>
+    <p class="footer-note">先選「標 X」或「放貓」，再單擊格子；單擊已有標記可取消。每關版圖固定且各不相同，「全部清除」只清除標記。完成一關 +1000 分、每次提示 −100 分、每次扣心 −500 分，積分不低於 0。<span class="version">Version 2026.10.06.8</span></p>
   </main>
 
   <dialog id="rulesDialog">
     <div class="sheet">
-      <div class="sheet-head"><div><h2>找出所有躲起來的貓咪</h2><p>100 關會逐步加大棋盤；「全部清除」只會移除標記，不會更換版圖。單擊放 X，快速連按兩下可在任何空格放貓；已有標記時單擊即可取消。遊戲開始有 5 顆心，並會跨關保留。</p></div><button class="close-btn" type="button" aria-label="關閉">×</button></div>
+      <div class="sheet-head"><div><h2>找出所有躲起來的貓咪</h2><p>100 關各有固定而不同的版圖，並會由淺入深逐步加大棋盤及提高區域變化。先選「標 X」或「放貓」，再單擊格子；已有標記時單擊即可取消。「全部清除」只會移除標記，不會更換版圖。</p></div><button class="close-btn" type="button" aria-label="關閉">×</button></div>
       <ol class="rules-list">
         <li><span class="rule-number">1</span><div><strong>每一行、每一列各一隻</strong><span>同一橫行或直列不能出現第二隻貓咪。</span></div></li>
         <li><span class="rule-number">2</span><div><strong>每個區域各一隻</strong><span>以粗邊界分隔的區域形狀不一，裡面一定剛好藏著一隻。</span></div></li>
         <li><span class="rule-number">3</span><div><strong>貓咪不能彼此相鄰</strong><span>連斜角也不行；放好後，周圍八格都可排除。</span></div></li>
         <li><span class="rule-number">4</span><div><strong>錯放貓咪會扣心</strong><span>若放貓後棋面再沒有合法解，會扣 1 顆心，並把該格自動改標為 X；心用完即遊戲結束。</span></div></li>
-        <li><span class="rule-number">5</span><div><strong>每關兩次免費提示</strong><span>「推理一步」不會扣心；用完後，到下一關會回復 2 次。</span></div></li>
-        <li><span class="rule-number">6</span><div><strong>每通過五關補回一顆心</strong><span>完成第 5、10、15…關時，若心數少於 5 顆便補回 1 顆；心數最多維持 5 顆。</span></div></li>
+        <li><span class="rule-number">5</span><div><strong>每關兩次提示</strong><span>每次使用扣 100 分，不扣心；用完後，到下一關會回復 2 次。</span></div></li>
+        <li><span class="rule-number">6</span><div><strong>積分與補心</strong><span>完成一關 +1000 分，扣心時 −500 分，積分最低為 0；每通過五關最多補回 1 顆心，心數上限為 5 顆。</span></div></li>
       </ol>
       <button class="primary close-rules" type="button">開始動腦</button>
     </div>
@@ -240,7 +252,7 @@
       <div class="result-cat" id="resultCat"></div>
       <h2 id="resultTitle">遊戲完結</h2>
       <p id="resultText">本關統計如下。</p>
-      <div class="stats"><div class="stat"><b id="timeStat">0:00</b><span>遊戲時間</span></div><div class="stat"><b id="mistakeStat">0</b><span>失誤</span></div><div class="stat"><b id="hintStat">0</b><span>推理協助</span></div><div class="stat"><b id="moveStat">0</b><span>落子次數</span></div></div>
+      <div class="stats"><div class="stat"><b id="timeStat">0:00</b><span>遊戲時間</span></div><div class="stat"><b id="mistakeStat">0</b><span>失誤</span></div><div class="stat"><b id="hintStat">0</b><span>推理協助</span></div><div class="stat"><b id="moveStat">0</b><span>落子次數</span></div><div class="stat"><b id="scoreStat">0</b><span>累計積分</span></div></div>
       <button class="primary" id="nextBtn" type="button">下一關</button>
       <button class="secondary" id="retryBtn" type="button">重新挑戰</button>
     </div>
@@ -250,23 +262,56 @@
 <script>
 (function(){
   'use strict';
-  var TOTAL=100, MAX_HEARTS=5, sessionSeed=(Date.now()^(Math.random()*0xffffffff))>>>0, variants=new Array(TOTAL).fill(0);
+  var TOTAL=100, MAX_HEARTS=5, PUZZLE_SEED=0x43a7c21d;
   var palette=['var(--r1)','var(--r2)','var(--r3)','var(--r4)','var(--r5)','var(--r6)','var(--r7)','var(--r8)','var(--r9)','var(--r10)','var(--r11)'];
   var first=['暖陽','月光','毛線','紙箱','星夜','清晨','雨聲','魚乾','雲朵','花影'];
   var second=['角落','小徑','迷宮','窗台','走廊','花園','書架','屋頂','庭院','秘境'];
   function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
   function shuffle(a,rand){for(var j=a.length-1;j>0;j--){var k=Math.floor(rand()*(j+1)),v=a[j];a[j]=a[k];a[k]=v}return a}
-  function levelSpec(index){var no=index+1;if(no<=20)return{size:6,colors:6,label:'入門'};if(no<=50)return{size:9,colors:9,label:'進階'};return{size:11,colors:11,label:'高手'} }
+  function levelSpec(index){var no=index+1,difficulty=index/(TOTAL-1);if(no<=20)return{size:6,colors:6,label:'入門',difficulty:difficulty};if(no<=50)return{size:9,colors:9,label:'進階',difficulty:difficulty};return{size:11,colors:11,label:'高手',difficulty:difficulty}}
   function makeSolution(n,rand){var cols=shuffle(Array.from({length:n},function(_,i){return i}),rand);for(var tries=0;tries<5000;tries++){shuffle(cols,rand);var ok=true;for(var r=1;r<n;r++)if(Math.abs(cols[r]-cols[r-1])<=1){ok=false;break}if(ok)return cols.slice()}var out=[],used={};function go(r){if(r===n)return true;var choices=shuffle(Array.from({length:n},function(_,i){return i}),rand);for(var q=0;q<n;q++){var c=choices[q];if(used[c]||(r&&Math.abs(c-out[r-1])<=1))continue;used[c]=1;out[r]=c;if(go(r+1))return true;delete used[c]}return false}go(0);return out}
-  function makePuzzle(index){
-    var spec=levelSpec(index),n=spec.size,rand=rng((sessionSeed+index*2654435761+variants[index]*1013904223)>>>0),solution=makeSolution(n,rand),regions=Array.from({length:n},function(){return new Array(n).fill(-1)}),left=n*n-n;
+  function fixedSeed(index,salt){var x=(PUZZLE_SEED^Math.imul(index+1,0x9e3779b1)^Math.imul(salt+1,0x85ebca6b))>>>0;x=Math.imul(x^(x>>>16),0x7feb352d);x=Math.imul(x^(x>>>15),0x846ca68b);return(x^(x>>>16))>>>0}
+  function makePuzzle(index,salt){
+    var spec=levelSpec(index),n=spec.size,rand=rng(fixedSeed(index,salt||0)),solution=makeSolution(n,rand),regions=Array.from({length:n},function(){return new Array(n).fill(-1)}),regionSizes=new Array(n).fill(1),left=n*n-n;
     for(var r=0;r<n;r++)regions[r][solution[r]]=r;
-    while(left){var frontier=[];for(var rr=0;rr<n;rr++)for(var cc=0;cc<n;cc++)if(regions[rr][cc]<0){var near=[];if(rr&&regions[rr-1][cc]>=0)near.push(regions[rr-1][cc]);if(rr<n-1&&regions[rr+1][cc]>=0)near.push(regions[rr+1][cc]);if(cc&&regions[rr][cc-1]>=0)near.push(regions[rr][cc-1]);if(cc<n-1&&regions[rr][cc+1]>=0)near.push(regions[rr][cc+1]);if(near.length)frontier.push([rr,cc,near])}var pick=frontier[Math.floor(rand()*frontier.length)],near=pick[2];regions[pick[0]][pick[1]]=near[Math.floor(rand()*near.length)];left--}
+    while(left){
+      var frontier=[];
+      for(var rr=0;rr<n;rr++)for(var cc=0;cc<n;cc++)if(regions[rr][cc]<0){
+        var adjacent=[];if(rr&&regions[rr-1][cc]>=0)adjacent.push(regions[rr-1][cc]);if(rr<n-1&&regions[rr+1][cc]>=0)adjacent.push(regions[rr+1][cc]);if(cc&&regions[rr][cc-1]>=0)adjacent.push(regions[rr][cc-1]);if(cc<n-1&&regions[rr][cc+1]>=0)adjacent.push(regions[rr][cc+1]);
+        if(adjacent.length){var unique=adjacent.filter(function(v,i,a){return a.indexOf(v)===i}),touch=0;for(var u=0;u<unique.length;u++){var count=adjacent.filter(function(v){return v===unique[u]}).length;if(count>touch)touch=count}frontier.push({r:rr,c:cc,near:unique,touch:touch,tie:rand()})}
+      }
+      frontier.sort(function(a,b){var easeA=a.touch*3-a.near.reduce(function(m,reg){return Math.min(m,regionSizes[reg])},99)/n,easeB=b.touch*3-b.near.reduce(function(m,reg){return Math.min(m,regionSizes[reg])},99)/n;return easeB-easeA||a.tie-b.tie});
+      var pool=Math.max(1,Math.ceil(frontier.length*(.1+spec.difficulty*.9))),pick=frontier[Math.floor(rand()*pool)],choices=pick.near.slice();
+      choices.sort(function(a,b){var compactA=0,compactB=0;if(pick.r&&regions[pick.r-1][pick.c]===a)compactA++;if(pick.r<n-1&&regions[pick.r+1][pick.c]===a)compactA++;if(pick.c&&regions[pick.r][pick.c-1]===a)compactA++;if(pick.c<n-1&&regions[pick.r][pick.c+1]===a)compactA++;if(pick.r&&regions[pick.r-1][pick.c]===b)compactB++;if(pick.r<n-1&&regions[pick.r+1][pick.c]===b)compactB++;if(pick.c&&regions[pick.r][pick.c-1]===b)compactB++;if(pick.c<n-1&&regions[pick.r][pick.c+1]===b)compactB++;return compactB-compactA||regionSizes[a]-regionSizes[b]});
+      var choice=spec.difficulty>.55&&rand()<spec.difficulty?choices[Math.floor(rand()*choices.length)]:choices[0];regions[pick.r][pick.c]=choice;regionSizes[choice]++;left--;
+    }
     var hues=shuffle(Array.from({length:n},function(_,i){return i%spec.colors}),rand);
-    return{name:first[index%10]+second[Math.floor(index/10)],size:n,colors:spec.colors,label:spec.label,regions:regions,regionHues:hues,solution:solution};
+    return{name:first[index%10]+second[Math.floor(index/10)],size:n,colors:spec.colors,label:spec.label,regions:regions,regionHues:hues,solution:solution,difficulty:spec.difficulty};
   }
-  var puzzles=new Array(TOTAL), state={level:0,cells:[],history:[],hearts:MAX_HEARTS,hintsRemaining:2,mistakes:0,hintsUsed:0,moves:0,start:Date.now(),locked:false,focus:0,milestoneRewards:{}};
-  var board=document.getElementById('board'),toast=document.getElementById('toast'),logicNote=document.getElementById('logicNote'),clickTimers={};
+  function puzzleSignature(p){return p.size+'|'+p.regions.map(function(row){return row.join(',')}).join(';')}
+  function measureDifficulty(p){
+    var n=p.size,usedCols=new Array(n).fill(false),usedRegions=new Array(n).fill(false),chosen=[],rows=Array.from({length:n},function(_,r){return{row:r,done:false}}),solutions=0,branches=0,limit=24;
+    function search(depth){
+      if(solutions>=limit)return;if(depth===n){solutions++;return}
+      var best=-1,options=null;
+      for(var ri=0;ri<n;ri++)if(!rows[ri].done){var r=rows[ri].row,opts=[];for(var c=0;c<n;c++){var idx=r*n+c,reg=p.regions[r][c],ok=!usedCols[c]&&!usedRegions[reg];if(ok)for(var j=0;j<chosen.length;j++){var cr=Math.floor(chosen[j]/n),cc=chosen[j]%n;if(Math.abs(cr-r)<=1&&Math.abs(cc-c)<=1){ok=false;break}}if(ok)opts.push(idx)}if(options===null||opts.length<options.length){best=ri;options=opts;if(!opts.length)break}}
+      if(!options||!options.length)return;rows[best].done=true;
+      for(var q=0;q<options.length;q++){branches++;var idx=options[q],rr=Math.floor(idx/n),cc=idx%n,reg=p.regions[rr][cc];chosen.push(idx);usedCols[cc]=true;usedRegions[reg]=true;search(depth+1);chosen.pop();usedCols[cc]=false;usedRegions[reg]=false;if(solutions>=limit)break}
+      rows[best].done=false;
+    }
+    search(0);
+    var perimeter=0;for(var r=0;r<n;r++)for(var c=0;c<n;c++){if(r<n-1&&p.regions[r][c]!==p.regions[r+1][c])perimeter++;if(c<n-1&&p.regions[r][c]!==p.regions[r][c+1])perimeter++}
+    return(limit-solutions)*100000+branches*10+perimeter;
+  }
+  function buildPuzzles(){
+    var generated=[],seen={};
+    for(var i=0;i<TOTAL;i++){var salt=0,p=makePuzzle(i,salt),key=puzzleSignature(p);while(seen[key]){salt++;p=makePuzzle(i,salt);key=puzzleSignature(p)}seen[key]=true;p.measuredDifficulty=measureDifficulty(p);generated.push(p)}
+    var bands=[[0,20],[20,50],[50,100]],out=new Array(TOTAL);
+    bands.forEach(function(band){var sorted=generated.slice(band[0],band[1]).sort(function(a,b){return a.measuredDifficulty-b.measuredDifficulty});for(var j=0;j<sorted.length;j++){var level=band[0]+j,spec=levelSpec(level);sorted[j].name=first[level%10]+second[Math.floor(level/10)];sorted[j].label=spec.label;sorted[j].difficulty=spec.difficulty;out[level]=sorted[j]}});
+    return out;
+  }
+  var puzzles=buildPuzzles(), state={level:0,cells:[],history:[],hearts:MAX_HEARTS,hintsRemaining:2,mistakes:0,hintsUsed:0,moves:0,score:0,mode:'x',start:Date.now(),locked:false,resultShown:false,focus:0,milestoneRewards:{}};
+  var board=document.getElementById('board'),toast=document.getElementById('toast'),logicNote=document.getElementById('logicNote');
   var audioCtx=null,masterGain=null,muted=false;
   function ensureAudio(){
     if(!audioCtx){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;audioCtx=new AC();masterGain=audioCtx.createGain();masterGain.gain.value=.42;masterGain.connect(audioCtx.destination)}
@@ -291,24 +336,29 @@
   document.getElementById('catModeIcon').innerHTML=catSVG;document.getElementById('resultCat').innerHTML=catSVG;
   function heartSVG(){return '<svg class="heart" viewBox="0 0 24 22" fill="currentColor" aria-hidden="true"><path d="M12 21S1 14.5 1 7.4C1 3.8 3.5 1 7 1c2.1 0 4 1.1 5 2.8C13 2.1 14.9 1 17 1c3.5 0 6 2.8 6 6.4C23 14.5 12 21 12 21Z"/></svg>'}
   function paintHearts(){state.hearts=Math.min(MAX_HEARTS,Math.max(0,state.hearts));var h=document.getElementById('hearts');h.innerHTML='';for(var i=0;i<MAX_HEARTS;i++){var w=document.createElement('span');w.innerHTML=heartSVG();var svg=w.firstChild;if(i>=state.hearts)svg.classList.add('lost');h.appendChild(svg)}h.setAttribute('aria-label','剩餘'+state.hearts+'次機會')}
+  function paintScore(){state.score=Math.max(0,state.score);document.getElementById('scoreValue').textContent=state.score.toLocaleString('zh-Hant')}
+  function changeScore(delta){state.score=Math.max(0,state.score+delta);paintScore()}
+  function paintMode(){document.getElementById('xModeBtn').setAttribute('aria-pressed',state.mode==='x'?'true':'false');document.getElementById('catModeBtn').setAttribute('aria-pressed',state.mode==='cat'?'true':'false')}
+  function chooseMode(mode){state.mode=mode;paintMode();setLogic(mode==='cat'?'已選擇放貓':'已選擇標 X',mode==='cat'?'單擊空白格放貓；單擊已有標記可取消。':'單擊空白格標 X；單擊已有標記可取消。',mode==='cat'?'●':'×')}
   function paintHintButton(){var btn=document.getElementById('hintBtn'),label=document.getElementById('hintLabel'),used=state.hintsRemaining<=0;label.textContent=used?'推理一步 · 已用完':'推理一步 · 剩餘 '+state.hintsRemaining+' 次';btn.setAttribute('aria-label',used?'推理一步，本關提示已用完':'推理一步，本關剩餘'+state.hintsRemaining+'次');btn.classList.toggle('hint-used',used)}
   function edge(p,r,c,dr,dc){var rr=r+dr,cc=c+dc;return rr<0||cc<0||rr>=p.size||cc>=p.size||p.regions[rr][cc]!==p.regions[r][c]}
-  function render(){var p=puzzles[state.level];board.innerHTML='';board.style.gridTemplateColumns='repeat('+p.size+',1fr)';board.style.gridTemplateRows='repeat('+p.size+',1fr)';document.getElementById('levelCount').textContent='第 '+(state.level+1)+'／100 關 · '+p.label+' · '+p.size+'×'+p.size+' · '+p.colors+' 色';document.getElementById('levelName').textContent=p.name;for(var r=0;r<p.size;r++)for(var c=0;c<p.size;c++){var i=r*p.size+c,b=document.createElement('button');b.type='button';b.className='cell';b.dataset.i=i;b.setAttribute('role','gridcell');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，空白');b.tabIndex=i===state.focus?0:-1;b.style.setProperty('--cell-bg',palette[p.regionHues[p.regions[r][c]]]);b.style.setProperty('--bt',edge(p,r,c,-1,0)?1:0);b.style.setProperty('--bb',edge(p,r,c,1,0)?1:0);b.style.setProperty('--bl',edge(p,r,c,0,-1)?1:0);b.style.setProperty('--br',edge(p,r,c,0,1)?1:0);b.addEventListener('click',onCell);b.addEventListener('keydown',onKey);board.appendChild(b)}paintHearts();paintHintButton()}
+  function render(){var p=puzzles[state.level];board.innerHTML='';board.style.gridTemplateColumns='repeat('+p.size+',1fr)';board.style.gridTemplateRows='repeat('+p.size+',1fr)';document.getElementById('levelCount').textContent='第 '+(state.level+1)+'／100 關 · '+p.label+' · '+p.size+'×'+p.size+' · '+p.colors+' 色';document.getElementById('levelName').textContent=p.name;for(var r=0;r<p.size;r++)for(var c=0;c<p.size;c++){var i=r*p.size+c,b=document.createElement('button');b.type='button';b.className='cell';b.dataset.i=i;b.setAttribute('role','gridcell');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，空白');b.tabIndex=i===state.focus?0:-1;b.style.setProperty('--cell-bg',palette[p.regionHues[p.regions[r][c]]]);b.style.setProperty('--bt',edge(p,r,c,-1,0)?1:0);b.style.setProperty('--bb',edge(p,r,c,1,0)?1:0);b.style.setProperty('--bl',edge(p,r,c,0,-1)?1:0);b.style.setProperty('--br',edge(p,r,c,0,1)?1:0);b.addEventListener('click',onCell);b.addEventListener('keydown',onKey);board.appendChild(b)}paintHearts();paintScore();paintMode();paintHintButton()}
   function updateCell(i,animate){var b=board.children[i],p=puzzles[state.level],r=Math.floor(i/p.size),c=i%p.size,v=state.cells[i];b.innerHTML=v==='cat'?catSVG:(v==='x'?'<span class="cross" aria-hidden="true"></span>':'');if(v==='cat'&&animate)b.querySelector('.cat').classList.add('pop');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，'+(v==='cat'?'貓咪':v==='x'?'已排除':'空白'))}
   function snapshot(){state.history.push(state.cells.slice());if(state.history.length>100)state.history.shift()}
   function focusCell(i){state.focus=i;board.querySelectorAll('.cell').forEach(function(x,j){x.tabIndex=j===i?0:-1})}
-  function onCell(e){if(state.locked)return;var i=+e.currentTarget.dataset.i;focusCell(i);if(clickTimers[i]){clearTimeout(clickTimers[i]);delete clickTimers[i];if(state.cells[i]==='')placeCat(i);else singleTap(i)}else clickTimers[i]=setTimeout(function(){delete clickTimers[i];singleTap(i)},260)}
-  function singleTap(i){if(state.locked)return;snapshot();state.moves++;state.cells[i]=state.cells[i]===''?'x':'';updateCell(i,false);if(state.cells[i]==='x')soundClick();setLogic(state.cells[i]==='x'?'已標記不能放':'已取消標記','單擊空格會放 X；已有 X 或貓時單擊會取消。','×')}
+  function onCell(e){if(state.locked)return;var i=+e.currentTarget.dataset.i;focusCell(i);if(state.cells[i]!==''){removeMark(i);return}if(state.mode==='cat')placeCat(i);else placeX(i)}
+  function placeX(i){if(state.locked||state.cells[i]!=='')return;snapshot();state.moves++;state.cells[i]='x';updateCell(i,false);soundClick();setLogic('已標記不能放','目前是「標 X」模式；單擊已有標記可取消。','×')}
+  function removeMark(i){if(state.locked||state.cells[i]==='')return;snapshot();state.moves++;state.cells[i]='';updateCell(i,false);setLogic('已取消標記','目前選擇的標記模式保持不變。','↶')}
   function conflicts(a,b,p){var ar=Math.floor(a/p.size),ac=a%p.size,br=Math.floor(b/p.size),bc=b%p.size;return ar===br||ac===bc||p.regions[ar][ac]===p.regions[br][bc]||(Math.abs(ar-br)<=1&&Math.abs(ac-bc)<=1)}
   function placeCat(i){
     if(state.locked||state.cells[i]!=='')return;
     snapshot();state.moves++;state.cells[i]='cat';
     var p=puzzles[state.level];
     if(!findLegalSolution(p,state.cells,-1)){
-      state.cells[i]='x';state.hearts=Math.max(0,state.hearts-1);state.mistakes++;
+      state.cells[i]='x';state.hearts=Math.max(0,state.hearts-1);state.mistakes++;changeScore(-500);
       updateCell(i,false);paintHearts();soundClick();board.children[i].classList.add('wrong');
-      setLogic('這格不能放貓','放置後棋面沒有任何合法解，已扣 1 顆心並把這格標為 X。','!');
-      showToast('放錯了：扣 1 顆心');vibrate(45);
+      setLogic('這格不能放貓','放置後棋面沒有任何合法解，已扣 1 顆心、500 分，並把這格標為 X。','!');
+      showToast('放錯了：扣 1 顆心及 500 分');vibrate(45);
       if(state.hearts<=0){state.locked=true;setTimeout(function(){finish(false)},450)}
       return;
     }
@@ -316,21 +366,21 @@
   }
   function updateAll(animate){for(var i=0;i<state.cells.length;i++)updateCell(i,animate&&state.cells[i]==='cat')}
   function setLogic(title,text,symbol){logicNote.innerHTML='<b>'+symbol+'</b><p><strong>'+title+'</strong>'+text+'</p>'}
-  function checkWin(){var p=puzzles[state.level],cats=[],rows=new Array(p.size).fill(0),cols=new Array(p.size).fill(0),regions=new Array(p.size).fill(0);for(var i=0;i<state.cells.length;i++)if(state.cells[i]==='cat'){var r=Math.floor(i/p.size),c=i%p.size;cats.push(i);rows[r]++;cols[c]++;regions[p.regions[r][c]]++}if(cats.length!==p.size)return false;for(var n=0;n<p.size;n++)if(rows[n]!==1||cols[n]!==1||regions[n]!==1)return false;for(var a=0;a<cats.length;a++)for(var b=a+1;b<cats.length;b++)if(conflicts(cats[a],cats[b],p))return false;setTimeout(function(){finish(true)},350);return true}
+  function checkWin(){var p=puzzles[state.level],cats=[],rows=new Array(p.size).fill(0),cols=new Array(p.size).fill(0),regions=new Array(p.size).fill(0);for(var i=0;i<state.cells.length;i++)if(state.cells[i]==='cat'){var r=Math.floor(i/p.size),c=i%p.size;cats.push(i);rows[r]++;cols[c]++;regions[p.regions[r][c]]++}if(cats.length!==p.size)return false;for(var n=0;n<p.size;n++)if(rows[n]!==1||cols[n]!==1||regions[n]!==1)return false;for(var a=0;a<cats.length;a++)for(var b=a+1;b<cats.length;b++)if(conflicts(cats[a],cats[b],p))return false;state.locked=true;setTimeout(function(){finish(true)},350);return true}
   function finish(win){
-    state.locked=true;Object.keys(clickTimers).forEach(function(k){clearTimeout(clickTimers[k])});clickTimers={};
-    var completed=state.level+1,recovered=false;
+    if(state.resultShown)return;state.resultShown=true;state.locked=true;
+    var completed=state.level+1,recovered=false,earned=false;
+    if(win){changeScore(1000);earned=true}
     if(win&&completed%5===0&&!state.milestoneRewards[completed]){
       state.milestoneRewards[completed]=true;
       if(state.hearts<MAX_HEARTS){state.hearts=Math.min(MAX_HEARTS,state.hearts+1);recovered=true;paintHearts()}
     }
-    var d=document.getElementById('resultDialog'),elapsed=Math.max(1,Math.floor((Date.now()-state.start)/1000));document.getElementById('timeStat').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');document.getElementById('mistakeStat').textContent=state.mistakes;document.getElementById('hintStat').textContent=state.hintsUsed;document.getElementById('moveStat').textContent=state.moves;document.getElementById('resultTitle').textContent='遊戲完結';document.getElementById('resultText').textContent=win?(recovered?'通過 '+completed+' 關！補回 1 顆心。':'恭喜完成第 '+completed+' 關！'):'5 顆心已用完；你來到第 '+completed+' 關。';document.getElementById('nextBtn').textContent=win?(state.level===99?'再玩一輪':'下一關'):'重新開始遊戲';document.getElementById('retryBtn').style.display=win?'block':'none';d.dataset.win=win?'1':'0';d.showModal();if(win)burst()
+    var d=document.getElementById('resultDialog'),elapsed=Math.max(1,Math.floor((Date.now()-state.start)/1000));document.getElementById('timeStat').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');document.getElementById('mistakeStat').textContent=state.mistakes;document.getElementById('hintStat').textContent=state.hintsUsed;document.getElementById('moveStat').textContent=state.moves;document.getElementById('scoreStat').textContent=state.score.toLocaleString('zh-Hant');document.getElementById('resultTitle').textContent=win?'完成第 '+completed+' 關':'遊戲完結';document.getElementById('resultText').textContent=win?('本關完成'+(earned?'，獲得 1000 分':'')+(recovered?'，並補回 1 顆心':'')+'。'):'5 顆心已用完；你來到第 '+completed+' 關，累計 '+state.score.toLocaleString('zh-Hant')+' 分。';document.getElementById('nextBtn').textContent=win?(state.level===99?'再玩一輪':'下一關'):'重新開始遊戲';document.getElementById('retryBtn').style.display=win?'block':'none';d.dataset.win=win?'1':'0';d.showModal();if(win)burst()
   }
-  function newLevel(index){state.level=index;variants[index]++;puzzles[index]=makePuzzle(index);var p=puzzles[index];state.cells=new Array(p.size*p.size).fill('');state.history=[];state.hintsRemaining=2;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.start=Date.now();state.locked=false;state.focus=0;render();setLogic('新版圖已生成','單擊放 X，快速連按兩下放貓；本關有 2 次免費提示，心數會跨關保留。','↻')}
+  function newLevel(index){state.level=index;var p=puzzles[index];state.cells=new Array(p.size*p.size).fill('');state.history=[];state.hintsRemaining=2;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.start=Date.now();state.locked=false;state.resultShown=false;state.focus=0;render();setLogic('固定版圖已準備','先選「標 X」或「放貓」，再單擊格子；本關有 2 次提示。','↻')}
   function restartLevel(){
     if(state.locked)return;
-    Object.keys(clickTimers).forEach(function(k){clearTimeout(clickTimers[k])});clickTimers={};
-    var p=puzzles[state.level];state.cells=new Array(p.size*p.size).fill('');state.history=[];state.focus=0;render();setLogic('已清除所有標記','版圖、心數、失誤數及計時保持不變；可由空白棋盤重新推理。','↻');showToast('已清除所有標記')
+    var p=puzzles[state.level];state.cells=new Array(p.size*p.size).fill('');state.history=[];state.focus=0;render();setLogic('已清除所有標記','版圖、積分、心數、失誤數及計時保持不變；可由空白棋盤重新推理。','↻');showToast('已清除所有標記')
   }
   function undo(){if(state.locked||!state.history.length){showToast('沒有可復原的步驟');return}state.cells=state.history.pop();updateAll(false);setLogic('已復原一步','可繼續推理下一個位置。','↶')}
   function findLegalSolution(p,cells,forbidden){
@@ -394,7 +444,7 @@
   }
   function hint(){
     if(state.locked)return;
-    if(state.hintsRemaining<=0){setLogic('本關提示已用完','下一關會回復 2 次免費提示；使用提示不會扣心。','!');showToast('本關提示已用完');return}
+    if(state.hintsRemaining<=0){setLogic('本關提示已用完','下一關會回復 2 次；提示不扣心，但每次扣 100 分。','!');showToast('本關提示已用完');return}
     var p=puzzles[state.level],solution=findLegalSolution(p,state.cells,-1);
     if(!solution){setLogic('棋面有矛盾',directConflictMessage(p),'!');showToast('請先修正矛盾');vibrate(35);return}
     var target=-1,certain=false;
@@ -405,19 +455,19 @@
     }
     if(target<0)for(var sr=0;sr<p.size;sr++)if(state.cells[solution[sr]]!=='cat'){target=solution[sr];break}
     if(target<0){checkWin();return}
-    snapshot();state.cells[target]='cat';state.moves++;state.hintsUsed++;state.hintsRemaining--;updateAll(false);soundMeow();paintHintButton();board.children[target].classList.add('hinted');vibrate(35);
+    snapshot();state.cells[target]='cat';state.moves++;state.hintsUsed++;state.hintsRemaining--;changeScore(-100);updateAll(false);soundMeow();paintHintButton();board.children[target].classList.add('hinted');vibrate(35);
     var tr=Math.floor(target/p.size)+1,tc=target%p.size+1;
-    if(certain)setLogic('推理一步：確定貓位','所有符合目前棋面的解法，都會在第 '+tr+' 行第 '+tc+' 列放貓。這次提示不扣心。','✓');
-    else setLogic('推理一步：其中一個解','第 '+tr+' 行第 '+tc+' 列是其中一個符合目前標記的合法解位置；這次提示不扣心。','✓');
-    showToast('免費提示已放置貓咪');
+    if(certain)setLogic('推理一步：確定貓位','所有符合目前棋面的解法，都會在第 '+tr+' 行第 '+tc+' 列放貓。已扣 100 分，不扣心。','✓');
+    else setLogic('推理一步：其中一個解','第 '+tr+' 行第 '+tc+' 列是其中一個符合目前標記的合法解位置。已扣 100 分，不扣心。','✓');
+    showToast('提示已放置貓咪：扣 100 分');
     checkWin()
   }
-  function onKey(e){var p=puzzles[state.level],i=+e.currentTarget.dataset.i,r=Math.floor(i/p.size),c=i%p.size,ni=i;if(e.key==='ArrowUp')ni=Math.max(0,r-1)*p.size+c;else if(e.key==='ArrowDown')ni=Math.min(p.size-1,r+1)*p.size+c;else if(e.key==='ArrowLeft')ni=r*p.size+Math.max(0,c-1);else if(e.key==='ArrowRight')ni=r*p.size+Math.min(p.size-1,c+1);else if(e.key===' '||e.key==='Enter'){e.preventDefault();singleTap(i);return}else if(e.key.toLowerCase()==='c'){e.preventDefault();placeCat(i);return}else return;e.preventDefault();focusCell(ni);board.children[ni].focus()}
+  function onKey(e){var p=puzzles[state.level],i=+e.currentTarget.dataset.i,r=Math.floor(i/p.size),c=i%p.size,ni=i;if(e.key==='ArrowUp')ni=Math.max(0,r-1)*p.size+c;else if(e.key==='ArrowDown')ni=Math.min(p.size-1,r+1)*p.size+c;else if(e.key==='ArrowLeft')ni=r*p.size+Math.max(0,c-1);else if(e.key==='ArrowRight')ni=r*p.size+Math.min(p.size-1,c+1);else if(e.key===' '||e.key==='Enter'){e.preventDefault();if(state.cells[i]!=='')removeMark(i);else if(state.mode==='cat')placeCat(i);else placeX(i);return}else if(e.key.toLowerCase()==='c'){e.preventDefault();chooseMode('cat');return}else if(e.key.toLowerCase()==='x'){e.preventDefault();chooseMode('x');return}else return;e.preventDefault();focusCell(ni);board.children[ni].focus()}
   var toastTimer;function showToast(t){toast.textContent=t;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove('show')},1200)}function vibrate(ms){if(navigator.vibrate)navigator.vibrate(ms)}
   function burst(){var box=document.getElementById('confetti'),colors=['#ec6f5c','#f2b84b','#4aa98e','#6b8fd8'];box.innerHTML='';for(var i=0;i<26;i++){var x=document.createElement('i');x.style.left=(5+Math.random()*90)+'%';x.style.background=colors[i%colors.length];x.style.setProperty('--drift',(Math.random()*160-80)+'px');x.style.animationDelay=(Math.random()*.45)+'s';box.appendChild(x)}setTimeout(function(){box.innerHTML=''},2400)}
   function toggleSound(){ensureAudio();muted=!muted;var btn=document.getElementById('soundBtn');btn.setAttribute('aria-pressed',muted?'true':'false');btn.setAttribute('aria-label',muted?'開啟音效':'靜音');btn.title=muted?'開啟音效':'靜音';showToast(muted?'音效已關閉':'音效已開啟')}
   document.addEventListener('pointerdown',ensureAudio,{once:true,capture:true});document.addEventListener('keydown',ensureAudio,{once:true,capture:true});
-  var rules=document.getElementById('rulesDialog'),result=document.getElementById('resultDialog');document.getElementById('soundBtn').onclick=toggleSound;document.getElementById('rulesBtn').onclick=function(){rules.showModal()};rules.querySelectorAll('.close-btn,.close-rules').forEach(function(b){b.onclick=function(){rules.close()}});document.getElementById('undoBtn').onclick=undo;document.getElementById('restartBtn').onclick=restartLevel;document.getElementById('hintBtn').onclick=hint;document.getElementById('nextBtn').onclick=function(){var won=result.dataset.win==='1',finishedAll=won&&state.level===99;result.close();if(!won||finishedAll){state.hearts=MAX_HEARTS;state.milestoneRewards={};newLevel(0);return}newLevel(state.level+1)};document.getElementById('retryBtn').onclick=function(){result.close();newLevel(state.level)};[rules,result].forEach(function(d){d.addEventListener('click',function(e){if(e.target===d&&d===rules)d.close()})});newLevel(0);
+  var rules=document.getElementById('rulesDialog'),result=document.getElementById('resultDialog');document.getElementById('soundBtn').onclick=toggleSound;document.getElementById('xModeBtn').onclick=function(){chooseMode('x')};document.getElementById('catModeBtn').onclick=function(){chooseMode('cat')};document.getElementById('rulesBtn').onclick=function(){rules.showModal()};rules.querySelectorAll('.close-btn,.close-rules').forEach(function(b){b.onclick=function(){rules.close()}});document.getElementById('undoBtn').onclick=undo;document.getElementById('restartBtn').onclick=restartLevel;document.getElementById('hintBtn').onclick=hint;document.getElementById('nextBtn').onclick=function(){var won=result.dataset.win==='1',finishedAll=won&&state.level===99;result.close();if(!won||finishedAll){state.hearts=MAX_HEARTS;state.score=0;state.milestoneRewards={};newLevel(0);return}newLevel(state.level+1)};document.getElementById('retryBtn').onclick=function(){result.close();newLevel(state.level)};[rules,result].forEach(function(d){d.addEventListener('click',function(e){if(e.target===d&&d===rules)d.close()})});newLevel(0);
 })();
 </script>
 </body>

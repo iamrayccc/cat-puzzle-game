@@ -26,8 +26,8 @@
       --good: #26886e;
       --bad: #c74343;
       --shadow: 0 14px 34px rgba(26,60,66,.14);
-      --r1:#ffd9ce; --r2:#ffe6a8; --r3:#cdebcf; --r4:#bee6eb;
-      --r5:#d8d5f5; --r6:#f2cfe4; --r7:#cddff8; --r8:#f6d5ae; --r9:#c9eadf; --r10:#f0c9c2; --r11:#e3d8b8; --r12:#c8e6bd; --r13:#f4c6a8; --r14:#c9d5ee;
+      --r1:#d7263d; --r2:#f26b1d; --r3:#f2c230; --r4:#4faf3b;
+      --r5:#008c8c; --r6:#2693d6; --r7:#3559c7; --r8:#7a3db8; --r9:#d6388f; --r10:#8a5638; --r11:#91c93e; --r12:#00bcd4; --r13:#f45b69; --r14:#607d8b;
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -35,8 +35,8 @@
         --panel-2:#294247; --line:#d6e3df; --soft-line:rgba(214,227,223,.2);
         --accent:#ff8a73; --accent-dark:#ffab98; --accent-ink:#25100d; --sun:#ffd06a;
         --good:#65d2ae; --bad:#ff7e7a; --shadow:0 16px 38px rgba(0,0,0,.3);
-        --r1:#653f3b; --r2:#65532d; --r3:#315741; --r4:#2c5660;
-        --r5:#46436b; --r6:#61415a; --r7:#38526f; --r8:#694e32; --r9:#315b52; --r10:#67443f; --r11:#5b5035; --r12:#3f6038; --r13:#71452f; --r14:#3f4e70;
+        --r1:#ff5f70; --r2:#ff8f3d; --r3:#ffd43b; --r4:#69db62;
+        --r5:#22c7b8; --r6:#4dabf7; --r7:#6f8cff; --r8:#c77dff; --r9:#f065a6; --r10:#c78b5b; --r11:#a9df45; --r12:#36cde3; --r13:#ff8792; --r14:#91a7b3;
       }
     }
     * { box-sizing:border-box; }
@@ -87,7 +87,7 @@
     #hintBtn .lit-bulb { color:var(--sun); filter:drop-shadow(0 0 3px color-mix(in srgb,var(--sun) 62%,transparent)); }
     #hintBtn .bulb-glow { fill:currentColor; stroke:var(--line); }
     #hintBtn.hint-used .lit-bulb { color:var(--muted); filter:none; }
-    .board-wrap { position:relative; margin:auto 0; }
+    .board-wrap { position:relative; margin:0; }
     .board-shell { background:var(--panel); border:1px solid var(--soft-line); border-radius:24px; padding:clamp(10px,3vw,16px); box-shadow:var(--shadow); }
     .board {
       width:100%; max-width:560px; aspect-ratio:1; margin:auto; display:grid;
@@ -122,7 +122,7 @@
     .logic-note b { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; background:var(--panel); color:var(--good); font-size:1rem; }
     .logic-note p { margin:0; font-size:.82rem; line-height:1.38; font-weight:700; }
     .logic-note strong { display:block; color:var(--ink); font-size:.88rem; }
-    .controls { margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .controls { width:100%; margin:0 auto 14px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .mode-btn { min-height:58px; border:2px solid var(--soft-line); background:var(--panel); border-radius:16px; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:10px; font-weight:900; box-shadow:0 5px 13px rgba(26,60,66,.06); touch-action:manipulation; }
     .mode-btn:hover, .mode-btn:focus-visible { border-color:var(--line); outline:2px solid var(--line); outline-offset:2px; }
     .mode-btn[aria-pressed="true"] { border-color:var(--line); background:var(--line); color:var(--panel); box-shadow:0 6px 0 color-mix(in srgb,var(--line) 35%, transparent); transform:translateY(-2px); }
@@ -224,6 +224,11 @@
       </button>
     </nav>
 
+    <section class="controls" aria-label="選擇放置標記">
+      <button class="mode-btn" id="xModeBtn" type="button" aria-pressed="true"><span class="mode-icon"><span class="mini-x"></span></span>標 X</button>
+      <button class="mode-btn" id="catModeBtn" type="button" aria-pressed="false"><span class="mode-icon" id="catModeIcon"></span>放貓</button>
+    </section>
+
     <section class="board-wrap" aria-label="解謎棋盤">
       <div class="board-shell">
         <div class="board" id="board" role="grid" aria-label="貓咪邏輯棋盤"></div>
@@ -239,11 +244,7 @@
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </section>
 
-    <section class="controls" aria-label="選擇放置標記">
-      <button class="mode-btn" id="xModeBtn" type="button" aria-pressed="true"><span class="mode-icon"><span class="mini-x"></span></span>標 X</button>
-      <button class="mode-btn" id="catModeBtn" type="button" aria-pressed="false"><span class="mode-icon" id="catModeIcon"></span>放貓</button>
-    </section>
-    <p class="footer-note"><span class="version">Version 2026.10.06.24</span></p>
+    <p class="footer-note"><span class="version">Version 2026.10.06.25</span></p>
   </main>
 
   <dialog id="rulesDialog">
@@ -411,10 +412,21 @@
     search(0);return answer;
   }
   function colorRegions(regions,n,seed){
-    var adjacent=Array.from({length:n},function(){return{}}),order=Array.from({length:n},function(_,i){return i}),hues=new Array(n),preferred=[0,3,4,1,6,8,5,11,7,13,2,9,10,12],offset=seed%preferred.length;
+    var adjacent=Array.from({length:n},function(){return{}}),order=Array.from({length:n},function(_,i){return i}),hues=new Array(n),preferred=[0,5,10,8,3,7,2,4,12,6,1,11,9,13],offset=seed%preferred.length;
+    var rgb=[[215,38,61],[242,107,29],[242,194,48],[79,175,59],[0,140,140],[38,147,214],[53,89,199],[122,61,184],[214,56,143],[138,86,56],[145,201,62],[0,188,212],[244,91,105],[96,125,139]];
+    function distance(a,b){var dr=rgb[a][0]-rgb[b][0],dg=rgb[a][1]-rgb[b][1],db=rgb[a][2]-rgb[b][2];return Math.sqrt(.3*dr*dr+.59*dg*dg+.11*db*db)}
     for(var r=0;r<n;r++)for(var c=0;c<n;c++){var a=regions[r][c],b;if(r<n-1&&(b=regions[r+1][c])!==a){adjacent[a][b]=1;adjacent[b][a]=1}if(c<n-1&&(b=regions[r][c+1])!==a){adjacent[a][b]=1;adjacent[b][a]=1}}
-    order.sort(function(a,b){return Object.keys(adjacent[b]).length-Object.keys(adjacent[a]).length});
-    order.forEach(function(g){var used={};Object.keys(adjacent[g]).forEach(function(k){if(hues[k]!==undefined)used[hues[k]]=1});for(var j=0;j<preferred.length;j++){var candidate=preferred[(j+offset)%preferred.length];if(!used[candidate]&&hues.indexOf(candidate)<0){hues[g]=candidate;break}}if(hues[g]===undefined)for(var q=0;q<preferred.length;q++)if(!used[preferred[q]]){hues[g]=preferred[q];break}});
+    order.sort(function(a,b){return Object.keys(adjacent[b]).length-Object.keys(adjacent[a]).length||a-b});
+    order.forEach(function(g,index){
+      var neighbors=Object.keys(adjacent[g]).map(Number).filter(function(k){return hues[k]!==undefined}),best=-1,bestScore=-1;
+      for(var j=0;j<preferred.length;j++){
+        var candidate=preferred[(j+offset+index)%preferred.length];
+        if(hues.indexOf(candidate)>=0)continue;
+        var score=neighbors.length?Math.min.apply(null,neighbors.map(function(k){return distance(candidate,hues[k])})):200-j;
+        if(score>bestScore){best=candidate;bestScore=score}
+      }
+      hues[g]=best;
+    });
     return hues;
   }
   function makeBalancedVariant(index,variant,salt){

@@ -190,7 +190,7 @@
       <div class="mode-btn" aria-label="單擊標記或取消"><span class="mode-icon"><span class="mini-x"></span></span>單擊：X／取消</div>
       <div class="mode-btn" aria-label="連續雙擊放置貓咪"><span class="mode-icon" id="catModeIcon"></span>連按兩下：放貓</div>
     </section>
-    <p class="footer-note">所有 X 均由你手動標記；只有使用「推理一步」才會扣 1 顆心，三顆心用完遊戲便結束。<span class="version">Version 2026.10.06.1</span></p>
+    <p class="footer-note">所有 X 均由你手動標記；只有使用「推理一步」才會扣 1 顆心，三顆心用完遊戲便結束。<span class="version">Version 2026.10.06.2</span></p>
   </main>
 
   <dialog id="rulesDialog">
@@ -256,7 +256,71 @@
   function finish(win){state.locked=true;Object.keys(clickTimers).forEach(function(k){clearTimeout(clickTimers[k])});clickTimers={};var d=document.getElementById('resultDialog'),elapsed=Math.max(1,Math.floor((Date.now()-state.start)/1000));document.getElementById('timeStat').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');document.getElementById('mistakeStat').textContent=state.mistakes;document.getElementById('hintStat').textContent=state.hintsUsed;document.getElementById('moveStat').textContent=state.moves;document.getElementById('resultTitle').textContent='遊戲完結';document.getElementById('resultText').textContent=win?'恭喜完成第 '+(state.level+1)+' 關！':'三顆心已用完；你來到第 '+(state.level+1)+' 關。';document.getElementById('nextBtn').textContent=win?(state.level===99?'再玩一輪':'下一關'):'重新挑戰';document.getElementById('retryBtn').style.display=win?'block':'none';d.dataset.win=win?'1':'0';d.showModal();if(win)burst()}
   function newLevel(index){state.level=index;variants[index]++;puzzles[index]=makePuzzle(index);var p=puzzles[index];state.cells=new Array(p.size*p.size).fill('');state.history=[];state.hearts=3;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.start=Date.now();state.locked=false;state.focus=0;render();setLogic('新版圖已生成','單擊放 X，快速連按兩下可在任何空格放貓；所有 X 均需手動標記。','↻')}
   function undo(){if(state.locked||!state.history.length){showToast('沒有可復原的步驟');return}state.cells=state.history.pop();updateAll(false);setLogic('已復原一步','可繼續推理下一個位置。','↶')}
-  function hint(){if(state.locked)return;var p=puzzles[state.level],target=-1;for(var r=0;r<p.size;r++){var i=r*p.size+p.solution[r];if(state.cells[i]!=='cat'){target=i;break}}if(target<0)return;state.hintsUsed++;state.hearts=Math.max(0,state.hearts-1);paintHearts();vibrate(35);if(state.hearts<=0){setTimeout(function(){finish(false)},450);return}snapshot();state.cells[target]='cat';state.moves++;updateAll(false);board.children[target].classList.add('hinted');setLogic('推理一步：放貓','綜合行、列、區域與相鄰限制，亮起的位置可以確定。','✓');showToast('已扣 1 顆心');checkWin()}
+  function findLegalSolution(p,cells,forbidden){
+    var n=p.size,fixedRows=new Array(n).fill(-1),cats=[];
+    for(var i=0;i<cells.length;i++)if(cells[i]==='cat'){
+      var row=Math.floor(i/n);
+      if(fixedRows[row]>=0)return null;
+      fixedRows[row]=i;cats.push(i);
+    }
+    for(var a=0;a<cats.length;a++)for(var b=a+1;b<cats.length;b++)if(conflicts(cats[a],cats[b],p))return null;
+    var rows=[];
+    for(var r=0;r<n;r++){
+      var options=[];
+      if(fixedRows[r]>=0){
+        if(fixedRows[r]===forbidden)return null;
+        options.push(fixedRows[r]);
+      }else for(var c=0;c<n;c++){
+        var idx=r*n+c;
+        if(idx!==forbidden&&cells[idx]!=='x')options.push(idx);
+      }
+      if(!options.length)return null;
+      rows.push({row:r,options:options});
+    }
+    rows.sort(function(x,y){return x.options.length-y.options.length});
+    var chosen=[],usedCols=new Array(n).fill(false),usedRegions=new Array(n).fill(false),answer=new Array(n);
+    function search(k){
+      if(k===rows.length)return true;
+      var item=rows[k];
+      for(var q=0;q<item.options.length;q++){
+        var idx=item.options[q],rr=Math.floor(idx/n),cc=idx%n,reg=p.regions[rr][cc],ok=true;
+        if(usedCols[cc]||usedRegions[reg])continue;
+        for(var j=0;j<chosen.length;j++)if(conflicts(idx,chosen[j],p)){ok=false;break}
+        if(!ok)continue;
+        chosen.push(idx);usedCols[cc]=true;usedRegions[reg]=true;answer[rr]=idx;
+        if(search(k+1))return true;
+        chosen.pop();usedCols[cc]=false;usedRegions[reg]=false;answer[rr]=undefined;
+      }
+      return false;
+    }
+    return search(0)?answer:null;
+  }
+  function directConflictMessage(p){
+    var cats=[];
+    for(var i=0;i<state.cells.length;i++)if(state.cells[i]==='cat')cats.push(i);
+    for(var a=0;a<cats.length;a++)for(var b=a+1;b<cats.length;b++)if(conflicts(cats[a],cats[b],p)){
+      var ar=Math.floor(cats[a]/p.size)+1,ac=cats[a]%p.size+1,br=Math.floor(cats[b]/p.size)+1,bc=cats[b]%p.size+1;
+      return '第 '+ar+' 行第 '+ac+' 列與第 '+br+' 行第 '+bc+' 列的貓互相衝突，請先取消其中一隻。';
+    }
+    return '現有的貓咪或 X 標記令棋盤無法完成，請復原或取消有問題的標記。';
+  }
+  function hint(){
+    if(state.locked)return;
+    var p=puzzles[state.level],solution=findLegalSolution(p,state.cells,-1);
+    if(!solution){setLogic('棋面有矛盾',directConflictMessage(p),'!');showToast('請先修正矛盾');vibrate(35);return}
+    var target=-1;
+    for(var r=0;r<p.size;r++){
+      var candidate=solution[r];
+      if(state.cells[candidate]==='cat')continue;
+      if(!findLegalSolution(p,state.cells,candidate)){target=candidate;break}
+    }
+    if(target<0){setLogic('暫時未能確定貓位','目前有多個合法解法；請先用行、列、區域與相鄰規則標記更多 X。','?');showToast('沒有可確定的貓位');return}
+    state.hintsUsed++;state.hearts=Math.max(0,state.hearts-1);paintHearts();vibrate(35);
+    if(state.hearts<=0){setTimeout(function(){finish(false)},450);return}
+    snapshot();state.cells[target]='cat';state.moves++;updateAll(false);board.children[target].classList.add('hinted');
+    var tr=Math.floor(target/p.size)+1,tc=target%p.size+1;
+    setLogic('推理一步：放貓','所有符合目前棋面的解法，都會在第 '+tr+' 行第 '+tc+' 列放貓。','✓');showToast('已扣 1 顆心');checkWin()
+  }
   function onKey(e){var p=puzzles[state.level],i=+e.currentTarget.dataset.i,r=Math.floor(i/p.size),c=i%p.size,ni=i;if(e.key==='ArrowUp')ni=Math.max(0,r-1)*p.size+c;else if(e.key==='ArrowDown')ni=Math.min(p.size-1,r+1)*p.size+c;else if(e.key==='ArrowLeft')ni=r*p.size+Math.max(0,c-1);else if(e.key==='ArrowRight')ni=r*p.size+Math.min(p.size-1,c+1);else if(e.key===' '||e.key==='Enter'){e.preventDefault();singleTap(i);return}else if(e.key.toLowerCase()==='c'){e.preventDefault();placeCat(i);return}else return;e.preventDefault();focusCell(ni);board.children[ni].focus()}
   var toastTimer;function showToast(t){toast.textContent=t;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove('show')},1200)}function vibrate(ms){if(navigator.vibrate)navigator.vibrate(ms)}
   function burst(){var box=document.getElementById('confetti'),colors=['#ec6f5c','#f2b84b','#4aa98e','#6b8fd8'];box.innerHTML='';for(var i=0;i<26;i++){var x=document.createElement('i');x.style.left=(5+Math.random()*90)+'%';x.style.background=colors[i%colors.length];x.style.setProperty('--drift',(Math.random()*160-80)+'px');x.style.animationDelay=(Math.random()*.45)+'s';box.appendChild(x)}setTimeout(function(){box.innerHTML=''},2400)}

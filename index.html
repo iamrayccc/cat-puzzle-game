@@ -238,7 +238,7 @@
       <button class="mode-btn" id="xModeBtn" type="button" aria-pressed="true"><span class="mode-icon"><span class="mini-x"></span></span>標 X</button>
       <button class="mode-btn" id="catModeBtn" type="button" aria-pressed="false"><span class="mode-icon" id="catModeIcon"></span>放貓</button>
     </section>
-    <p class="footer-note">先選「標 X」或「放貓」，再單擊格子；每次放貓後都會自動切回「標 X」，單擊已有標記可取消。100 關均有唯一解，並可只靠邏輯推理完成；「全部清除」只清除標記。完成一關 +1000 分、每次提示 −100 分、每次扣心 −500 分，積分不低於 0。<span class="version">Version 2026.10.06.16</span></p>
+    <p class="footer-note">先選「標 X」或「放貓」，再單擊格子；每次放貓後都會自動切回「標 X」，單擊已有標記可取消。100 關均有唯一解，並可只靠邏輯推理完成；「全部清除」只清除標記。完成一關 +1000 分；每次使用提示扣 100 分；每扣 1 顆心扣 500 分；積分最低為 0 分。<span class="version">Version 2026.10.06.17</span></p>
   </main>
 
   <dialog id="rulesDialog">
@@ -249,8 +249,8 @@
         <li><span class="rule-number">2</span><div><strong>每個區域各一隻</strong><span>以粗邊界分隔的區域形狀不一，裡面一定剛好藏著一隻。</span></div></li>
         <li><span class="rule-number">3</span><div><strong>貓咪不能彼此相鄰</strong><span>連斜角也不行；放好後，周圍八格都可排除。</span></div></li>
         <li><span class="rule-number">4</span><div><strong>錯放貓咪會扣心</strong><span>若放貓後棋面再沒有合法解，會先顯示剛放的貓，再提示錯誤並扣 1 顆心，最後把該格改標為 X；心用完即遊戲結束。</span></div></li>
-        <li><span class="rule-number">5</span><div><strong>每關兩次提示</strong><span>每次使用扣 100 分，不扣心；用完後，到下一關會回復 2 次。</span></div></li>
-        <li><span class="rule-number">6</span><div><strong>積分與補心</strong><span>完成一關 +1000 分，扣心時 −500 分，積分最低為 0；每通過五關最多補回 1 顆心，心數上限為 5 顆。</span></div></li>
+        <li><span class="rule-number">5</span><div><strong>每關兩次提示</strong><span>每關可使用 2 次「推理一步」，提示不扣心；用完後，到下一關會回復 2 次。</span></div></li>
+        <li><span class="rule-number">6</span><div><strong>積分與補心</strong><span>完成一關 +1000 分；每次使用提示扣 100 分；每扣 1 顆心扣 500 分；積分最低為 0 分。每通過五關最多補回 1 顆心，心數上限為 5 顆。</span></div></li>
       </ol>
       <button class="primary close-rules" type="button">開始動腦</button>
     </div>
@@ -483,6 +483,7 @@
   function removeMark(i){if(state.locked||state.pendingCells[i]||state.cells[i]==='')return;snapshot();state.moves++;state.cells[i]='';updateCell(i,false);setLogic('已取消標記','目前選擇的標記模式保持不變。','↶');persistProgress()}
   function conflicts(a,b,p){var ar=Math.floor(a/p.size),ac=a%p.size,br=Math.floor(b/p.size),bc=b%p.size;return ar===br||ac===bc||p.regions[ar][ac]===p.regions[br][bc]||(Math.abs(ar-br)<=1&&Math.abs(ac-bc)<=1)}
   function commitWrongPlacement(i){
+    var scoreBeforePenalty=state.score;
     state.cells[i]='x';
     state.pendingCells[i]=true;
     state.hearts=Math.max(0,state.hearts-1);
@@ -490,7 +491,7 @@
     state.score=Math.max(0,state.score-500);
     if(state.hearts<=0)state.locked=true;
     persistProgress();
-    return state.hearts;
+    return{hearts:state.hearts,deducted:scoreBeforePenalty-state.score};
   }
   function placeCat(i){
     if(state.locked||state.pendingCells[i]||state.cells[i]!=='')return;
@@ -499,15 +500,16 @@
     Object.keys(state.pendingCells).forEach(function(key){validationCells[+key]='x'});
     updateCell(i,true);soundMeow();state.mode='x';paintMode();
     if(!findLegalSolution(p,validationCells,-1)){
-      var cell=board.children[i],heartAfterHit=commitWrongPlacement(i);cell.setAttribute('aria-busy','true');
+      var cell=board.children[i],penalty=commitWrongPlacement(i),heartAfterHit=penalty.hearts;cell.setAttribute('aria-busy','true');
       setLogic('正在檢查這隻貓','先看清楚剛放下的貓咪，棋面正在確認是否仍有合法解。','…');
       setTimeout(function(){
         paintScore();paintHearts();
         var heartBox=document.getElementById('hearts'),lostHeart=heartBox.querySelectorAll('.heart')[heartAfterHit];
         heartBox.classList.remove('heart-hit');void heartBox.offsetWidth;heartBox.classList.add('heart-hit');if(lostHeart)lostHeart.classList.add('breaking');
         cell.classList.add('wrong');soundClick();vibrate([70,45,110]);
-        setLogic('這格不能放貓','棋面已沒有合法解，扣除 1 顆心及 500 分。','!');
-        showToast('放錯了：扣 1 顆心及 500 分');
+        var penaltyText=penalty.deducted?'扣除 1 顆心及 '+penalty.deducted+' 分。':'扣除 1 顆心；積分已是 0 分，不再扣分。';
+        setLogic('這格不能放貓','棋面已沒有合法解，'+penaltyText,'!');
+        showToast(penalty.deducted?'放錯了：扣 1 顆心及 '+penalty.deducted+' 分':'放錯了：扣 1 顆心，積分維持 0 分');
       },700);
       setTimeout(function(){
         delete state.pendingCells[i];cell.classList.remove('wrong');cell.removeAttribute('aria-busy');updateCell(i,false);soundClick();
@@ -580,8 +582,12 @@
     var cats=[];
     for(var i=0;i<state.cells.length;i++)if(state.cells[i]==='cat')cats.push(i);
     for(var a=0;a<cats.length;a++)for(var b=a+1;b<cats.length;b++)if(conflicts(cats[a],cats[b],p)){
-      var ar=Math.floor(cats[a]/p.size)+1,ac=cats[a]%p.size+1,br=Math.floor(cats[b]/p.size)+1,bc=cats[b]%p.size+1;
-      return '第 '+ar+' 行第 '+ac+' 列與第 '+br+' 行第 '+bc+' 列的貓互相衝突，請先取消其中一隻。';
+      var ar=Math.floor(cats[a]/p.size)+1,ac=cats[a]%p.size+1,br=Math.floor(cats[b]/p.size)+1,bc=cats[b]%p.size+1,reason;
+      if(ar===br)reason='兩隻貓在同一行，違反「每行只可有一隻貓」';
+      else if(ac===bc)reason='兩隻貓在同一列，違反「每列只可有一隻貓」';
+      else if(p.regions[ar-1][ac-1]===p.regions[br-1][bc-1])reason='兩隻貓在同一色區，違反「每色區只可有一隻貓」';
+      else reason='兩隻貓彼此相鄰（包括斜角），違反「貓咪不能彼此相鄰」';
+      return '第 '+ar+' 行第 '+ac+' 列的貓與第 '+br+' 行第 '+bc+' 列的貓：'+reason+'。請先取消其中一隻。';
     }
     var core=state.cells.slice();
     for(var x=0;x<core.length;x++)if(core[x]!==''){
@@ -589,12 +595,22 @@
       if(!findLegalSolution(p,withoutMark,-1))core=withoutMark;
     }
     var bad=[];
-    for(var i=0;i<core.length;i++)if(core[i]!=='')bad.push({i:i,mark:core[i]});
-    if(bad.length){
-      var shown=bad.slice(0,4).map(function(item){return '第 '+(Math.floor(item.i/p.size)+1)+' 行第 '+(item.i%p.size+1)+' 列的 '+(item.mark==='cat'?'貓':'X')});
-      return shown.join('、')+(bad.length>4?'等 '+bad.length+' 個標記':'')+'互相造成矛盾，請先取消其中一個。';
+    for(var j=0;j<core.length;j++)if(core[j]!=='')bad.push({i:j,mark:core[j]});
+    for(var k=0;k<bad.length;k++)if(bad[k].mark==='x'){
+      var xr=Math.floor(bad[k].i/p.size)+1,xc=bad[k].i%p.size+1,withoutX=core.slice();withoutX[bad[k].i]='';
+      var recovered=findLegalSolution(p,withoutX,-1);
+      if(recovered&&recovered[xr-1]===bad[k].i)return '第 '+xr+' 行第 '+xc+' 列的 X 排除了目前唯一能完成棋面的貓位；保留其他標記時，只有把貓放在這格，才能同時滿足「每行、每列、每色區各一隻」及「貓咪不能相鄰」。請取消這個 X。';
     }
-    return '目前標記無法完成，請按「全部清除」後重新推理。';
+    if(bad.length){
+      var badX=bad.find(function(item){return item.mark==='x'});
+      if(badX){
+        var badXR=Math.floor(badX.i/p.size)+1,badXC=badX.i%p.size+1;
+        return '第 '+badXR+' 行第 '+badXC+' 列的 X 與其他標記矛盾，令棋面無法同時滿足所有規則。請先取消其中一個標記。';
+      }
+      var shown=bad.slice(0,4).map(function(item){return '第 '+(Math.floor(item.i/p.size)+1)+' 行第 '+(item.i%p.size+1)+' 列的 '+(item.mark==='cat'?'貓':'X')});
+      return '這組標記（'+shown.join('、')+(bad.length>4?'等共 '+bad.length+' 個標記':'')+'）令「每行、每列、每色區各一隻」及「貓咪不能相鄰」無法同時成立。請取消其中一個再推理。';
+    }
+    return '目前沒有任何位置能同時滿足「每行、每列、每色區各一隻」及「貓咪不能相鄰」。請按「全部清除」後重新推理。';
   }
   function hint(){
     if(state.locked)return;
@@ -610,12 +626,14 @@
     }
     if(target<0)for(var sr=0;sr<p.size;sr++)if(state.cells[solution[sr]]!=='cat'){target=solution[sr];break}
     if(target<0){checkWin();return}
-    snapshot();state.cells[target]='cat';state.moves++;state.hintsUsed++;state.hintsRemaining--;changeScore(-100);updateAll(false);soundMeow();paintHintButton();board.children[target].classList.add('hinted');vibrate(35);
-    var tr=Math.floor(target/p.size)+1,tc=target%p.size+1;
-    if(certain)setLogic('推理一步：確定貓位','所有符合目前棋面的解法，都會在第 '+tr+' 行第 '+tc+' 列放貓。已扣 100 分，不扣心。','✓');
-    else setLogic('推理一步：其中一個解','第 '+tr+' 行第 '+tc+' 列是其中一個符合目前標記的合法解位置。已扣 100 分，不扣心。','✓');
-    showToast('提示已放置貓咪：扣 100 分');
-    checkWin()
+    snapshot();state.cells[target]='cat';state.moves++;state.hintsUsed++;state.hintsRemaining--;
+    var scoreBeforeHint=state.score;changeScore(-100);var deducted=scoreBeforeHint-state.score;
+    state.mode='x';paintMode();updateAll(false);soundMeow();paintHintButton();board.children[target].classList.add('hinted');vibrate(35);
+    var tr=Math.floor(target/p.size)+1,tc=target%p.size+1,scoreText=deducted?'已扣 '+deducted+' 分，不扣心。':'積分已是 0 分，不再扣分；提示不扣心。';
+    if(certain)setLogic('推理一步：確定貓位','所有符合目前棋面的解法，都會在第 '+tr+' 行第 '+tc+' 列放貓。'+scoreText+'已自動切回「標 X」模式。','✓');
+    else setLogic('推理一步：其中一個解','第 '+tr+' 行第 '+tc+' 列是其中一個符合目前標記的合法解位置。'+scoreText+'已自動切回「標 X」模式。','✓');
+    showToast(deducted?'提示已放置貓咪：扣 '+deducted+' 分':'提示已放置貓咪：積分維持 0 分');
+    persistProgress();checkWin()
   }
   function onKey(e){var p=puzzles[state.level],i=+e.currentTarget.dataset.i,r=Math.floor(i/p.size),c=i%p.size,ni=i;if(e.key==='ArrowUp')ni=Math.max(0,r-1)*p.size+c;else if(e.key==='ArrowDown')ni=Math.min(p.size-1,r+1)*p.size+c;else if(e.key==='ArrowLeft')ni=r*p.size+Math.max(0,c-1);else if(e.key==='ArrowRight')ni=r*p.size+Math.min(p.size-1,c+1);else if(e.key===' '||e.key==='Enter'){e.preventDefault();if(state.cells[i]!=='')removeMark(i);else if(state.mode==='cat')placeCat(i);else placeX(i);return}else if(e.key.toLowerCase()==='c'){e.preventDefault();chooseMode('cat');return}else if(e.key.toLowerCase()==='x'){e.preventDefault();chooseMode('x');return}else return;e.preventDefault();focusCell(ni);board.children[ni].focus()}
   var toastTimer;function clearToast(){clearTimeout(toastTimer);toast.classList.remove('show');toast.textContent=''}function showToast(t){toast.textContent=t;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove('show')},1200)}function vibrate(ms){if(navigator.vibrate)navigator.vibrate(ms)}

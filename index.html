@@ -54,7 +54,7 @@
       display:flex; flex-direction:column;
     }
     .statusbar { display:flex; align-items:center; justify-content:flex-end; margin-bottom:12px; }
-    .level-meta { min-width:0; margin-bottom:16px; }
+    .level-meta { min-width:0; margin-bottom:16px; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:12px; }
     .status-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex:0 0 auto; width:100%; }
     .score { min-height:42px; display:flex; flex-direction:column; justify-content:center; align-items:flex-end; background:var(--panel); border:1px solid var(--soft-line); padding:5px 11px; border-radius:13px; box-shadow:0 5px 16px rgba(26,60,66,.08); font-variant-numeric:tabular-nums; }
     .score span { color:var(--muted); font-size:.65rem; font-weight:900; line-height:1; }
@@ -65,8 +65,8 @@
     .sound-btn .sound-off { display:none; }
     .sound-btn[aria-pressed="true"] .sound-on { display:none; }
     .sound-btn[aria-pressed="true"] .sound-off { display:block; }
-    .level-meta small { display:block; color:var(--muted); font-weight:800; font-size:.76rem; letter-spacing:.06em; margin-bottom:2px; }
-    .level-meta h1 { font-size:clamp(1.35rem,5vw,1.8rem); line-height:1.1; margin:0; font-weight:900; }
+    .level-meta small { display:block; color:var(--muted); font-weight:800; font-size:clamp(.64rem,2.4vw,.76rem); letter-spacing:.015em; text-align:right; white-space:nowrap; }
+    .level-meta h1 { min-width:0; font-size:clamp(1.15rem,4.7vw,1.8rem); line-height:1.1; margin:0; font-weight:900; }
     .hearts { display:flex; align-items:center; gap:5px; background:var(--panel); border:1px solid var(--soft-line); padding:9px 12px; border-radius:999px; box-shadow:0 5px 16px rgba(26,60,66,.08); }
     .heart { width:18px; height:17px; color:var(--accent); transition:opacity .2s, transform .2s; }
     .heart.lost { opacity:.18; transform:scale(.78); }
@@ -199,7 +199,7 @@
         <div class="hearts" aria-label="剩餘五次機會" id="hearts"></div>
       </div>
     </section>
-    <section class="level-meta" aria-label="關卡資料"><small id="levelCount">第 1／100 關</small><h1 id="levelName">午睡角落</h1></section>
+    <section class="level-meta" aria-label="關卡資料"><h1 id="levelName">午睡角落</h1><small id="levelCount">第 1／100 關</small></section>
 
     <nav class="top-actions" aria-label="遊戲工具">
       <button class="quiet-btn" id="rulesBtn" type="button" aria-label="查看玩法">

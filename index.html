@@ -68,12 +68,15 @@
     .level-meta small { display:block; color:var(--muted); font-weight:800; font-size:clamp(.64rem,2.4vw,.76rem); letter-spacing:.015em; text-align:right; white-space:nowrap; }
     .level-meta h1 { min-width:0; font-size:clamp(1.15rem,4.7vw,1.8rem); line-height:1.1; margin:0; font-weight:900; }
     .hearts { display:flex; align-items:center; gap:5px; background:var(--panel); border:1px solid var(--soft-line); padding:9px 12px; border-radius:999px; box-shadow:0 5px 16px rgba(26,60,66,.08); }
-    .heart { width:18px; height:17px; color:var(--accent); transition:opacity .2s, transform .2s; }
-    .heart.lost { opacity:.18; transform:scale(.78); }
-    .hearts.heart-hit { animation:heartHit .7s ease; }
-    .heart.breaking { animation:heartBreak .7s ease both; }
-    @keyframes heartHit { 25%{transform:scale(1.13);background:color-mix(in srgb,var(--bad) 16%,var(--panel))} 55%{transform:scale(.95)} }
-    @keyframes heartBreak { 0%{opacity:1;transform:scale(1)} 35%{opacity:1;transform:scale(1.35) rotate(-8deg)} 100%{opacity:.18;transform:scale(.78) rotate(12deg)} }
+    .heart { width:18px; height:17px; color:var(--accent); overflow:visible; transition:opacity .2s, transform .2s, filter .2s; }
+    .heart.lost { opacity:.18; transform:scale(.78); filter:grayscale(1); }
+    .heart-crack { fill:none; stroke:var(--panel); stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; opacity:0; }
+    .hearts.heart-hit { animation:heartHit .85s ease; }
+    .heart.breaking { animation:heartBreak .9s cubic-bezier(.22,.8,.32,1) both; }
+    .heart.breaking .heart-crack { animation:crackShow .9s ease both; }
+    @keyframes heartHit { 18%{transform:translateX(-3px);background:color-mix(in srgb,var(--bad) 18%,var(--panel))} 36%{transform:translateX(3px)} 54%{transform:translateX(-2px)} 100%{transform:none} }
+    @keyframes heartBreak { 0%{opacity:1;transform:translateY(0) scale(1);filter:none} 28%{opacity:1;transform:translateY(-3px) scale(1.38) rotate(-7deg);filter:none} 55%{opacity:.82;transform:translateY(2px) scale(1.02) rotate(8deg);filter:grayscale(.75)} 100%{opacity:.18;transform:translateY(9px) scale(.72) rotate(14deg);filter:grayscale(1)} }
+    @keyframes crackShow { 0%,20%{opacity:0;stroke-dasharray:16;stroke-dashoffset:16} 38%,100%{opacity:1;stroke-dasharray:16;stroke-dashoffset:0} }
     .top-actions { display:flex; gap:8px; margin-bottom:18px; }
     .quiet-btn { border:0; background:transparent; color:var(--muted); padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:800; display:flex; align-items:center; gap:6px; }
     .quiet-btn:hover, .quiet-btn:focus-visible { background:var(--panel-2); color:var(--ink); outline:none; }
@@ -235,7 +238,7 @@
       <button class="mode-btn" id="xModeBtn" type="button" aria-pressed="true"><span class="mode-icon"><span class="mini-x"></span></span>標 X</button>
       <button class="mode-btn" id="catModeBtn" type="button" aria-pressed="false"><span class="mode-icon" id="catModeIcon"></span>放貓</button>
     </section>
-    <p class="footer-note">先選「標 X」或「放貓」，再單擊格子；單擊已有標記可取消。每關版圖固定且各不相同，「全部清除」只清除標記。完成一關 +1000 分、每次提示 −100 分、每次扣心 −500 分，積分不低於 0。<span class="version">Version 2026.10.06.10</span></p>
+    <p class="footer-note">先選「標 X」或「放貓」，再單擊格子；成功放貓後會自動切回「標 X」，單擊已有標記可取消。每關版圖固定且各不相同，「全部清除」只清除標記。完成一關 +1000 分、每次提示 −100 分、每次扣心 −500 分，積分不低於 0。<span class="version">Version 2026.10.06.11</span></p>
   </main>
 
   <dialog id="rulesDialog">
@@ -338,9 +341,19 @@
     gain.gain.setValueAtTime(.001,now);gain.gain.linearRampToValueAtTime(.24,now+.035);gain.gain.setValueAtTime(.24,now+.18);gain.gain.exponentialRampToValueAtTime(.001,now+.5);
     harmonicGain.gain.value=.16;osc.connect(gain);harmonic.connect(harmonicGain);harmonicGain.connect(gain);gain.connect(masterGain);osc.start(now);harmonic.start(now);osc.stop(now+.52);harmonic.stop(now+.52);
   }
+  function soundComplete(){
+    if(muted)return;ensureAudio();if(!audioCtx||!masterGain)return;
+    var now=audioCtx.currentTime,notes=[523.25,659.25,783.99,1046.5];
+    notes.forEach(function(freq,index){
+      var start=now+index*.13,osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+      osc.type=index===3?'sine':'triangle';osc.frequency.setValueAtTime(freq,start);
+      gain.gain.setValueAtTime(.001,start);gain.gain.linearRampToValueAtTime(.16,start+.025);gain.gain.exponentialRampToValueAtTime(.001,start+.28);
+      osc.connect(gain);gain.connect(masterGain);osc.start(start);osc.stop(start+.3);
+    });
+  }
   var catSVG='<svg class="cat" viewBox="0 0 64 64" aria-hidden="true"><path d="M13 25 10 8l15 9a28 28 0 0 1 14 0l15-9-3 17c4 5 6 10 5 16-2 11-11 17-24 17S10 52 8 41c-1-6 1-11 5-16Z" fill="currentColor"/><path d="M18 17 14 12l1 9m31-4 4-5-1 9" fill="none" stroke="var(--panel)" stroke-width="2" stroke-linecap="round" opacity=".55"/><path d="M20 35h.1M44 35h.1" stroke="var(--panel)" stroke-width="5" stroke-linecap="round"/><path d="M29 42c2 2 4 2 6 0m-3-4v4" fill="none" stroke="var(--panel)" stroke-width="2.4" stroke-linecap="round"/><path d="M17 42 7 40m10 7L8 49m39-7 10-2m-10 7 9 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
   document.getElementById('catModeIcon').innerHTML=catSVG;document.getElementById('resultCat').innerHTML=catSVG;
-  function heartSVG(){return '<svg class="heart" viewBox="0 0 24 22" fill="currentColor" aria-hidden="true"><path d="M12 21S1 14.5 1 7.4C1 3.8 3.5 1 7 1c2.1 0 4 1.1 5 2.8C13 2.1 14.9 1 17 1c3.5 0 6 2.8 6 6.4C23 14.5 12 21 12 21Z"/></svg>'}
+  function heartSVG(){return '<svg class="heart" viewBox="0 0 24 22" fill="currentColor" aria-hidden="true"><path d="M12 21S1 14.5 1 7.4C1 3.8 3.5 1 7 1c2.1 0 4 1.1 5 2.8C13 2.1 14.9 1 17 1c3.5 0 6 2.8 6 6.4C23 14.5 12 21 12 21Z"/><path class="heart-crack" d="m13.5 3.5-3 5 3 2.8-3.2 5.2 1.2 4"/></svg>'}
   function paintHearts(){state.hearts=Math.min(MAX_HEARTS,Math.max(0,state.hearts));var h=document.getElementById('hearts');h.innerHTML='';for(var i=0;i<MAX_HEARTS;i++){var w=document.createElement('span');w.innerHTML=heartSVG();var svg=w.firstChild;if(i>=state.hearts)svg.classList.add('lost');h.appendChild(svg)}h.setAttribute('aria-label','剩餘'+state.hearts+'次機會')}
   function paintScore(){state.score=Math.max(0,state.score);document.getElementById('scoreValue').textContent=state.score.toLocaleString('zh-Hant')}
   function changeScore(delta){state.score=Math.max(0,state.score+delta);paintScore()}
@@ -370,7 +383,7 @@
         state.hearts=Math.max(0,state.hearts-1);state.mistakes++;changeScore(-500);paintHearts();if(state.hearts<=0)state.locked=true;
         var heartBox=document.getElementById('hearts'),lostHeart=heartBox.querySelectorAll('.heart')[state.hearts];
         heartBox.classList.remove('heart-hit');void heartBox.offsetWidth;heartBox.classList.add('heart-hit');if(lostHeart)lostHeart.classList.add('breaking');
-        cell.classList.add('wrong');soundClick();vibrate(80);
+        cell.classList.add('wrong');soundClick();vibrate([70,45,110]);
         setLogic('這格不能放貓','棋面已沒有合法解，扣除 1 顆心及 500 分。','!');
         showToast('放錯了：扣 1 顆心及 500 分');
       },700);
@@ -381,7 +394,7 @@
       },1500);
       return;
     }
-    setLogic('已放置貓咪','目前棋面仍有合法解；其他 X 仍由你手動標記。','✓');vibrate(25);checkWin()
+    state.mode='x';paintMode();setLogic('已放置貓咪','目前棋面仍有合法解，已自動切回「標 X」模式。','✓');vibrate(25);checkWin()
   }
   function updateAll(animate){for(var i=0;i<state.cells.length;i++)updateCell(i,animate&&state.cells[i]==='cat')}
   function setLogic(title,text,symbol){logicNote.innerHTML='<b>'+symbol+'</b><p><strong>'+title+'</strong>'+text+'</p>'}
@@ -394,7 +407,7 @@
       state.milestoneRewards[completed]=true;
       if(state.hearts<MAX_HEARTS){state.hearts=Math.min(MAX_HEARTS,state.hearts+1);recovered=true;paintHearts()}
     }
-    var d=document.getElementById('resultDialog'),elapsed=Math.max(1,Math.floor((Date.now()-state.start)/1000));document.getElementById('timeStat').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');document.getElementById('mistakeStat').textContent=state.mistakes;document.getElementById('hintStat').textContent=state.hintsUsed;document.getElementById('moveStat').textContent=state.moves;document.getElementById('scoreStat').textContent=state.score.toLocaleString('zh-Hant');document.getElementById('resultTitle').textContent=win?'完成第 '+completed+' 關':'遊戲完結';document.getElementById('resultText').textContent=win?('本關完成'+(earned?'，獲得 1000 分':'')+(recovered?'，並補回 1 顆心':'')+'。'):'5 顆心已用完；你來到第 '+completed+' 關，累計 '+state.score.toLocaleString('zh-Hant')+' 分。';document.getElementById('nextBtn').textContent=win?(state.level===99?'再玩一輪':'下一關'):'重新開始遊戲';document.getElementById('retryBtn').style.display=win?'block':'none';d.dataset.win=win?'1':'0';d.showModal();if(win)burst()
+    var d=document.getElementById('resultDialog'),elapsed=Math.max(1,Math.floor((Date.now()-state.start)/1000));document.getElementById('timeStat').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');document.getElementById('mistakeStat').textContent=state.mistakes;document.getElementById('hintStat').textContent=state.hintsUsed;document.getElementById('moveStat').textContent=state.moves;document.getElementById('scoreStat').textContent=state.score.toLocaleString('zh-Hant');document.getElementById('resultTitle').textContent=win?'完成第 '+completed+' 關':'遊戲完結';document.getElementById('resultText').textContent=win?('本關完成'+(earned?'，獲得 1000 分':'')+(recovered?'，並補回 1 顆心':'')+'。'):'5 顆心已用完；你來到第 '+completed+' 關，累計 '+state.score.toLocaleString('zh-Hant')+' 分。';document.getElementById('nextBtn').textContent=win?(state.level===99?'再玩一輪':'下一關'):'重新開始遊戲';document.getElementById('retryBtn').style.display=win?'block':'none';d.dataset.win=win?'1':'0';d.showModal();if(win){soundComplete();burst()}
   }
   function newLevel(index){state.level=index;var p=puzzles[index];state.cells=new Array(p.size*p.size).fill('');state.history=[];state.pendingCells={};state.hintsRemaining=2;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.start=Date.now();state.locked=false;state.resultShown=false;state.focus=0;render();setLogic('固定版圖已準備','先選「標 X」或「放貓」，再單擊格子；本關有 2 次提示。','↻')}
   function restartLevel(){

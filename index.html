@@ -238,12 +238,12 @@
       <button class="mode-btn" id="xModeBtn" type="button" aria-pressed="true"><span class="mode-icon"><span class="mini-x"></span></span>標 X</button>
       <button class="mode-btn" id="catModeBtn" type="button" aria-pressed="false"><span class="mode-icon" id="catModeIcon"></span>放貓</button>
     </section>
-    <p class="footer-note">先選「標 X」或「放貓」，再單擊格子；成功放貓後會自動切回「標 X」，單擊已有標記可取消。每關版圖固定且各不相同，「全部清除」只清除標記。完成一關 +1000 分、每次提示 −100 分、每次扣心 −500 分，積分不低於 0。<span class="version">Version 2026.10.06.11</span></p>
+    <p class="footer-note">先選「標 X」或「放貓」，再單擊格子；成功放貓後會自動切回「標 X」，單擊已有標記可取消。100 關均有唯一解，並可只靠邏輯推理完成；「全部清除」只清除標記。完成一關 +1000 分、每次提示 −100 分、每次扣心 −500 分，積分不低於 0。<span class="version">Version 2026.10.06.12</span></p>
   </main>
 
   <dialog id="rulesDialog">
     <div class="sheet">
-      <div class="sheet-head"><div><h2>找出所有躲起來的貓咪</h2><p>100 關各有固定而不同的版圖，並會由淺入深逐步加大棋盤及提高區域變化。先選「標 X」或「放貓」，再單擊格子；已有標記時單擊即可取消。「全部清除」只會移除標記，不會更換版圖。</p></div><button class="close-btn" type="button" aria-label="關閉">×</button></div>
+      <div class="sheet-head"><div><h2>找出所有躲起來的貓咪</h2><p>100 關各有固定而不同的唯一解版圖，並已驗證可只靠行、列、色區與相鄰排除等邏輯逐步解出，不需要瞎猜；難度會由淺入深。先選「標 X」或「放貓」，再單擊格子；已有標記時單擊即可取消。「全部清除」只會移除標記，不會更換版圖。</p></div><button class="close-btn" type="button" aria-label="關閉">×</button></div>
       <ol class="rules-list">
         <li><span class="rule-number">1</span><div><strong>每一行、每一列各一隻</strong><span>同一橫行或直列不能出現第二隻貓咪。</span></div></li>
         <li><span class="rule-number">2</span><div><strong>每個區域各一隻</strong><span>以粗邊界分隔的區域形狀不一，裡面一定剛好藏著一隻。</span></div></li>
@@ -278,6 +278,75 @@
   function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
   function shuffle(a,rand){for(var j=a.length-1;j>0;j--){var k=Math.floor(rand()*(j+1)),v=a[j];a[j]=a[k];a[k]=v}return a}
   function levelSpec(index){var no=index+1,difficulty=index/(TOTAL-1);if(no<=20)return{size:6,colors:6,label:'入門',difficulty:difficulty};if(no<=50)return{size:9,colors:9,label:'進階',difficulty:difficulty};return{size:11,colors:11,label:'高手',difficulty:difficulty}}
+  var VERIFIED_BASES=[{"n":6,"r":"001111011111211111211311255334255444","s":"140352"},{"n":6,"r":"000111241111244444244443444443444455","s":"130524"},{"n":6,"r":"113300113300113322333333433333455333","s":"415302"},{"n":9,"r":"000333333000331112333333322333333333333343333553343333555543663777743333788743333","s":"258640731"},{"n":9,"r":"440000113444444113442444443442444443444444444444455555644447778644447778444447888","s":"362814057"},{"n":9,"r":"211100885221188885228888885448888385848888385888888885888668885887788888888888888","s":"530618427"},{"n":9,"r":"111444400111444444224444444224444334244444444244445444664445744664488744644488444","s":"820735164"},{"n":11,"r":"aa000aa3344aa0011a3344aaa111a3224aaa56aa3224aaa56aaaa44a5556aaaaaaaaa66aaaaaaaaa8aaaa7aaaaa8aaaa7aa99aaaaaaaaaaaaaaaaaaaa","s":"2597a148306"},{"n":11,"r":"11117700000222117000002227777777755777777773557777774737577777746677777777766777777777777777777877777797778777aa997777777","s":"642a8195730"},{"n":11,"r":"110000666661116006666246663366662466633666664666666666666666655666666666666666686676666666866796666666667966666666699aa66","s":"31a40795268"},{"n":11,"r":"000004444410002244444133442444444334444444443344444444488444444555884444665778844444447788944444444999444444449994444aaaa","s":"3a415869027"},{"n":11,"r":"33333111000333332211003333322333333333333333443533333333335333333333333663333377333333333393338833333933388aa33333338aaa3","s":"a8640351729"},{"n":11,"r":"221100aaaaa2211aaaaaaa22aaaaaaaaa55533aa44445553aaa44445557aaaa666aaa7aaaa666aaa7aaaaaaaaaaaaaaaa88aaaaaaaa998aaaaaaaaaaa","s":"52047193a86"},{"n":11,"r":"1100000666611330026666113336266661133366666655533666644555566666666667666666686676666666866666666696666666666966666666aa9","s":"516492730a8"}];
+  function transformVerified(base,turn){
+    var n=base.n,flat=base.r.split('').map(function(v){return parseInt(v,36)}),solution=base.s.split('').map(function(v){return parseInt(v,36)}),out=new Array(n*n),nextSolution=new Array(n);
+    function xy(r,c){if(turn===0)return[r,c];if(turn===1)return[c,n-1-r];if(turn===2)return[n-1-r,n-1-c];if(turn===3)return[n-1-c,r];if(turn===4)return[r,n-1-c];if(turn===5)return[n-1-r,c];if(turn===6)return[c,r];return[n-1-c,n-1-r]}
+    for(var r=0;r<n;r++)for(var c=0;c<n;c++){var at=xy(r,c);out[at[0]*n+at[1]]=flat[r*n+c]}
+    for(var row=0;row<n;row++){var cat=xy(row,solution[row]);nextSolution[cat[0]]=cat[1]}
+    var regions=[];for(var rr=0;rr<n;rr++)regions.push(out.slice(rr*n,(rr+1)*n));
+    return{size:n,colors:n,regions:regions,solution:nextSolution};
+  }
+  function puzzleConflict(a,b,p){var n=p.size,ar=Math.floor(a/n),ac=a%n,br=Math.floor(b/n),bc=b%n;return ar===br||ac===bc||p.regions[ar][ac]===p.regions[br][bc]||(Math.abs(ar-br)<=1&&Math.abs(ac-bc)<=1)}
+  function countPuzzleSolutions(p,limit){
+    var n=p.size,usedCols=new Array(n).fill(false),usedRegions=new Array(n).fill(false),chosen=[],count=0;
+    function search(row){
+      if(count>=limit)return;if(row===n){count++;return}
+      for(var c=0;c<n;c++){
+        var reg=p.regions[row][c];
+        if(usedCols[c]||usedRegions[reg]||(row&&Math.abs(chosen[row-1]-c)<=1))continue;
+        chosen[row]=c;usedCols[c]=true;usedRegions[reg]=true;search(row+1);usedCols[c]=false;usedRegions[reg]=false;
+      }
+    }
+    search(0);return count;
+  }
+  function logicalSolvePuzzle(p){
+    var n=p.size,total=n*n,candidates=new Array(total).fill(true),cats=new Array(total).fill(false),units=[],steps=0,direct=0,combined=0;
+    for(var r=0;r<n;r++)units.push(Array.from({length:n},function(_,c){return r*n+c}));
+    for(var c=0;c<n;c++)units.push(Array.from({length:n},function(_,r){return r*n+c}));
+    for(var reg=0;reg<n;reg++){var area=[];for(var i=0;i<total;i++)if(p.regions[Math.floor(i/n)][i%n]===reg)area.push(i);units.push(area)}
+    function place(i){if(cats[i])return;cats[i]=true;for(var j=0;j<total;j++)if(j!==i&&candidates[j]&&puzzleConflict(i,j,p))candidates[j]=false;steps++}
+    while(true){
+      var changed=false;
+      for(var u=0;u<units.length;u++){
+        var placed=units[u].filter(function(i){return cats[i]}),options;
+        if(placed.length>1)return{solved:false,steps:steps,direct:direct,combined:combined};
+        if(placed.length)continue;
+        options=units[u].filter(function(i){return candidates[i]});
+        if(!options.length)return{solved:false,steps:steps,direct:direct,combined:combined};
+        if(options.length===1){place(options[0]);direct++;changed=true;break}
+      }
+      if(changed)continue;
+      for(var g=0;g<units.length;g++){
+        if(units[g].some(function(i){return cats[i]}))continue;
+        var opts=units[g].filter(function(i){return candidates[i]});
+        if(opts.length<2)continue;
+        for(var target=0;target<total;target++)if(candidates[target]&&opts.indexOf(target)<0&&opts.every(function(i){return puzzleConflict(i,target,p)})){
+          candidates[target]=false;steps++;combined++;changed=true;break;
+        }
+        if(changed)break;
+      }
+      if(!changed)break;
+    }
+    return{solved:cats.filter(Boolean).length===n,steps:steps,direct:direct,combined:combined};
+  }
+  function buildVerifiedPuzzles(){
+    var targets={6:20,9:30,11:50},generated=[],seen={};
+    [6,9,11].forEach(function(n){
+      var band=[],bases=VERIFIED_BASES.filter(function(base){return base.n===n});
+      for(var b=0;b<bases.length;b++)for(var turn=0;turn<8;turn++){
+        var p=transformVerified(bases[b],turn),signature=puzzleSignature(p);
+        if(seen[signature])continue;
+        var unique=countPuzzleSolutions(p,2)===1,logic=logicalSolvePuzzle(p);
+        if(!unique||!logic.solved)continue;
+        seen[signature]=true;p.logicSteps=logic.steps;p.logicCombined=logic.combined;band.push(p);
+      }
+      band.sort(function(a,b){return a.logicSteps-b.logicSteps||a.logicCombined-b.logicCombined||puzzleSignature(a).localeCompare(puzzleSignature(b))});
+      if(band.length<targets[n])throw new Error('沒有足夠已驗證的 '+n+'×'+n+' 邏輯版圖');
+      generated=generated.concat(n===11?band.slice(band.length-targets[n]):band.slice(0,targets[n]));
+    });
+    return generated.map(function(p,index){var spec=levelSpec(index),rand=rng(fixedSeed(index,p.logicSteps));p.name=first[index%10]+second[Math.floor(index/10)];p.label=spec.label;p.difficulty=spec.difficulty;p.regionHues=shuffle(Array.from({length:p.size},function(_,i){return i}),rand);return p});
+  }
   function makeSolution(n,rand){var cols=shuffle(Array.from({length:n},function(_,i){return i}),rand);for(var tries=0;tries<5000;tries++){shuffle(cols,rand);var ok=true;for(var r=1;r<n;r++)if(Math.abs(cols[r]-cols[r-1])<=1){ok=false;break}if(ok)return cols.slice()}var out=[],used={};function go(r){if(r===n)return true;var choices=shuffle(Array.from({length:n},function(_,i){return i}),rand);for(var q=0;q<n;q++){var c=choices[q];if(used[c]||(r&&Math.abs(c-out[r-1])<=1))continue;used[c]=1;out[r]=c;if(go(r+1))return true;delete used[c]}return false}go(0);return out}
   function fixedSeed(index,salt){var x=(PUZZLE_SEED^Math.imul(index+1,0x9e3779b1)^Math.imul(salt+1,0x85ebca6b))>>>0;x=Math.imul(x^(x>>>16),0x7feb352d);x=Math.imul(x^(x>>>15),0x846ca68b);return(x^(x>>>16))>>>0}
   function makePuzzle(index,salt){
@@ -319,36 +388,53 @@
     bands.forEach(function(band){var sorted=generated.slice(band[0],band[1]).sort(function(a,b){return a.measuredDifficulty-b.measuredDifficulty});for(var j=0;j<sorted.length;j++){var level=band[0]+j,spec=levelSpec(level);sorted[j].name=first[level%10]+second[Math.floor(level/10)];sorted[j].label=spec.label;sorted[j].difficulty=spec.difficulty;out[level]=sorted[j]}});
     return out;
   }
-  var puzzles=buildPuzzles(), state={level:0,cells:[],history:[],hearts:MAX_HEARTS,hintsRemaining:2,mistakes:0,hintsUsed:0,moves:0,score:0,mode:'x',start:Date.now(),locked:false,pendingCells:{},resultShown:false,focus:0,milestoneRewards:{}};
+  var puzzles=buildVerifiedPuzzles(), state={level:0,cells:[],history:[],hearts:MAX_HEARTS,hintsRemaining:2,mistakes:0,hintsUsed:0,moves:0,score:0,mode:'x',start:Date.now(),locked:false,pendingCells:{},resultShown:false,focus:0,milestoneRewards:{}};
   var board=document.getElementById('board'),toast=document.getElementById('toast'),logicNote=document.getElementById('logicNote');
-  var audioCtx=null,masterGain=null,muted=false;
+  var audioCtx=null,masterGain=null,muted=false,audioQueueTime=0;
   function ensureAudio(){
-    if(!audioCtx){var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;audioCtx=new AC();masterGain=audioCtx.createGain();masterGain.gain.value=.42;masterGain.connect(audioCtx.destination)}
-    if(audioCtx.state==='suspended')audioCtx.resume();
+    var AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return Promise.resolve(false);
+    if(!audioCtx||audioCtx.state==='closed'){
+      audioCtx=new AC();masterGain=audioCtx.createGain();masterGain.gain.value=.42;masterGain.connect(audioCtx.destination);audioQueueTime=0;
+    }
+    if(audioCtx.state==='running')return Promise.resolve(true);
+    return audioCtx.resume().then(function(){return audioCtx.state==='running'}).catch(function(){return false});
+  }
+  function queueSound(duration,draw){
+    if(muted)return;
+    ensureAudio().then(function(ready){
+      if(!ready||muted||!audioCtx||!masterGain)return;
+      var now=audioCtx.currentTime,start=Math.max(now+.012,audioQueueTime);
+      audioQueueTime=start+duration;
+      draw(start);
+    });
   }
   function soundClick(){
-    if(muted)return;ensureAudio();if(!audioCtx||!masterGain)return;
-    var now=audioCtx.currentTime,osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
-    osc.type='square';osc.frequency.setValueAtTime(1250,now);osc.frequency.exponentialRampToValueAtTime(190,now+.045);
-    gain.gain.setValueAtTime(.18,now);gain.gain.exponentialRampToValueAtTime(.001,now+.05);
-    osc.connect(gain);gain.connect(masterGain);osc.start(now);osc.stop(now+.055);
+    queueSound(.065,function(now){
+      var osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+      osc.type='square';osc.frequency.setValueAtTime(1250,now);osc.frequency.exponentialRampToValueAtTime(190,now+.045);
+      gain.gain.setValueAtTime(.18,now);gain.gain.exponentialRampToValueAtTime(.001,now+.05);
+      osc.connect(gain);gain.connect(masterGain);osc.start(now);osc.stop(now+.055);
+    });
   }
   function soundMeow(){
-    if(muted)return;ensureAudio();if(!audioCtx||!masterGain)return;
-    var now=audioCtx.currentTime,osc=audioCtx.createOscillator(),harmonic=audioCtx.createOscillator(),gain=audioCtx.createGain(),harmonicGain=audioCtx.createGain();
-    osc.type='triangle';osc.frequency.setValueAtTime(540,now);osc.frequency.linearRampToValueAtTime(920,now+.13);osc.frequency.exponentialRampToValueAtTime(430,now+.48);
-    harmonic.type='sine';harmonic.frequency.setValueAtTime(1080,now);harmonic.frequency.linearRampToValueAtTime(1840,now+.13);harmonic.frequency.exponentialRampToValueAtTime(860,now+.48);
-    gain.gain.setValueAtTime(.001,now);gain.gain.linearRampToValueAtTime(.24,now+.035);gain.gain.setValueAtTime(.24,now+.18);gain.gain.exponentialRampToValueAtTime(.001,now+.5);
-    harmonicGain.gain.value=.16;osc.connect(gain);harmonic.connect(harmonicGain);harmonicGain.connect(gain);gain.connect(masterGain);osc.start(now);harmonic.start(now);osc.stop(now+.52);harmonic.stop(now+.52);
+    queueSound(.54,function(now){
+      var osc=audioCtx.createOscillator(),harmonic=audioCtx.createOscillator(),gain=audioCtx.createGain(),harmonicGain=audioCtx.createGain();
+      osc.type='triangle';osc.frequency.setValueAtTime(540,now);osc.frequency.linearRampToValueAtTime(920,now+.13);osc.frequency.exponentialRampToValueAtTime(430,now+.48);
+      harmonic.type='sine';harmonic.frequency.setValueAtTime(1080,now);harmonic.frequency.linearRampToValueAtTime(1840,now+.13);harmonic.frequency.exponentialRampToValueAtTime(860,now+.48);
+      gain.gain.setValueAtTime(.001,now);gain.gain.linearRampToValueAtTime(.24,now+.035);gain.gain.setValueAtTime(.24,now+.18);gain.gain.exponentialRampToValueAtTime(.001,now+.5);
+      harmonicGain.gain.value=.16;osc.connect(gain);harmonic.connect(harmonicGain);harmonicGain.connect(gain);gain.connect(masterGain);osc.start(now);harmonic.start(now);osc.stop(now+.52);harmonic.stop(now+.52);
+    });
   }
   function soundComplete(){
-    if(muted)return;ensureAudio();if(!audioCtx||!masterGain)return;
-    var now=audioCtx.currentTime,notes=[523.25,659.25,783.99,1046.5];
-    notes.forEach(function(freq,index){
-      var start=now+index*.13,osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
-      osc.type=index===3?'sine':'triangle';osc.frequency.setValueAtTime(freq,start);
-      gain.gain.setValueAtTime(.001,start);gain.gain.linearRampToValueAtTime(.16,start+.025);gain.gain.exponentialRampToValueAtTime(.001,start+.28);
-      osc.connect(gain);gain.connect(masterGain);osc.start(start);osc.stop(start+.3);
+    queueSound(.72,function(now){
+      var notes=[523.25,659.25,783.99,1046.5];
+      notes.forEach(function(freq,index){
+        var start=now+index*.13,osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+        osc.type=index===3?'sine':'triangle';osc.frequency.setValueAtTime(freq,start);
+        gain.gain.setValueAtTime(.001,start);gain.gain.linearRampToValueAtTime(.16,start+.025);gain.gain.exponentialRampToValueAtTime(.001,start+.28);
+        osc.connect(gain);gain.connect(masterGain);osc.start(start);osc.stop(start+.3);
+      });
     });
   }
   var catSVG='<svg class="cat" viewBox="0 0 64 64" aria-hidden="true"><path d="M13 25 10 8l15 9a28 28 0 0 1 14 0l15-9-3 17c4 5 6 10 5 16-2 11-11 17-24 17S10 52 8 41c-1-6 1-11 5-16Z" fill="currentColor"/><path d="M18 17 14 12l1 9m31-4 4-5-1 9" fill="none" stroke="var(--panel)" stroke-width="2" stroke-linecap="round" opacity=".55"/><path d="M20 35h.1M44 35h.1" stroke="var(--panel)" stroke-width="5" stroke-linecap="round"/><path d="M29 42c2 2 4 2 6 0m-3-4v4" fill="none" stroke="var(--panel)" stroke-width="2.4" stroke-linecap="round"/><path d="M17 42 7 40m10 7L8 49m39-7 10-2m-10 7 9 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -498,8 +584,13 @@
   function onKey(e){var p=puzzles[state.level],i=+e.currentTarget.dataset.i,r=Math.floor(i/p.size),c=i%p.size,ni=i;if(e.key==='ArrowUp')ni=Math.max(0,r-1)*p.size+c;else if(e.key==='ArrowDown')ni=Math.min(p.size-1,r+1)*p.size+c;else if(e.key==='ArrowLeft')ni=r*p.size+Math.max(0,c-1);else if(e.key==='ArrowRight')ni=r*p.size+Math.min(p.size-1,c+1);else if(e.key===' '||e.key==='Enter'){e.preventDefault();if(state.cells[i]!=='')removeMark(i);else if(state.mode==='cat')placeCat(i);else placeX(i);return}else if(e.key.toLowerCase()==='c'){e.preventDefault();chooseMode('cat');return}else if(e.key.toLowerCase()==='x'){e.preventDefault();chooseMode('x');return}else return;e.preventDefault();focusCell(ni);board.children[ni].focus()}
   var toastTimer;function showToast(t){toast.textContent=t;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove('show')},1200)}function vibrate(ms){if(navigator.vibrate)navigator.vibrate(ms)}
   function burst(){var box=document.getElementById('confetti'),colors=['#ec6f5c','#f2b84b','#4aa98e','#6b8fd8'];box.innerHTML='';for(var i=0;i<26;i++){var x=document.createElement('i');x.style.left=(5+Math.random()*90)+'%';x.style.background=colors[i%colors.length];x.style.setProperty('--drift',(Math.random()*160-80)+'px');x.style.animationDelay=(Math.random()*.45)+'s';box.appendChild(x)}setTimeout(function(){box.innerHTML=''},2400)}
-  function toggleSound(){ensureAudio();muted=!muted;var btn=document.getElementById('soundBtn');btn.setAttribute('aria-pressed',muted?'true':'false');btn.setAttribute('aria-label',muted?'開啟音效':'靜音');btn.title=muted?'開啟音效':'靜音';showToast(muted?'音效已關閉':'音效已開啟')}
-  document.addEventListener('pointerdown',ensureAudio,{once:true,capture:true});document.addEventListener('keydown',ensureAudio,{once:true,capture:true});
+  function toggleSound(){
+    muted=!muted;
+    ensureAudio().then(function(ready){if(ready&&masterGain){masterGain.gain.cancelScheduledValues(audioCtx.currentTime);masterGain.gain.setValueAtTime(muted?0:.42,audioCtx.currentTime);if(!muted)audioQueueTime=audioCtx.currentTime}});
+    var btn=document.getElementById('soundBtn');btn.setAttribute('aria-pressed',muted?'true':'false');btn.setAttribute('aria-label',muted?'開啟音效':'靜音');btn.title=muted?'開啟音效':'靜音';showToast(muted?'音效已關閉':'音效已開啟')
+  }
+  function unlockAudio(){if(!muted)ensureAudio()}
+  document.addEventListener('pointerdown',unlockAudio,{capture:true,passive:true});document.addEventListener('keydown',unlockAudio,{capture:true});document.addEventListener('visibilitychange',function(){if(!document.hidden&&!muted)ensureAudio()});
   var rules=document.getElementById('rulesDialog'),result=document.getElementById('resultDialog');document.getElementById('soundBtn').onclick=toggleSound;document.getElementById('xModeBtn').onclick=function(){chooseMode('x')};document.getElementById('catModeBtn').onclick=function(){chooseMode('cat')};document.getElementById('rulesBtn').onclick=function(){rules.showModal()};rules.querySelectorAll('.close-btn,.close-rules').forEach(function(b){b.onclick=function(){rules.close()}});document.getElementById('undoBtn').onclick=undo;document.getElementById('restartBtn').onclick=restartLevel;document.getElementById('hintBtn').onclick=hint;document.getElementById('nextBtn').onclick=function(){var won=result.dataset.win==='1',finishedAll=won&&state.level===99;result.close();if(!won||finishedAll){state.hearts=MAX_HEARTS;state.score=0;state.milestoneRewards={};newLevel(0);return}newLevel(state.level+1)};document.getElementById('retryBtn').onclick=function(){result.close();newLevel(state.level)};[rules,result].forEach(function(d){d.addEventListener('click',function(e){if(e.target===d&&d===rules)d.close()})});newLevel(0);
 })();
 </script>

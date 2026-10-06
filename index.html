@@ -243,7 +243,7 @@
       <button class="mode-btn" id="xModeBtn" type="button" aria-pressed="true"><span class="mode-icon"><span class="mini-x"></span></span>標 X</button>
       <button class="mode-btn" id="catModeBtn" type="button" aria-pressed="false"><span class="mode-icon" id="catModeIcon"></span>放貓</button>
     </section>
-    <p class="footer-note">先選「標 X」或「放貓」，再單擊格子；每次放貓後都會自動切回「標 X」，單擊已有標記可取消。每關有 3 幅隨機版圖，色區大小均衡、完整連通，並保留純邏輯推理玩法；「全部清除」只清除標記。完成一關 +1000 分；每次使用找貓提示扣 100 分；每扣 1 顆心扣 500 分；積分最低為 0 分。<span class="version">Version 2026.10.06.23</span></p>
+    <p class="footer-note"><span class="version">Version 2026.10.06.24</span></p>
   </main>
 
   <dialog id="rulesDialog">
@@ -567,13 +567,6 @@
   function onCell(e){if(state.locked)return;var i=+e.currentTarget.dataset.i;if(state.pendingCells[i])return;focusCell(i);if(state.cells[i]!==''){removeMark(i);return}if(state.mode==='cat')placeCat(i);else placeX(i)}
   function placeX(i){
     if(state.locked||state.pendingCells[i]||state.cells[i]!=='')return;
-    var p=currentPuzzle(),currentSolution=findLegalSolution(p,state.cells,-1);
-    if(!currentSolution){setLogic('棋面已有矛盾',directConflictMessage(p),'!');showToast('請先修正較早的標記');vibrate(35);return}
-    var trial=state.cells.slice();trial[i]='x';
-    if(!findLegalSolution(p,trial,-1)){
-      var row=Math.floor(i/p.size)+1,col=i%p.size+1;
-      setLogic('這格不能標 X','所有符合目前棋面的合法解，都會在第 '+row+' 行第 '+col+' 列放貓；已阻止這個 X，不扣心。','!');showToast('這格必須放貓，不能標 X');vibrate(35);return;
-    }
     snapshot();state.moves++;state.cells[i]='x';updateCell(i,false);soundClick();setLogic('已標記不能放','目前是「標 X」模式；單擊已有標記可取消。','×');persistProgress()
   }
   function removeMark(i){if(state.locked||state.pendingCells[i]||state.cells[i]==='')return;snapshot();state.moves++;state.cells[i]='';updateCell(i,false);setLogic('已取消標記','目前選擇的標記模式保持不變。','↶');persistProgress()}

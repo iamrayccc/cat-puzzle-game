@@ -99,7 +99,6 @@
     .cell {
       position:relative; border:0; margin:0; padding:0; min-width:0; cursor:pointer;
       background:var(--cell-bg); outline:0; display:grid; place-items:center; touch-action:manipulation;
-      box-shadow:inset calc(var(--bl)*1px) 0 0 var(--grid-line), inset calc(var(--br)*-1px) 0 0 var(--grid-line), inset 0 calc(var(--bt)*1px) 0 var(--grid-line), inset 0 calc(var(--bb)*-1px) 0 var(--grid-line);
     }
     .cell::after { content:""; position:absolute; inset:3px; border:2px solid transparent; border-radius:7px; pointer-events:none; }
     .cell:hover::after { border-color:rgba(255,255,255,.62); }
@@ -247,7 +246,7 @@
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </section>
 
-    <p class="footer-note"><span class="version">Version 2026.10.06.26</span></p>
+    <p class="footer-note"><span class="version">Version 2026.10.06.27</span></p>
   </main>
 
   <dialog id="rulesDialog">
@@ -600,8 +599,7 @@
   function paintMode(){document.getElementById('xModeBtn').setAttribute('aria-pressed',state.mode==='x'?'true':'false');document.getElementById('catModeBtn').setAttribute('aria-pressed',state.mode==='cat'?'true':'false')}
   function chooseMode(mode){state.mode=mode;paintMode();setLogic(mode==='cat'?'已選擇放貓':'已選擇標 X',mode==='cat'?'單擊空白格放貓；單擊已有標記可取消。':'單擊空白格標 X；單擊已有標記可取消。',mode==='cat'?'●':'×')}
   function paintHintButton(){var btn=document.getElementById('hintBtn'),label=document.getElementById('hintLabel'),used=state.hintsRemaining<=0;label.textContent=used?'找貓提示 · 已用完':'找貓提示 · 剩餘 '+state.hintsRemaining+' 次';btn.setAttribute('aria-label',used?'找貓提示，本關已用完':'找貓提示，本關剩餘'+state.hintsRemaining+'次');btn.classList.toggle('hint-used',used)}
-  function edge(p,r,c,dr,dc){var rr=r+dr,cc=c+dc;return rr<0||cc<0||rr>=p.size||cc>=p.size||p.regions[rr][cc]!==p.regions[r][c]}
-  function render(){var p=currentPuzzle();board.innerHTML='';board.style.gridTemplateColumns='repeat('+p.size+',1fr)';board.style.gridTemplateRows='repeat('+p.size+',1fr)';document.getElementById('levelCount').textContent='第 '+(state.level+1)+'／'+TOTAL+' 關 · '+p.label+' · '+p.size+'×'+p.size+' · '+p.colors+' 色';document.getElementById('levelName').textContent=p.name;for(var r=0;r<p.size;r++)for(var c=0;c<p.size;c++){var i=r*p.size+c,b=document.createElement('button');b.type='button';b.className='cell';b.dataset.i=i;b.setAttribute('role','gridcell');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，空白');b.tabIndex=i===state.focus?0:-1;b.style.setProperty('--cell-bg',palette[p.regionHues[p.regions[r][c]]]);b.style.setProperty('--bt',edge(p,r,c,-1,0)?1:0);b.style.setProperty('--bb',edge(p,r,c,1,0)?1:0);b.style.setProperty('--bl',edge(p,r,c,0,-1)?1:0);b.style.setProperty('--br',edge(p,r,c,0,1)?1:0);b.addEventListener('click',onCell);b.addEventListener('keydown',onKey);board.appendChild(b)}paintHearts();paintScore();paintMode();paintHintButton()}
+  function render(){var p=currentPuzzle();board.innerHTML='';board.style.gridTemplateColumns='repeat('+p.size+',1fr)';board.style.gridTemplateRows='repeat('+p.size+',1fr)';document.getElementById('levelCount').textContent='第 '+(state.level+1)+'／'+TOTAL+' 關 · '+p.label+' · '+p.size+'×'+p.size+' · '+p.colors+' 色';document.getElementById('levelName').textContent=p.name;for(var r=0;r<p.size;r++)for(var c=0;c<p.size;c++){var i=r*p.size+c,b=document.createElement('button');b.type='button';b.className='cell';b.dataset.i=i;b.setAttribute('role','gridcell');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，空白');b.tabIndex=i===state.focus?0:-1;b.style.setProperty('--cell-bg',palette[p.regionHues[p.regions[r][c]]]);b.addEventListener('click',onCell);b.addEventListener('keydown',onKey);board.appendChild(b)}paintHearts();paintScore();paintMode();paintHintButton()}
   function updateCell(i,animate){var b=board.children[i],p=currentPuzzle(),r=Math.floor(i/p.size),c=i%p.size,v=state.cells[i];b.innerHTML=v==='cat'?catSVG:(v==='x'?'<span class="cross" aria-hidden="true"></span>':'');if(v==='cat'&&animate)b.querySelector('.cat').classList.add('pop');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，'+(v==='cat'?'貓咪':v==='x'?'已排除':'空白'))}
   function snapshot(){state.history.push(state.cells.slice());if(state.history.length>100)state.history.shift()}
   function focusCell(i){state.focus=i;board.querySelectorAll('.cell').forEach(function(x,j){x.tabIndex=j===i?0:-1})}

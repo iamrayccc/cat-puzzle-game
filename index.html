@@ -132,6 +132,8 @@
     .version { display:block; margin-top:7px; font-size:.7rem; font-variant-numeric:tabular-nums; opacity:.82; }
     dialog { border:0; padding:0; max-width:none; max-height:none; background:transparent; color:inherit; }
     dialog::backdrop { background:rgba(12,28,31,.62); backdrop-filter:blur(4px); }
+    #resultDialog[open] { width:100vw; height:100vh; margin:0; overflow:visible; pointer-events:none; }
+    #resultDialog .sheet { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:1; pointer-events:auto; }
     .sheet { width:min(92vw,520px); max-height:min(84vh,700px); overflow:auto; background:var(--panel); border:1px solid var(--soft-line); border-radius:24px; padding:24px; box-shadow:0 24px 70px rgba(0,0,0,.32); }
     .sheet-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; }
     .sheet h2 { margin:0 0 6px; font-size:1.55rem; line-height:1.15; }
@@ -238,7 +240,7 @@
       <button class="mode-btn" id="xModeBtn" type="button" aria-pressed="true"><span class="mode-icon"><span class="mini-x"></span></span>標 X</button>
       <button class="mode-btn" id="catModeBtn" type="button" aria-pressed="false"><span class="mode-icon" id="catModeIcon"></span>放貓</button>
     </section>
-    <p class="footer-note">先選「標 X」或「放貓」，再單擊格子；每次放貓後都會自動切回「標 X」，單擊已有標記可取消。100 關均有唯一解，並可只靠邏輯推理完成；「全部清除」只清除標記。完成一關 +1000 分；每次使用提示扣 100 分；每扣 1 顆心扣 500 分；積分最低為 0 分。<span class="version">Version 2026.10.06.17</span></p>
+    <p class="footer-note">先選「標 X」或「放貓」，再單擊格子；每次放貓後都會自動切回「標 X」，單擊已有標記可取消。100 關均有唯一解，並可只靠邏輯推理完成；「全部清除」只清除標記。完成一關 +1000 分；每次使用提示扣 100 分；每扣 1 顆心扣 500 分；積分最低為 0 分。<span class="version">Version 2026.10.06.19</span></p>
   </main>
 
   <dialog id="rulesDialog">
@@ -261,12 +263,12 @@
       <div class="result-cat" id="resultCat"></div>
       <h2 id="resultTitle">遊戲完結</h2>
       <p id="resultText">本關統計如下。</p>
-      <div class="stats"><div class="stat"><b id="timeStat">0:00</b><span>遊戲時間</span></div><div class="stat"><b id="mistakeStat">0</b><span>失誤</span></div><div class="stat"><b id="hintStat">0</b><span>推理協助</span></div><div class="stat"><b id="moveStat">0</b><span>落子次數</span></div><div class="stat"><b id="scoreStat">0</b><span>累計積分</span></div></div>
+      <div class="stats"><div class="stat"><b id="timeStat">0:00</b><span>用時</span></div><div class="stat"><b id="mistakeStat">0</b><span>失誤</span></div><div class="stat"><b id="hintStat">0</b><span>推理協助</span></div><div class="stat"><b id="moveStat">0</b><span>步數</span></div><div class="stat"><b id="scoreStat">0</b><span>累計積分</span></div></div>
       <button class="primary" id="nextBtn" type="button">下一關</button>
       <button class="secondary" id="retryBtn" type="button">重新挑戰</button>
     </div>
+    <div class="confetti" id="confetti" aria-hidden="true"></div>
   </dialog>
-  <div class="confetti" id="confetti" aria-hidden="true"></div>
 
 <script>
 (function(){
@@ -417,7 +419,8 @@
       return true;
     }catch(err){return false}
   }
-  var audioCtx=null,masterGain=null,muted=false,audioQueueTime=0;
+  var audioCtx=null,masterGain=null,muted=false,audioQueueTime=0,meowBufferPromise=null;
+  var MEOW_AUDIO_URI='data:audio/mpeg;base64,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';
   function ensureAudio(){
     var AC=window.AudioContext||window.webkitAudioContext;
     if(!AC)return Promise.resolve(false);
@@ -426,6 +429,16 @@
     }
     if(audioCtx.state==='running')return Promise.resolve(true);
     return audioCtx.resume().then(function(){return audioCtx.state==='running'}).catch(function(){return false});
+  }
+  function getMeowBuffer(){
+    if(meowBufferPromise)return meowBufferPromise;
+    meowBufferPromise=ensureAudio().then(function(ready){
+      if(!ready||!audioCtx)throw new Error('AudioContext unavailable');
+      var encoded=MEOW_AUDIO_URI.split(',')[1],raw=atob(encoded),bytes=new Uint8Array(raw.length);
+      for(var i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+      return audioCtx.decodeAudioData(bytes.buffer);
+    }).catch(function(err){meowBufferPromise=null;throw err});
+    return meowBufferPromise;
   }
   function queueSound(duration,draw){
     if(muted)return;
@@ -445,13 +458,13 @@
     });
   }
   function soundMeow(){
-    queueSound(.54,function(now){
-      var osc=audioCtx.createOscillator(),harmonic=audioCtx.createOscillator(),gain=audioCtx.createGain(),harmonicGain=audioCtx.createGain();
-      osc.type='triangle';osc.frequency.setValueAtTime(540,now);osc.frequency.linearRampToValueAtTime(920,now+.13);osc.frequency.exponentialRampToValueAtTime(430,now+.48);
-      harmonic.type='sine';harmonic.frequency.setValueAtTime(1080,now);harmonic.frequency.linearRampToValueAtTime(1840,now+.13);harmonic.frequency.exponentialRampToValueAtTime(860,now+.48);
-      gain.gain.setValueAtTime(.001,now);gain.gain.linearRampToValueAtTime(.24,now+.035);gain.gain.setValueAtTime(.24,now+.18);gain.gain.exponentialRampToValueAtTime(.001,now+.5);
-      harmonicGain.gain.value=.16;osc.connect(gain);harmonic.connect(harmonicGain);harmonicGain.connect(gain);gain.connect(masterGain);osc.start(now);harmonic.start(now);osc.stop(now+.52);harmonic.stop(now+.52);
-    });
+    if(muted)return;
+    getMeowBuffer().then(function(buffer){
+      queueSound(buffer.duration,function(now){
+        var source=audioCtx.createBufferSource(),gain=audioCtx.createGain();
+        source.buffer=buffer;gain.gain.value=.9;source.connect(gain);gain.connect(masterGain);source.start(now);
+      });
+    }).catch(function(){});
   }
   function soundComplete(){
     queueSound(.72,function(now){
@@ -479,7 +492,17 @@
   function snapshot(){state.history.push(state.cells.slice());if(state.history.length>100)state.history.shift()}
   function focusCell(i){state.focus=i;board.querySelectorAll('.cell').forEach(function(x,j){x.tabIndex=j===i?0:-1})}
   function onCell(e){if(state.locked)return;var i=+e.currentTarget.dataset.i;if(state.pendingCells[i])return;focusCell(i);if(state.cells[i]!==''){removeMark(i);return}if(state.mode==='cat')placeCat(i);else placeX(i)}
-  function placeX(i){if(state.locked||state.pendingCells[i]||state.cells[i]!=='')return;snapshot();state.moves++;state.cells[i]='x';updateCell(i,false);soundClick();setLogic('已標記不能放','目前是「標 X」模式；單擊已有標記可取消。','×');persistProgress()}
+  function placeX(i){
+    if(state.locked||state.pendingCells[i]||state.cells[i]!=='')return;
+    var p=puzzles[state.level],currentSolution=findLegalSolution(p,state.cells,-1);
+    if(!currentSolution){setLogic('棋面已有矛盾',directConflictMessage(p),'!');showToast('請先修正較早的標記');vibrate(35);return}
+    var trial=state.cells.slice();trial[i]='x';
+    if(!findLegalSolution(p,trial,-1)){
+      var row=Math.floor(i/p.size)+1,col=i%p.size+1;
+      setLogic('這格不能標 X','所有符合目前棋面的合法解，都會在第 '+row+' 行第 '+col+' 列放貓；已阻止這個 X，不扣心。','!');showToast('這格必須放貓，不能標 X');vibrate(35);return;
+    }
+    snapshot();state.moves++;state.cells[i]='x';updateCell(i,false);soundClick();setLogic('已標記不能放','目前是「標 X」模式；單擊已有標記可取消。','×');persistProgress()
+  }
   function removeMark(i){if(state.locked||state.pendingCells[i]||state.cells[i]==='')return;snapshot();state.moves++;state.cells[i]='';updateCell(i,false);setLogic('已取消標記','目前選擇的標記模式保持不變。','↶');persistProgress()}
   function conflicts(a,b,p){var ar=Math.floor(a/p.size),ac=a%p.size,br=Math.floor(b/p.size),bc=b%p.size;return ar===br||ac===bc||p.regions[ar][ac]===p.regions[br][bc]||(Math.abs(ar-br)<=1&&Math.abs(ac-bc)<=1)}
   function commitWrongPlacement(i){
@@ -513,8 +536,10 @@
       },700);
       setTimeout(function(){
         delete state.pendingCells[i];cell.classList.remove('wrong');cell.removeAttribute('aria-busy');updateCell(i,false);soundClick();
-        setLogic('已自動標記 X','錯放的格子已改為 X，可以繼續推理；標記模式為「標 X」。','×');
-        if(state.hearts<=0){state.locked=true;setTimeout(function(){finish(false)},250)}else if(!Object.keys(state.pendingCells).length)checkWin();
+        var boardStillValid=!!findLegalSolution(p,state.cells,-1);
+        if(boardStillValid)setLogic('已自動標記 X','錯放的格子已改為 X，可以繼續推理；標記模式為「標 X」。','×');
+        else setLogic('棋面仍有矛盾','錯放的格子已改為 X，但較早的標記可能有誤；建議使用「復原」或「全部清除」。','!');
+        if(state.hearts<=0){state.locked=true;setTimeout(function(){finish(false)},250)}else if(boardStillValid&&!Object.keys(state.pendingCells).length)checkWin();
       },1500);
       return;
     }

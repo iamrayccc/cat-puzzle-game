@@ -240,7 +240,7 @@
       <button class="mode-btn" id="xModeBtn" type="button" aria-pressed="true"><span class="mode-icon"><span class="mini-x"></span></span>標 X</button>
       <button class="mode-btn" id="catModeBtn" type="button" aria-pressed="false"><span class="mode-icon" id="catModeIcon"></span>放貓</button>
     </section>
-    <p class="footer-note">先選「標 X」或「放貓」，再單擊格子；每次放貓後都會自動切回「標 X」，單擊已有標記可取消。100 關均有唯一解，並可只靠邏輯推理完成；「全部清除」只清除標記。完成一關 +1000 分；每次使用提示扣 100 分；每扣 1 顆心扣 500 分；積分最低為 0 分。<span class="version">Version 2026.10.06.19</span></p>
+    <p class="footer-note">先選「標 X」或「放貓」，再單擊格子；每次放貓後都會自動切回「標 X」，單擊已有標記可取消。100 關均有唯一解，並可只靠邏輯推理完成；「全部清除」只清除標記。完成一關 +1000 分；每次使用提示扣 100 分；每扣 1 顆心扣 500 分；積分最低為 0 分。<span class="version">Version 2026.10.06.20</span></p>
   </main>
 
   <dialog id="rulesDialog">
@@ -412,7 +412,7 @@
       var level=bytes[1],p=puzzles[level];if(!p)return false;
       var needed=Math.ceil((p.size*p.size)/5);if(bytes.length!==9+needed)return false;
       var score=((bytes[2]*16777216)+(bytes[3]<<16)+(bytes[4]<<8)+bytes[5]);
-      if(score<0||bytes[6]>MAX_HEARTS||bytes[7]>2)return false;
+      if(score<0||bytes[6]<1||bytes[6]>MAX_HEARTS||bytes[7]>2)return false;
       var cells=[],power=[1,3,9,27,81];
       for(var n=0;n<needed;n++){var packed=bytes[9+n];if(packed>242)return false;for(var j=0;j<5&&cells.length<p.size*p.size;j++){var value=Math.floor(packed/power[j])%3;cells.push(value===1?'x':(value===2?'cat':''))}}
       state.level=level;state.cells=cells;state.score=score;state.hearts=bytes[6];state.hintsRemaining=bytes[7];state.levelAwarded=!!(bytes[8]&1);state.history=[];state.pendingCells={};state.mistakes=0;state.hintsUsed=2-state.hintsRemaining;state.moves=0;state.start=Date.now();state.locked=false;state.resultShown=false;state.focus=0;
@@ -549,7 +549,7 @@
   function setLogic(title,text,symbol){logicNote.innerHTML='<b>'+symbol+'</b><p><strong>'+title+'</strong>'+text+'</p>'}
   function checkWin(){if(Object.keys(state.pendingCells).length)return false;var p=puzzles[state.level],cats=[],rows=new Array(p.size).fill(0),cols=new Array(p.size).fill(0),regions=new Array(p.size).fill(0);for(var i=0;i<state.cells.length;i++)if(state.cells[i]==='cat'){var r=Math.floor(i/p.size),c=i%p.size;cats.push(i);rows[r]++;cols[c]++;regions[p.regions[r][c]]++}if(cats.length!==p.size)return false;for(var n=0;n<p.size;n++)if(rows[n]!==1||cols[n]!==1||regions[n]!==1)return false;for(var a=0;a<cats.length;a++)for(var b=a+1;b<cats.length;b++)if(conflicts(cats[a],cats[b],p))return false;state.locked=true;setTimeout(function(){finish(true)},350);return true}
   function finish(win){
-    if(state.resultShown)return;state.resultShown=true;state.locked=true;
+    if(state.resultShown)return;state.resultShown=true;state.locked=true;if(!win)clearProgress();
     var completed=state.level+1,recovered=false,earned=false,firstCompletion=win&&!state.levelAwarded;
     if(firstCompletion){state.levelAwarded=true;changeScore(1000);earned=true}
     if(firstCompletion&&completed%5===0&&!state.milestoneRewards[completed]){

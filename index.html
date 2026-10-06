@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:," />
+  <title>貓咪邏輯解謎遊戲</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #eef7f4;
+      --ink: #18323a;
+      --muted: #567078;
+      --panel: #fffdf9;
+      --panel-2: #dcece8;
+      --line: #24454c;
+      --soft-line: rgba(36,69,76,.18);
+      --accent: #ec6f5c;
+      --accent-dark: #b94135;
+      --accent-ink: #32110d;
+      --sun: #f2b84b;
+      --good: #26886e;
+      --bad: #c74343;
+      --shadow: 0 14px 34px rgba(26,60,66,.14);
+      --r1:#ffd9ce; --r2:#ffe6a8; --r3:#cdebcf; --r4:#bee6eb;
+      --r5:#d8d5f5; --r6:#f2cfe4; --r7:#cddff8; --r8:#f6d5ae;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:#142326; --ink:#f5f1e8; --muted:#b7c9c9; --panel:#1d3034;
+        --panel-2:#294247; --line:#d6e3df; --soft-line:rgba(214,227,223,.2);
+        --accent:#ff8a73; --accent-dark:#ffab98; --accent-ink:#25100d; --sun:#ffd06a;
+        --good:#65d2ae; --bad:#ff7e7a; --shadow:0 16px 38px rgba(0,0,0,.3);
+        --r1:#653f3b; --r2:#65532d; --r3:#315741; --r4:#2c5660;
+        --r5:#46436b; --r6:#61415a; --r7:#38526f; --r8:#694e32;
+      }
+    }
+    * { box-sizing:border-box; }
+    html, body { min-height:100%; }
+    body {
+      margin:0; color:var(--ink); background:var(--bg);
+      font-family:"Nunito","Noto Sans TC",sans-serif;
+      -webkit-tap-highlight-color:transparent;
+      overflow-x:hidden;
+    }
+    button { font:inherit; color:inherit; }
+    .app {
+      width:min(100%, 760px); margin:0 auto; min-height:100vh;
+      padding:max(18px,env(safe-area-inset-top)) clamp(16px,4vw,30px) calc(32px + env(safe-area-inset-bottom));
+      display:flex; flex-direction:column;
+    }
+    .statusbar { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:16px; }
+    .level-meta { min-width:0; }
+    .level-meta small { display:block; color:var(--muted); font-weight:800; font-size:.76rem; letter-spacing:.06em; margin-bottom:2px; }
+    .level-meta h1 { font-size:clamp(1.35rem,5vw,1.8rem); line-height:1.1; margin:0; font-weight:900; }
+    .hearts { display:flex; align-items:center; gap:5px; background:var(--panel); border:1px solid var(--soft-line); padding:9px 12px; border-radius:999px; box-shadow:0 5px 16px rgba(26,60,66,.08); }
+    .heart { width:18px; height:17px; color:var(--accent); transition:opacity .2s, transform .2s; }
+    .heart.lost { opacity:.18; transform:scale(.78); }
+    .top-actions { display:flex; gap:8px; margin-bottom:18px; }
+    .quiet-btn { border:0; background:transparent; color:var(--muted); padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:800; display:flex; align-items:center; gap:6px; }
+    .quiet-btn:hover, .quiet-btn:focus-visible { background:var(--panel-2); color:var(--ink); outline:none; }
+    .quiet-btn svg { width:18px; height:18px; }
+    .quiet-btn:first-child { margin-left:-8px; }
+    .quiet-btn:last-child { margin-left:auto; }
+    .board-wrap { position:relative; margin:auto 0; }
+    .board-shell { background:var(--panel); border:1px solid var(--soft-line); border-radius:24px; padding:clamp(10px,3vw,16px); box-shadow:var(--shadow); }
+    .board {
+      width:100%; max-width:560px; aspect-ratio:1; margin:auto; display:grid;
+      border:3px solid var(--line); border-radius:12px; overflow:hidden; background:var(--line); gap:1px;
+    }
+    .cell {
+      position:relative; border:0; margin:0; padding:0; min-width:0; cursor:pointer;
+      background:var(--cell-bg); outline:0; display:grid; place-items:center;
+      box-shadow:inset calc(var(--bl)*2px) 0 0 var(--line), inset calc(var(--br)*-2px) 0 0 var(--line), inset 0 calc(var(--bt)*2px) 0 var(--line), inset 0 calc(var(--bb)*-2px) 0 var(--line);
+    }
+    .cell::after { content:""; position:absolute; inset:3px; border:2px solid transparent; border-radius:7px; pointer-events:none; }
+    .cell:hover::after { border-color:rgba(255,255,255,.62); }
+    .cell:focus-visible::after, .cell.keyboard-focus::after { border-color:var(--line); }
+    .cell.wrong { animation:shake .35s ease; }
+    .cell.hinted::after { border-color:var(--sun); animation:pulse 1.1s ease 2; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+    @keyframes pulse { 50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--sun) 38%, transparent)} }
+    .cross { width:32%; height:32%; position:relative; opacity:.7; }
+    .cross::before,.cross::after { content:""; position:absolute; left:46%; top:-8%; width:3px; height:116%; border-radius:2px; background:var(--line); transform:rotate(45deg); }
+    .cross::after { transform:rotate(-45deg); }
+    .cat { width:70%; height:70%; filter:drop-shadow(0 2px 0 rgba(255,255,255,.5)); transform-origin:center bottom; }
+    .cat.pop { animation:catPop .28s cubic-bezier(.2,1.8,.4,1); }
+    @keyframes catPop { from{transform:scale(.2) rotate(-12deg)} to{transform:scale(1) rotate(0)} }
+    .toast { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) translateY(10px); opacity:0; pointer-events:none; z-index:3; background:var(--line); color:var(--panel); border-radius:999px; padding:9px 14px; font-weight:900; font-size:.86rem; transition:.18s; white-space:nowrap; }
+    .toast.show { opacity:1; transform:translate(-50%,-50%) translateY(0); }
+    .rule-strip { display:flex; justify-content:center; gap:clamp(10px,5vw,30px); padding:16px 4px 12px; color:var(--muted); font-size:.75rem; font-weight:800; }
+    .rule { display:flex; align-items:center; gap:6px; }
+    .rule b { display:grid; place-items:center; width:22px; height:22px; border-radius:7px; background:var(--panel-2); color:var(--ink); font-size:.82rem; }
+    .logic-note { margin-top:12px; display:grid; grid-template-columns:34px 1fr; gap:10px; align-items:center; padding:11px 13px; border-radius:14px; background:var(--panel-2); color:var(--muted); }
+    .logic-note b { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; background:var(--panel); color:var(--good); font-size:1rem; }
+    .logic-note p { margin:0; font-size:.82rem; line-height:1.38; font-weight:700; }
+    .logic-note strong { display:block; color:var(--ink); font-size:.88rem; }
+    .controls { margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .mode-btn { min-height:58px; border:2px solid var(--soft-line); background:var(--panel); border-radius:16px; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:10px; font-weight:900; box-shadow:0 5px 13px rgba(26,60,66,.06); }
+    .mode-btn[aria-pressed="true"] { border-color:var(--line); background:var(--line); color:var(--panel); box-shadow:0 6px 0 color-mix(in srgb,var(--line) 35%, transparent); transform:translateY(-2px); }
+    .mode-icon { width:28px; height:28px; display:grid; place-items:center; }
+    .mini-x { width:18px; height:18px; position:relative; }
+    .mini-x::before,.mini-x::after { content:""; position:absolute; left:8px; top:0; width:3px; height:19px; border-radius:2px; background:currentColor; transform:rotate(45deg); }
+    .mini-x::after{transform:rotate(-45deg)}
+    .mode-icon svg { width:30px; height:30px; }
+    .footer-note { text-align:center; font-size:.78rem; color:var(--muted); margin:13px 0 0; }
+    dialog { border:0; padding:0; max-width:none; max-height:none; background:transparent; color:inherit; }
+    dialog::backdrop { background:rgba(12,28,31,.62); backdrop-filter:blur(4px); }
+    .sheet { width:min(92vw,520px); max-height:min(84vh,700px); overflow:auto; background:var(--panel); border:1px solid var(--soft-line); border-radius:24px; padding:24px; box-shadow:0 24px 70px rgba(0,0,0,.32); }
+    .sheet-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; }
+    .sheet h2 { margin:0 0 6px; font-size:1.55rem; line-height:1.15; }
+    .sheet p { margin:0; color:var(--muted); line-height:1.55; }
+    .close-btn { width:36px; height:36px; border:0; background:var(--panel-2); border-radius:50%; cursor:pointer; font-size:1.25rem; line-height:1; }
+    .rules-list { list-style:none; padding:0; margin:22px 0; display:grid; gap:15px; }
+    .rules-list li { display:grid; grid-template-columns:38px 1fr; gap:12px; align-items:center; }
+    .rule-number { width:38px; height:38px; display:grid; place-items:center; border-radius:12px; background:var(--panel-2); font-weight:900; }
+    .rules-list strong { display:block; margin-bottom:2px; }
+    .rules-list span { display:block; color:var(--muted); font-size:.88rem; line-height:1.35; }
+    .primary { width:100%; min-height:52px; border:0; border-radius:14px; background:var(--accent); color:#fff; font-weight:900; font-size:1rem; cursor:pointer; box-shadow:0 5px 0 var(--accent-dark); }
+    .primary:active { transform:translateY(3px); box-shadow:0 2px 0 var(--accent-dark); }
+    .result { text-align:center; padding-top:28px; }
+    .result-cat { width:110px; height:110px; margin:0 auto 16px; color:var(--accent); animation:celebrate .7s ease; }
+    @keyframes celebrate { 0%{transform:translateY(20px) scale(.6);opacity:0} 70%{transform:translateY(-8px) scale(1.05)} 100%{transform:none;opacity:1} }
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:22px 0; }
+    .stat { background:var(--panel-2); padding:12px 6px; border-radius:14px; }
+    .stat b { display:block; font-size:1.2rem; }
+    .stat span { font-size:.75rem; color:var(--muted); }
+    .secondary { width:100%; min-height:48px; margin-top:10px; border:1px solid var(--soft-line); border-radius:14px; background:transparent; cursor:pointer; font-weight:900; }
+    .confetti { position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:20; }
+    .confetti i { position:absolute; width:9px; height:15px; top:-20px; border-radius:2px; animation:fall 1.7s ease-in forwards; }
+    @keyframes fall { to { transform:translate(var(--drift),110vh) rotate(680deg); } }
+    @media (min-width:660px) {
+      .app { padding-top:30px; }
+      .board-shell { padding:18px; }
+      .controls { width:420px; align-self:center; }
+      .rule-strip { font-size:.82rem; }
+    }
+    @media (max-height:720px) and (orientation:landscape) {
+      .app { width:100%; max-width:980px; display:grid; grid-template-columns:minmax(300px,520px) 1fr; grid-template-rows:auto 1fr; gap:0 28px; padding:12px 24px; }
+      .statusbar,.top-actions { grid-column:2; }
+      .statusbar { margin:8px 0 0; }
+      .top-actions { margin:0; }
+      .board-wrap { grid-column:1; grid-row:1/5; align-self:center; }
+      .controls,.footer-note { grid-column:2; align-self:start; }
+      .rule-strip { padding:8px 0 0; }
+    }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="statusbar" aria-label="遊戲狀態">
+      <div class="level-meta"><small id="levelCount">第 1／20 關</small><h1 id="levelName">午睡角落</h1></div>
+      <div class="hearts" aria-label="剩餘三次機會" id="hearts"></div>
+    </section>
+
+    <nav class="top-actions" aria-label="遊戲工具">
+      <button class="quiet-btn" id="rulesBtn" type="button" aria-label="查看玩法">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.4 2.4 0 1 1 3.1 2.3c-.8.3-1.3.9-1.3 1.7"/><path d="M12 17h.01"/></svg>玩法
+      </button>
+      <button class="quiet-btn" id="undoBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 8-4 4 4 4"/><path d="M5 12h8a6 6 0 0 1 6 6"/></svg>復原
+      </button>
+      <button class="quiet-btn" id="hintBtn" type="button" aria-label="推理一步，扣一顆心">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18h6M10 22h4M8.5 14.5A6 6 0 1 1 15.5 14.5c-.8.7-1.5 1.5-1.5 2.5h-4c0-1-.7-1.8-1.5-2.5Z"/></svg>推理一步 · −1 心
+      </button>
+    </nav>
+
+    <section class="board-wrap" aria-label="解謎棋盤">
+      <div class="board-shell">
+        <div class="board" id="board" role="grid" aria-label="貓咪邏輯棋盤"></div>
+        <div class="rule-strip" aria-hidden="true">
+          <span class="rule"><b>↔</b> 每行一隻</span>
+          <span class="rule"><b>↕</b> 每列一隻</span>
+          <span class="rule"><b>◇</b> 每色一隻</span>
+        </div>
+        <div class="logic-note" id="logicNote" role="status" aria-live="polite">
+          <b>?</b><p><strong>先找可排除的位置</strong>觀察某一行、列或色區的貓只可能落在哪些格子。</p>
+        </div>
+      </div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="controls" aria-label="落子模式">
+      <button class="mode-btn" id="markMode" type="button" aria-pressed="true"><span class="mode-icon"><span class="mini-x"></span></span>標記不能放</button>
+      <button class="mode-btn" id="catMode" type="button" aria-pressed="false"><span class="mode-icon" id="catModeIcon"></span>放置貓咪</button>
+    </section>
+    <p class="footer-note">成功使用「推理一步」或錯誤放置都會扣 1 顆心；三顆心用完，本關便結束。</p>
+  </main>
+
+  <dialog id="rulesDialog">
+    <div class="sheet">
+      <div class="sheet-head"><div><h2>找出所有躲起來的貓咪</h2><p>20 個不同版圖會以隨機次序出現。不必猜答案，運用三條規則逐步排除；「推理一步」每次成功使用扣 1 顆心。</p></div><button class="close-btn" type="button" aria-label="關閉">×</button></div>
+      <ol class="rules-list">
+        <li><span class="rule-number">1</span><div><strong>每一行、每一列各一隻</strong><span>同一橫行或直列不能出現第二隻貓咪。</span></div></li>
+        <li><span class="rule-number">2</span><div><strong>每個顏色區域各一隻</strong><span>區域形狀不一，但裡面一定剛好藏著一隻。</span></div></li>
+        <li><span class="rule-number">3</span><div><strong>貓咪不能彼此相鄰</strong><span>連斜角也不行；放好後，周圍八格都可排除。</span></div></li>
+      </ol>
+      <button class="primary close-rules" type="button">開始動腦</button>
+    </div>
+  </dialog>
+
+  <dialog id="resultDialog">
+    <div class="sheet result">
+      <div class="result-cat" id="resultCat"></div>
+      <h2 id="resultTitle">全部找到了！</h2>
+      <p id="resultText">每隻貓咪都有自己的舒適角落。</p>
+      <div class="stats"><div class="stat"><b id="timeStat">0:00</b><span>完成時間</span></div><div class="stat"><b id="mistakeStat">0</b><span>失誤</span></div><div class="stat"><b id="hintStat">0</b><span>推理協助</span></div></div>
+      <button class="primary" id="nextBtn" type="button">下一關</button>
+      <button class="secondary" id="retryBtn" type="button">重新挑戰</button>
+    </div>
+  </dialog>
+  <div class="confetti" id="confetti" aria-hidden="true"></div>
+
+<script>
+(function(){
+  'use strict';
+  var templates = [
+    {name:'午睡角落',size:5,regions:[[0,0,0,0,1],[0,0,0,1,1],[2,2,3,3,1],[2,2,3,3,1],[4,3,3,3,3]],solution:[2,4,1,3,0]},
+    {name:'窗邊日光',size:5,regions:[[2,0,0,1,1],[2,1,1,1,1],[2,2,1,4,1],[2,2,3,4,4],[2,2,4,4,4]],solution:[1,3,0,2,4]},
+    {name:'毛線小徑',size:5,regions:[[1,1,1,0,0],[1,1,1,0,0],[3,1,4,2,0],[3,4,4,4,4],[3,3,4,4,4]],solution:[4,1,3,0,2]},
+    {name:'紙袋探險',size:5,regions:[[1,1,1,0,0],[1,1,1,1,2],[1,1,1,2,2],[1,1,3,2,2],[4,4,2,2,2]],solution:[3,1,4,2,0]},
+    {name:'魚乾藏寶',size:5,regions:[[0,1,1,1,1],[3,1,1,1,1],[3,3,1,1,2],[3,3,3,4,4],[3,3,4,4,4]],solution:[0,2,4,1,3]},
+    {name:'軟墊迷陣',size:5,regions:[[2,2,0,0,0],[2,2,1,0,0],[2,4,4,3,3],[4,4,4,3,3],[4,4,4,3,3]],solution:[4,2,0,3,1]},
+    {name:'月光窗台',size:5,regions:[[0,3,1,1,1],[3,3,1,1,1],[3,3,1,2,2],[3,3,3,2,2],[3,3,3,4,2]],solution:[0,2,4,1,3]},
+    {name:'紙箱迷宮',size:6,regions:[[0,1,1,1,1,1],[1,1,1,1,2,2],[1,3,1,1,2,2],[3,3,3,4,4,2],[3,3,3,4,4,4],[3,5,3,4,4,4]],solution:[0,3,5,2,4,1]},
+    {name:'廚房巡遊',size:6,regions:[[1,1,1,1,1,0],[3,1,1,1,1,1],[3,3,1,1,2,2],[3,5,5,1,4,2],[3,5,5,4,4,2],[5,5,5,5,4,2]],solution:[5,2,4,0,3,1]},
+    {name:'書架密道',size:6,regions:[[1,1,1,2,0,0],[1,1,2,2,2,2],[1,1,2,2,2,2],[3,4,4,2,2,2],[4,4,4,4,4,4],[4,4,4,4,4,5]],solution:[4,1,3,0,2,5]},
+    {name:'陽台足印',size:6,regions:[[0,0,0,0,0,0],[1,0,0,0,0,0],[1,1,0,2,2,2],[1,3,4,4,2,2],[4,4,4,4,2,2],[4,4,4,2,2,5]],solution:[2,0,4,1,3,5]},
+    {name:'雨聲躲藏',size:6,regions:[[0,0,0,0,1,1],[0,0,1,1,1,1],[1,1,1,1,2,2],[3,3,1,1,2,2],[5,5,4,2,2,2],[5,5,5,5,5,2]],solution:[1,3,5,0,2,4]},
+    {name:'花盆之間',size:6,regions:[[0,0,3,3,3,3],[2,2,2,2,3,1],[2,2,2,3,3,3],[5,2,2,3,3,3],[5,4,5,3,3,3],[5,5,5,5,5,5]],solution:[0,5,2,4,1,3]},
+    {name:'星夜走廊',size:6,regions:[[0,1,1,1,1,1],[2,2,2,1,1,1],[2,2,2,2,1,1],[2,2,2,2,3,1],[4,2,4,3,3,3],[4,4,4,3,3,5]],solution:[0,3,1,4,2,5]},
+    {name:'屋頂巡遊',size:7,regions:[[1,1,1,1,3,0,0],[1,1,1,1,3,0,0],[1,1,1,3,3,2,3],[1,3,3,3,3,3,3],[4,4,4,3,3,3,3],[4,4,5,3,6,6,3],[4,4,4,6,6,6,6]],solution:[6,1,5,3,0,2,4]},
+    {name:'高櫃秘境',size:7,regions:[[0,2,2,1,4,4,4],[2,2,1,1,4,4,4],[2,2,3,1,1,4,4],[2,3,3,3,3,4,4],[5,5,5,3,4,4,4],[5,5,5,6,6,6,6],[5,5,5,6,6,6,6]],solution:[0,3,1,4,6,2,5]},
+    {name:'庭園追蹤',size:7,regions:[[4,4,4,4,2,2,0],[4,4,1,4,4,2,0],[4,4,4,4,4,2,2],[3,3,4,4,4,2,2],[3,3,4,4,4,4,2],[5,3,4,6,6,6,6],[4,4,4,4,6,6,6]],solution:[6,2,5,1,3,0,4]},
+    {name:'雲朵樓梯',size:7,regions:[[0,0,0,0,0,2,2],[0,0,1,2,2,2,2],[3,3,3,2,2,2,2],[3,3,3,2,2,2,2],[3,3,3,4,4,2,5],[3,3,6,4,4,5,5],[3,3,6,6,5,5,5]],solution:[0,2,5,1,4,6,3]},
+    {name:'暖爐圈圈',size:7,regions:[[0,2,2,2,2,2,2],[0,2,1,2,2,2,2],[0,2,3,3,2,2,2],[3,3,3,2,2,2,6],[3,3,3,5,5,4,6],[3,3,3,5,5,6,6],[3,3,5,5,5,6,6]],solution:[0,2,4,1,5,3,6]},
+    {name:'清晨花園',size:7,regions:[[2,2,0,3,3,1,1],[2,2,2,2,3,1,3],[2,2,2,2,3,3,3],[2,2,2,3,3,3,3],[4,2,2,3,3,3,3],[4,4,2,3,3,3,5],[4,4,2,6,3,5,5]],solution:[2,5,1,4,0,6,3]}
+  ];
+  function shuffled(n){var a=[];for(var i=0;i<n;i++)a.push(i);for(var j=n-1;j>0;j--){var k=Math.floor(Math.random()*(j+1)),v=a[j];a[j]=a[k];a[k]=v}return a}
+  function shuffleItems(a){for(var j=a.length-1;j>0;j--){var k=Math.floor(Math.random()*(j+1)),v=a[j];a[j]=a[k];a[k]=v}return a}
+  templates=shuffleItems(templates.slice());
+  var puzzles=templates.slice(),lastVariants=[];
+  function mapped(r,c,n,t){
+    if(t===1)return[c,n-1-r];if(t===2)return[n-1-r,n-1-c];if(t===3)return[n-1-c,r];
+    if(t===4)return[r,n-1-c];if(t===5)return[n-1-r,c];if(t===6)return[c,r];if(t===7)return[n-1-c,n-1-r];return[r,c];
+  }
+  function makeVariant(index){
+    var base=templates[index],n=base.size,t=Math.floor(Math.random()*8),colors=shuffled(n),signature=t+'-'+colors.join('');
+    if(signature===lastVariants[index]){t=(t+1)%8;signature=t+'-'+colors.join('')}
+    lastVariants[index]=signature;
+    var regions=new Array(n),solution=new Array(n);for(var r=0;r<n;r++)regions[r]=new Array(n);
+    for(var rr=0;rr<n;rr++)for(var cc=0;cc<n;cc++){var pos=mapped(rr,cc,n,t);regions[pos[0]][pos[1]]=colors[base.regions[rr][cc]]}
+    for(var row=0;row<n;row++){var cat=mapped(row,base.solution[row],n,t);solution[cat[0]]=cat[1]}
+    return{name:base.name,size:n,regions:regions,solution:solution};
+  }
+  var palette=['var(--r1)','var(--r2)','var(--r3)','var(--r4)','var(--r5)','var(--r6)','var(--r7)','var(--r8)'];
+  var state={level:0,mode:'mark',cells:[],history:[],hearts:3,mistakes:0,hintsUsed:0,start:Date.now(),locked:false,focus:0};
+  var board=document.getElementById('board'), toast=document.getElementById('toast'), logicNote=document.getElementById('logicNote');
+  var catSVG='<svg class="cat" viewBox="0 0 64 64" aria-hidden="true"><path d="M13 25 10 8l15 9a28 28 0 0 1 14 0l15-9-3 17c4 5 6 10 5 16-2 11-11 17-24 17S10 52 8 41c-1-6 1-11 5-16Z" fill="currentColor"/><path d="M18 17 14 12l1 9m31-4 4-5-1 9" fill="none" stroke="var(--panel)" stroke-width="2" stroke-linecap="round" opacity=".55"/><path d="M20 35h.1M44 35h.1" stroke="var(--panel)" stroke-width="5" stroke-linecap="round"/><path d="M29 42c2 2 4 2 6 0m-3-4v4" fill="none" stroke="var(--panel)" stroke-width="2.4" stroke-linecap="round"/><path d="M17 42 7 40m10 7L8 49m39-7 10-2m-10 7 9 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  document.getElementById('catModeIcon').innerHTML=catSVG;
+  document.getElementById('resultCat').innerHTML=catSVG;
+
+  function heartSVG(){return '<svg class="heart" viewBox="0 0 24 22" fill="currentColor" aria-hidden="true"><path d="M12 21S1 14.5 1 7.4C1 3.8 3.5 1 7 1c2.1 0 4 1.1 5 2.8C13 2.1 14.9 1 17 1c3.5 0 6 2.8 6 6.4C23 14.5 12 21 12 21Z"/></svg>'}
+  function paintHearts(){
+    var h=document.getElementById('hearts'); h.innerHTML='';
+    for(var i=0;i<3;i++){var wrap=document.createElement('span');wrap.innerHTML=heartSVG();var svg=wrap.firstChild;if(i>=state.hearts)svg.classList.add('lost');h.appendChild(svg)}
+    h.setAttribute('aria-label','剩餘'+state.hearts+'次機會');
+  }
+  function edge(p,r,c,dr,dc){
+    var rr=r+dr,cc=c+dc; return rr<0||cc<0||rr>=p.size||cc>=p.size||p.regions[rr][cc]!==p.regions[r][c];
+  }
+  function render(){
+    var p=puzzles[state.level]; board.innerHTML=''; board.style.gridTemplateColumns='repeat('+p.size+',1fr)'; board.style.gridTemplateRows='repeat('+p.size+',1fr)';
+    document.getElementById('levelCount').textContent='第 '+(state.level+1)+'／'+puzzles.length+' 關';
+    document.getElementById('levelName').textContent=p.name;
+    for(var r=0;r<p.size;r++) for(var c=0;c<p.size;c++){
+      var i=r*p.size+c, b=document.createElement('button'); b.type='button'; b.className='cell'; b.dataset.i=i; b.setAttribute('role','gridcell');
+      b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，空白'); b.tabIndex=i===state.focus?0:-1;
+      b.style.setProperty('--cell-bg',palette[p.regions[r][c]%palette.length]);
+      b.style.setProperty('--bt',edge(p,r,c,-1,0)?1:0); b.style.setProperty('--bb',edge(p,r,c,1,0)?1:0);
+      b.style.setProperty('--bl',edge(p,r,c,0,-1)?1:0); b.style.setProperty('--br',edge(p,r,c,0,1)?1:0);
+      b.addEventListener('click',onCell); b.addEventListener('keydown',onKey); board.appendChild(b);
+    }
+    paintHearts();
+  }
+  function updateCell(i,animate){
+    var b=board.children[i],p=puzzles[state.level],r=Math.floor(i/p.size),c=i%p.size,v=state.cells[i];
+    b.innerHTML=v==='cat'?catSVG:(v==='x'?'<span class="cross" aria-hidden="true"></span>':'');
+    if(v==='cat'&&animate)b.querySelector('.cat').classList.add('pop');
+    b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，'+(v==='cat'?'貓咪':v==='x'?'已排除':'空白'));
+  }
+  function setMode(mode){state.mode=mode;document.getElementById('markMode').setAttribute('aria-pressed',mode==='mark');document.getElementById('catMode').setAttribute('aria-pressed',mode==='cat')}
+  function snapshot(){state.history.push(state.cells.slice());if(state.history.length>80)state.history.shift()}
+  function onCell(e){ if(state.locked)return; var i=+e.currentTarget.dataset.i; state.focus=i; board.querySelectorAll('.cell').forEach(function(x,j){x.tabIndex=j===i?0:-1}); act(i); }
+  function getUnits(p){
+    var units=[],r,c,g,cells;
+    for(r=0;r<p.size;r++){cells=[];for(c=0;c<p.size;c++)cells.push(r*p.size+c);units.push({type:'row',index:r,name:'第 '+(r+1)+' 行',cells:cells})}
+    for(c=0;c<p.size;c++){cells=[];for(r=0;r<p.size;r++)cells.push(r*p.size+c);units.push({type:'col',index:c,name:'第 '+(c+1)+' 列',cells:cells})}
+    for(g=0;g<p.size;g++){cells=[];for(r=0;r<p.size;r++)for(c=0;c<p.size;c++)if(p.regions[r][c]===g)cells.push(r*p.size+c);units.push({type:'region',index:g,name:'第 '+(g+1)+' 個色區',cells:cells})}
+    return units;
+  }
+  function conflicts(a,b,p){
+    var ar=Math.floor(a/p.size),ac=a%p.size,br=Math.floor(b/p.size),bc=b%p.size;
+    return ar===br||ac===bc||p.regions[ar][ac]===p.regions[br][bc]||(Math.abs(ar-br)<=1&&Math.abs(ac-bc)<=1);
+  }
+  function candidates(p){
+    var cats=[],out=[];
+    state.cells.forEach(function(v,i){if(v==='cat')cats.push(i)});
+    state.cells.forEach(function(v,i){if(v===''&&!cats.some(function(cat){return conflicts(i,cat,p)}))out.push(i)});
+    return out;
+  }
+  function unitHasCat(unit){return unit.cells.some(function(i){return state.cells[i]==='cat'})}
+  function forcedReason(i,p){
+    var cand=candidates(p),units=getUnits(p);
+    for(var u=0;u<units.length;u++)if(!unitHasCat(units[u])){
+      var possible=units[u].cells.filter(function(x){return cand.indexOf(x)>=0});
+      if(possible.length===1&&possible[0]===i)return units[u].name+'只剩這一格可放';
+    }
+    return '';
+  }
+  function setLogic(title,text,symbol){logicNote.innerHTML='<b>'+symbol+'</b><p><strong>'+title+'</strong>'+text+'</p>'}
+  function act(i){
+    var p=puzzles[state.level], r=Math.floor(i/p.size), c=i%p.size;
+    if(state.mode==='mark'){
+      if(state.cells[i]==='cat')return;
+      snapshot(); state.cells[i]=state.cells[i]==='x'?'':'x'; updateCell(i,false);
+      setLogic(state.cells[i]==='x'?'已標記不能放':'已取消標記','繼續查看同一行、列與色區還剩多少可能。','×'); return;
+    }
+    if(state.cells[i]==='cat'){snapshot();state.cells[i]='';updateCell(i,false);setLogic('已移走貓咪','可用「復原」回到上一個棋面。','↶');return}
+    if(state.cells[i]==='x'){showToast('先取消這格的 × 標記');return}
+    var catConflict=state.cells.some(function(v,j){return v==='cat'&&conflicts(i,j,p)});
+    if(catConflict){
+      state.mistakes++;state.hearts--;paintHearts();var b=board.children[i];b.classList.remove('wrong');void b.offsetWidth;b.classList.add('wrong');showToast('這格與已放的貓衝突');vibrate(80);
+      if(state.hearts<=0)setTimeout(function(){finish(false,'mistakes')},430);return;
+    }
+    var reason=forcedReason(i,p);
+    if(!reason){showToast('這格暫時未能確定');setLogic('先不要猜','這格仍有其他可能；先用 × 排除，或按「推理一步」查看理由。','?');return}
+    if(p.solution[r]!==c){showToast('排除標記造成矛盾');setLogic('回看較早的標記','目前的 × 把答案排除了，請復原後再推理。','!');return}
+    snapshot();state.cells[i]='cat';autoMark(r,c,p.regions[r][c]);updateAll(true);setLogic('可以確定放貓',reason+'，周圍、同行、同列與同色區已自動排除。','✓');vibrate(25);checkWin();
+  }
+  function autoMark(r,c,region){
+    var p=puzzles[state.level];
+    for(var rr=0;rr<p.size;rr++)for(var cc=0;cc<p.size;cc++){
+      var i=rr*p.size+cc;
+      if(i===r*p.size+c)continue;
+      if(rr===r||cc===c||p.regions[rr][cc]===region||(Math.abs(rr-r)<=1&&Math.abs(cc-c)<=1)){
+        if(state.cells[i]==='')state.cells[i]='x';
+      }
+    }
+  }
+  function updateAll(animate){for(var i=0;i<state.cells.length;i++)updateCell(i,animate&&state.cells[i]==='cat')}
+  function checkWin(){var p=puzzles[state.level],count=0;for(var r=0;r<p.size;r++)if(state.cells[r*p.size+p.solution[r]]==='cat')count++;if(count===p.size)setTimeout(function(){finish(true)},350)}
+  function finish(win,reason){
+    state.locked=true;var d=document.getElementById('resultDialog'), elapsed=Math.max(1,Math.floor((Date.now()-state.start)/1000));
+    document.getElementById('timeStat').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');
+    document.getElementById('mistakeStat').textContent=state.mistakes;document.getElementById('hintStat').textContent=state.hintsUsed;
+    document.getElementById('resultTitle').textContent=win?'全部找到了！':reason==='hints'?'心心用完了':'貓咪溜走了';
+    document.getElementById('resultText').textContent=win?'每隻貓咪都有自己的舒適角落。':reason==='hints'?'三顆心已用完；推理協助或錯誤放置每次扣一顆心。':'再仔細看看顏色區域與相鄰格子。';
+    document.getElementById('nextBtn').textContent=win?(state.level===puzzles.length-1?'再玩一輪':'下一關'):'重新挑戰';
+    document.getElementById('retryBtn').style.display=win?'block':'none';
+    d.dataset.win=win?'1':'0';d.showModal();if(win)burst();
+  }
+  function newLevel(index){
+    state.level=index;puzzles[index]=makeVariant(index);var p=puzzles[index];state.cells=new Array(p.size*p.size).fill('');state.history=[];state.hearts=3;state.mistakes=0;state.hintsUsed=0;state.start=Date.now();state.locked=false;state.focus=0;setMode('mark');render();setLogic('隨機關卡已生成','全套共有 20 個不同版圖；每次開始或重新挑戰都會再換方向與配色。','↻');
+  }
+  function undo(){if(state.locked||!state.history.length){showToast('沒有可復原的步驟');return}state.cells=state.history.pop();updateAll(false)}
+  function highlightCells(ids){
+    board.querySelectorAll('.hinted').forEach(function(x){x.classList.remove('hinted')});
+    ids.forEach(function(i){if(board.children[i])board.children[i].classList.add('hinted')});
+    setTimeout(function(){ids.forEach(function(i){if(board.children[i])board.children[i].classList.remove('hinted')})},2300);
+  }
+  function spendHint(){
+    state.hintsUsed++;state.hearts=Math.max(0,state.hearts-1);paintHearts();vibrate(35);
+    if(state.hearts<=0){state.locked=true;setTimeout(function(){finish(false,'hints')},650);return true}
+    return false;
+  }
+  function hint(){
+    if(state.locked)return;
+    var p=puzzles[state.level],units=getUnits(p),cand=candidates(p),u,v,possible,remove=[];
+    for(u=0;u<units.length;u++)if(!unitHasCat(units[u])){
+      possible=units[u].cells.filter(function(i){return cand.indexOf(i)>=0});
+      if(!possible.length){showToast('棋面出現矛盾');setLogic('這個標記組合走不通',units[u].name+'已沒有任何可放位置，請復原較早的 ×。','!');return}
+    }
+    for(u=0;u<units.length;u++)if(!unitHasCat(units[u])){
+      possible=units[u].cells.filter(function(i){return cand.indexOf(i)>=0});
+      if(possible.length===1){
+        var i=possible[0],r=Math.floor(i/p.size),c=i%p.size;
+        if(p.solution[r]!==c){showToast('較早的標記有誤');setLogic('先復原一步',units[u].name+'雖只剩一格，但它與唯一答案矛盾。','!');return}
+        snapshot();state.cells[i]='cat';autoMark(r,c,p.regions[r][c]);updateAll(false);highlightCells([i]);
+        setLogic('唯一位置：放貓',units[u].name+'只剩這一格可用，所以這裡一定有貓。','✓');showToast('已扣 1 顆心 · 由唯一位置確定');if(!spendHint())checkWin();return;
+      }
+    }
+    for(u=0;u<units.length;u++)if(!unitHasCat(units[u])){
+      possible=units[u].cells.filter(function(i){return cand.indexOf(i)>=0});
+      for(v=0;v<units.length;v++)if(u!==v&&units[u].type!==units[v].type&&!unitHasCat(units[v])){
+        if(possible.length&&possible.every(function(i){return units[v].cells.indexOf(i)>=0})){
+          remove=units[v].cells.filter(function(i){return units[u].cells.indexOf(i)<0&&cand.indexOf(i)>=0});
+          if(remove.length){snapshot();remove.forEach(function(i){state.cells[i]='x'});updateAll(false);highlightCells(remove);
+            setLogic('鎖定區域：排除',units[u].name+'的所有可能都落在'+units[v].name+'，所以該處其餘格不能放貓。','×');showToast('已扣 1 顆心 · 排除 '+remove.length+' 格');spendHint();return}
+        }
+      }
+    }
+    for(u=0;u<units.length;u++)if(!unitHasCat(units[u])){
+      possible=units[u].cells.filter(function(i){return cand.indexOf(i)>=0});remove=cand.filter(function(i){return units[u].cells.indexOf(i)<0&&possible.length&&possible.every(function(x){
+        var ir=Math.floor(i/p.size),ic=i%p.size,xr=Math.floor(x/p.size),xc=x%p.size;return Math.abs(ir-xr)<=1&&Math.abs(ic-xc)<=1;
+      })});
+      if(remove.length){snapshot();remove.forEach(function(i){state.cells[i]='x'});updateAll(false);highlightCells(remove);
+        setLogic('相鄰規則：排除',units[u].name+'的貓不論落在哪個候選格，都會貼近亮起的格子，所以那些格子不能放貓。','×');showToast('已扣 1 顆心 · 由相鄰規則排除');spendHint();return}
+    }
+    setLogic('暫時沒有單一步驟','檢查是否有多餘的 ×；也可復原後重新從鎖定色區推理。','?');showToast('先檢查現有標記');
+  }
+  function onKey(e){
+    var p=puzzles[state.level],i=+e.currentTarget.dataset.i,r=Math.floor(i/p.size),c=i%p.size,ni=i;
+    if(e.key==='ArrowUp')ni=Math.max(0,r-1)*p.size+c;else if(e.key==='ArrowDown')ni=Math.min(p.size-1,r+1)*p.size+c;else if(e.key==='ArrowLeft')ni=r*p.size+Math.max(0,c-1);else if(e.key==='ArrowRight')ni=r*p.size+Math.min(p.size-1,c+1);else if(e.key===' '||e.key==='Enter'){e.preventDefault();act(i);return}else return;
+    e.preventDefault();state.focus=ni;board.querySelectorAll('.cell').forEach(function(x,j){x.tabIndex=j===ni?0:-1});board.children[ni].focus();
+  }
+  var toastTimer;function showToast(t){toast.textContent=t;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toast.classList.remove('show')},1200)}
+  function vibrate(ms){if(navigator.vibrate)navigator.vibrate(ms)}
+  function burst(){
+    var box=document.getElementById('confetti'),colors=['#ec6f5c','#f2b84b','#4aa98e','#6b8fd8'];box.innerHTML='';
+    for(var i=0;i<26;i++){var x=document.createElement('i');x.style.left=(5+Math.random()*90)+'%';x.style.background=colors[i%colors.length];x.style.setProperty('--drift',(Math.random()*160-80)+'px');x.style.animationDelay=(Math.random()*.45)+'s';box.appendChild(x)}setTimeout(function(){box.innerHTML=''},2400)
+  }
+  var rules=document.getElementById('rulesDialog'),result=document.getElementById('resultDialog');
+  document.getElementById('rulesBtn').onclick=function(){rules.showModal()};
+  rules.querySelectorAll('.close-btn,.close-rules').forEach(function(b){b.onclick=function(){rules.close()}});
+  document.getElementById('markMode').onclick=function(){setMode('mark')};document.getElementById('catMode').onclick=function(){setMode('cat')};
+  document.getElementById('undoBtn').onclick=undo;document.getElementById('hintBtn').onclick=hint;
+  document.getElementById('nextBtn').onclick=function(){var won=result.dataset.win==='1';result.close();if(!won){newLevel(state.level);return}if(state.level===puzzles.length-1){templates=shuffleItems(templates.slice());puzzles=templates.slice();lastVariants=[];newLevel(0)}else newLevel(state.level+1)};
+  document.getElementById('retryBtn').onclick=function(){result.close();newLevel(state.level)};
+  [rules,result].forEach(function(d){d.addEventListener('click',function(e){if(e.target===d&&d===rules)d.close()})});
+  newLevel(0);
+})();
+</script>
+</body>
+</html>

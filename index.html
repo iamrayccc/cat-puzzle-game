@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="light dark" />
-  <link rel="icon" href="data:," />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Cg%20class%3D%22cat-sway%22%3E%3Cg%20class%3D%22cat-breathe%22%3E%3Cpath%20d%3D%22M14%2025%2011%208l15%209a27%2027%200%200%201%2012%200l15-9-3%2017c4%204%206%2010%206%2016%200%2011-10%2018-24%2018S8%2052%208%2041c0-6%202-12%206-16Z%22%20fill%3D%22%23fffdf8%22%20stroke%3D%22%2329474f%22%20stroke-width%3D%222.7%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22m15%2013%203%2010%207-4Z%22%20fill%3D%22%23f5b4ae%22%2F%3E%3Cpath%20d%3D%22m49%2013-3%2010-7-4Z%22%20fill%3D%22%23f5b4ae%22%2F%3E%3Cg%20class%3D%22cat-blink%22%3E%3Cpath%20d%3D%22M21%2035h.1M43%2035h.1%22%20stroke%3D%22%2329474f%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fg%3E%3Cpath%20d%3D%22m29%2041%203-2%203%202-3%203Z%22%20fill%3D%22%23ee7b70%22%20stroke%3D%22%2329474f%22%20stroke-width%3D%221.2%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M32%2044c-1%203-5%203-6%201m6-1c1%203%205%203%206%201%22%20fill%3D%22none%22%20stroke%3D%22%2329474f%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M19%2043%207%2040m12%208L8%2050m37-7%2012-3m-12%208%2011%202%22%20fill%3D%22none%22%20stroke%3D%22%2329474f%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E" />
   <title>貓咪邏輯解謎遊戲</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,7 +29,7 @@
       --bad: #c74343;
       --shadow: 0 14px 34px rgba(26,60,66,.14);
       --r1:#f3a6a6; --r2:#f6c184; --r3:#e8da72; --r4:#b8db76;
-      --r5:#b08968; --r6:#7fd6bc; --r7:#78cfd9; --r8:#82bde5; --r9:#8ea3e1; --r10:#aa92dc; --r11:#c895d8; --r12:#e89bc8; --r13:#d4b191; --r14:#a7b8c4;
+      --r5:#b08968; --r6:#7fd6bc; --r7:#a7b8c4; --r8:#82bde5; --r9:#8ea3e1; --r10:#aa92dc;
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -39,7 +39,7 @@
         --good:#65d2ae; --bad:#ff7e7a; --shadow:0 16px 38px rgba(0,0,0,.3);
         --grid-line:#ffffff; --cell-ink:#29474f;
         --r1:#f3a6a6; --r2:#f6c184; --r3:#e8da72; --r4:#b8db76;
-        --r5:#b08968; --r6:#7fd6bc; --r7:#78cfd9; --r8:#82bde5; --r9:#8ea3e1; --r10:#aa92dc; --r11:#c895d8; --r12:#e89bc8; --r13:#d4b191; --r14:#a7b8c4;
+        --r5:#b08968; --r6:#7fd6bc; --r7:#a7b8c4; --r8:#82bde5; --r9:#8ea3e1; --r10:#aa92dc;
       }
     }
     * { box-sizing:border-box; }
@@ -80,17 +80,24 @@
     @keyframes heartHit { 18%{transform:translateX(-3px);background:color-mix(in srgb,var(--bad) 18%,var(--panel))} 36%{transform:translateX(3px)} 54%{transform:translateX(-2px)} 100%{transform:none} }
     @keyframes heartBreak { 0%{opacity:1;transform:translateY(0) scale(1);filter:none} 28%{opacity:1;transform:translateY(-3px) scale(1.38) rotate(-7deg);filter:none} 55%{opacity:.82;transform:translateY(2px) scale(1.02) rotate(8deg);filter:grayscale(.75)} 100%{opacity:.18;transform:translateY(9px) scale(.72) rotate(14deg);filter:grayscale(1)} }
     @keyframes crackShow { 0%,20%{opacity:0;stroke-dasharray:16;stroke-dashoffset:16} 38%,100%{opacity:1;stroke-dasharray:16;stroke-dashoffset:0} }
-    .top-actions { display:flex; gap:8px; margin-bottom:18px; }
-    .quiet-btn { border:0; background:transparent; color:var(--muted); padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:800; display:flex; align-items:center; gap:6px; }
+    .top-actions { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:18px; }
+    .top-row { grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .top-row .quiet-btn { flex:0 0 auto; padding:8px 10px; }
+    .top-row .theme-seg { flex:0 1 auto; }
+    .top-row .cats-remaining { flex:0 0 auto; padding:8px 6px; white-space:nowrap; }
+    .quiet-btn { border:0; background:transparent; color:var(--muted); padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px; }
     .quiet-btn:hover, .quiet-btn:focus-visible { background:var(--panel-2); color:var(--ink); outline:none; }
     .quiet-btn.hint-used { opacity:.7; }
     .quiet-btn svg { width:18px; height:18px; }
-    .quiet-btn:first-child { margin-left:-8px; }
+    .cats-remaining { display:flex; align-items:center; justify-content:flex-end; gap:6px; padding:8px 10px; border-radius:10px; color:var(--ink); font-weight:800; }
+    .cats-remaining .cats-icon { width:22px; height:22px; display:inline-flex; }
+    .cats-remaining .cats-icon svg { width:100%; height:100%; }
+    .cats-remaining b { font-size:1.25rem; }
     #openingBtn { background:var(--panel-2); color:var(--ink); }
     #openingBtn[hidden] { display:none; }
     #openingBtn svg { color:var(--good); }
     #openingBtn.guide-used { opacity:.68; cursor:default; }
-    #hintBtn { margin-left:auto; }
+    #hintBtn { background:var(--panel-2); color:var(--ink); }
     #hintBtn .lit-bulb { color:var(--sun); filter:drop-shadow(0 0 3px color-mix(in srgb,var(--sun) 62%,transparent)); }
     #hintBtn .bulb-glow { fill:currentColor; stroke:var(--line); }
     #hintBtn.hint-used .lit-bulb { color:var(--muted); filter:none; }
@@ -143,15 +150,18 @@
     .guide-close { align-self:center; border:1px solid var(--soft-line); background:var(--panel); color:var(--ink); min-height:36px; padding:7px 10px; border-radius:10px; cursor:pointer; font-weight:900; font-size:.76rem; white-space:nowrap; }
     .guide-close:hover,.guide-close:focus-visible { outline:2px solid var(--line); outline-offset:2px; }
     .controls { width:100%; margin:0 auto 14px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .mode-btn { min-height:58px; border:2px solid var(--soft-line); background:var(--panel); border-radius:16px; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:10px; font-weight:900; box-shadow:0 5px 13px rgba(26,60,66,.06); touch-action:manipulation; }
+    .mode-btn { min-height:44px; border:2px solid var(--soft-line); background:var(--panel); border-radius:16px; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:10px; font-weight:900; box-shadow:0 5px 13px rgba(26,60,66,.06); touch-action:manipulation; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; }
     .mode-btn:hover, .mode-btn:focus-visible { border-color:var(--line); outline:2px solid var(--line); outline-offset:2px; }
-    .mode-btn[aria-pressed="true"] { border-color:var(--line); background:var(--line); color:var(--panel); box-shadow:0 6px 0 color-mix(in srgb,var(--line) 35%, transparent); transform:translateY(-2px); }
+    .mode-btn:active, .mode-btn:focus:not(:focus-visible) { outline:none; }
+    .mode-btn[aria-pressed="true"] { border-color:#555; background:#ffffff; color:var(--ink); box-shadow:0 6px 14px rgba(26,60,66,.14); outline:none !important; -webkit-tap-highlight-color:transparent; }
     .mode-icon { width:28px; height:28px; display:grid; place-items:center; }
     .mini-x { width:18px; height:18px; position:relative; }
     .mini-x::before,.mini-x::after { content:""; position:absolute; left:6px; top:0; width:5px; height:19px; border-radius:3px; background:currentColor; transform:rotate(45deg); }
     .mini-x::after{transform:rotate(-45deg)}
     .mode-icon svg { width:30px; height:30px; }
     .footer-note { text-align:center; font-size:.78rem; color:var(--muted); margin:13px 0 0; }
+    .jump-bottom-btn { display:block; margin:18px auto 0; border:1px solid var(--line); background:var(--panel);
+      color:var(--muted); padding:8px 18px; border-radius:10px; font-size:.78rem; font-weight:800; cursor:pointer; }
     .version { display:block; margin-top:7px; font-size:.7rem; font-variant-numeric:tabular-nums; opacity:.82; }
     dialog { border:0; padding:0; max-width:none; max-height:none; background:transparent; color:inherit; }
     dialog::backdrop { background:rgba(12,28,31,.62); backdrop-filter:blur(4px); }
@@ -213,6 +223,14 @@
       pointer-events:auto;
     }
     #jumpDialog .sheet { width:min(92vw,400px); text-align:center; }
+    #updateDialog[open] {
+      position:fixed; inset:0; width:auto; height:100dvh; margin:0;
+      padding:14px; display:flex; flex-direction:column; align-items:center; justify-content:safe center;
+      pointer-events:auto;
+    }
+    #updateDialog .sheet { width:min(92vw,400px); text-align:center; }
+    #updateDialog .sheet h2 { margin-bottom:12px; }
+    #updateDialog .sheet p { margin-bottom:18px; }
     #jumpDialog .sheet label { font-size:1.1rem; font-weight:800; margin:0 0 18px; color:var(--ink); }
     #jumpDialog .sheet label { display:block; }
     #jumpInput { width:100%; min-height:52px; margin-bottom:10px; border:2px solid var(--soft-line); border-radius:14px; background:var(--panel); color:var(--ink); padding:8px 12px; font:inherit; font-size:1.05rem; text-align:center; }
@@ -246,8 +264,7 @@
       .stat:last-child { grid-column:1/-1; }
       .top-actions { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; }
       .quiet-btn { justify-content:center; padding:8px 5px; font-size:.78rem; }
-      .quiet-btn:first-child, #hintBtn { margin-left:0; }
-      #hintBtn { grid-column:1/-1; background:var(--panel-2); }
+      .cats-remaining { justify-content:flex-end; padding:8px 5px; font-size:.78rem; }
       .logic-note.guide-active { grid-template-columns:30px 1fr; }
       .logic-note.guide-active .guide-close { grid-column:2; justify-self:start; }
     }
@@ -266,6 +283,20 @@
       .rule-strip { padding:8px 0 0; }
     }
     @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }
+
+    /* ===== 深淺色主題：深色版色區（v35.63）===== */
+    /* 深色版 r1-r9 取自 CC 截圖，r10 按截圖風格推導；淺色版維持 :root 原色 */
+    body.theme-dark {
+      --r1:#eeb7ce; --r2:#f1ae77; --r3:#ddbc5d; --r4:#b5d79b; --r5:#a3734f;
+      --r6:#67b1b0; --r7:#acbed6; --r8:#7fbae2; --r9:#9179cf; --r10:#dc89b5;
+    }
+    /* 主題切換按鈕樣式（沿用 sound-btn 風格） */
+    .theme-seg { display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel); }
+    .theme-seg-btn { border:0; background:transparent; color:var(--muted); padding:8px 10px; font-size:.78rem; font-weight:800; cursor:pointer; white-space:nowrap; }
+    .theme-seg-btn.active { background:var(--accent); color:#fff; }
+    .theme-seg-btn + .theme-seg-btn { border-left:1px solid var(--line); }
+    .theme-btn svg { width:16px; height:16px; }
+    .theme-btn:hover { filter:brightness(1.05); }
   </style>
 </head>
 <body>
@@ -283,17 +314,25 @@
     <section class="level-meta" aria-label="關卡資料"><h1 id="levelName">午睡角落</h1><small id="levelCount">第 1／50 關</small></section>
 
     <nav class="top-actions" aria-label="遊戲工具">
+      <div class="top-row">
       <button class="quiet-btn" id="rulesBtn" type="button" aria-label="查看玩法">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.4 2.4 0 1 1 3.1 2.3c-.8.3-1.3.9-1.3 1.7"/><path d="M12 17h.01"/></svg>玩法
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.4 2.4 0 1 1 3.1 2.3c-.8.3-1.3.9-1.3 1.7"/><path d="M12 17h.01"/></svg>玩法
       </button>
-      <button class="quiet-btn" id="undoBtn" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 8-4 4 4 4"/><path d="M5 12h8a6 6 0 0 1 6 6"/></svg>復原
-      </button>
+      <div class="theme-seg" role="group" aria-label="主題選擇">
+        <button class="theme-seg-btn" id="themeDarkBtn" type="button">深色</button><button class="theme-seg-btn" id="themeLightBtn" type="button">淺色</button>
+      </div>
+      <div class="cats-remaining" id="catsRemaining" aria-label="剩餘 9 隻貓">
+        <span class="cats-icon" id="catsRemainingIcon" aria-hidden="true"></span><span>剩餘 <b id="catsRemainingNum">9</b> 隻</span>
+      </div>
+      </div>
       <button class="quiet-btn" id="restartBtn" type="button" aria-label="清除本關所有標記，保留同一版圖">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 11a8 8 0 1 1 2.3 6.7"/><path d="M4 5v6h6"/></svg>全部清除
       </button>
       <button class="quiet-btn" id="openingBtn" type="button" aria-label="查看本關免費開局指引">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 19c3-7 7-11 14-14"/><path d="M9 5h10v10"/><circle cx="6" cy="18" r="2"/></svg><span id="openingLabel">開局指引 · 免費</span>
+      </button>
+      <button class="quiet-btn" id="undoBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 8-4 4 4 4"/><path d="M5 12h8a6 6 0 0 1 6 6"/></svg>復原
       </button>
       <button class="quiet-btn" id="hintBtn" type="button" aria-label="找貓提示，本關剩餘兩次">
         <svg class="lit-bulb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 1v2M4.2 4.2l1.4 1.4M1 12h2m16 0h2M18.4 5.6l1.4-1.4"/><path class="bulb-glow" d="M8.5 14.5A6 6 0 1 1 15.5 14.5c-.8.7-1.5 1.5-1.5 2.5h-4c0-1-.7-1.8-1.5-2.5Z"/><path d="M9 19h6M10 22h4"/></svg><span id="hintLabel">找貓提示 · 剩餘 2 次</span>
@@ -320,7 +359,7 @@
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </section>
 
-    <p class="footer-note"><span class="version">Version 2026.10.10.35.52</span></p>
+    <p class="footer-note"><span class="version">Version 2026.10.11.36.3</span></p>
   </main>
 
   <dialog id="rulesDialog">
@@ -372,6 +411,16 @@
       </div>
     </form>
   </dialog>
+  <dialog id="updateDialog">
+    <div class="sheet">
+      <h2>發現新版本</h2>
+      <p>遊戲已更新，建議立即更新以獲得最新內容</p>
+      <div class="jump-actions">
+        <button class="secondary" id="updateLater" type="button">稍後</button>
+        <button class="primary" id="updateNow" type="button">立即更新</button>
+      </div>
+    </div>
+  </dialog>
 
 
 <script>
@@ -406,8 +455,9 @@
      IS_TEST = true  → 顯示跳關按鈕（測試版專用）
      玩家版構建時改為 false → 跳關按鈕＋全部相關邏輯完全消除，頁面無按鈕、無入口 */
   var IS_TEST = false; // 玩家版構建時改為 false，跳關功能即完全消除
+  var CURRENT_VERSION='2026.10.11.36.3'; // 過關時版本檢查用；發佈新版本時同步更新 version.txt
   var TOTAL=150, MAX_HEARTS=5, PUZZLE_SEED=0x43a7c21d;
-  var palette=['var(--r1)','var(--r2)','var(--r3)','var(--r4)','var(--r5)','var(--r6)','var(--r7)','var(--r8)','var(--r9)','var(--r10)','var(--r11)','var(--r12)','var(--r13)','var(--r14)'];
+  var paletteLight=['#f3a6a6','#f6c184','#e8da72','#b8db76','#b08968','#7fd6bc','#a7b8c4','#82bde5','#8ea3e1','#aa92dc'],paletteDark=['#eeb7ce','#f1ae77','#ddbc5d','#b5d79b','#a3734f','#67b1b0','#acbed6','#7fbae2','#9179cf','#dc89b5'];
   var first=['暖陽','月光','毛線','紙箱','星夜','清晨','雨聲','魚乾','雲朵','花影'];
   var second=['角落','小徑','迷宮','窗台','走廊','花園','書架','屋頂','庭院','秘境'];
   function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -597,8 +647,8 @@
     search(0);return answer;
   }
   function colorRegions(regions,n,seed){
-    var adjacent=Array.from({length:n},function(){return{}}),hues=new Array(n),used=new Array(14).fill(false),preferred=[0,5,10,8,3,7,2,4,12,6,1,11,9,13],offset=seed%preferred.length,calls=0;
-    var rgb=[[243,166,166],[246,193,132],[232,218,114],[184,219,118],[141,211,155],[127,214,188],[120,207,217],[130,189,229],[142,163,225],[170,146,220],[200,149,216],[232,155,200],[212,177,145],[167,184,196]];
+    var adjacent=Array.from({length:n},function(){return{}}),hues=new Array(n),used=new Array(10).fill(false),preferred=[0,5,8,3,7,2,9,4,1,6],offset=seed%preferred.length,calls=0;
+    var rgb=[[243,166,166],[246,193,132],[232,218,114],[184,219,118],[176,137,104],[127,214,188],[167,184,196],[130,189,229],[142,163,225],[170,146,220]];
     function distance(a,b){var dr=rgb[a][0]-rgb[b][0],dg=rgb[a][1]-rgb[b][1],db=rgb[a][2]-rgb[b][2];return Math.sqrt(.3*dr*dr+.59*dg*dg+.11*db*db)}
     for(var r=0;r<n;r++)for(var c=0;c<n;c++){var a=regions[r][c],b;if(r<n-1&&(b=regions[r+1][c])!==a){adjacent[a][b]=1;adjacent[b][a]=1}if(c<n-1&&(b=regions[r][c+1])!==a){adjacent[a][b]=1;adjacent[b][a]=1}}
     function assign(colored){
@@ -613,8 +663,6 @@
       for(var j=0;j<preferred.length;j++){
         var candidate=preferred[(j+offset+colored)%preferred.length];
         if(used[candidate])continue;
-        if((candidate===9&&used[10])||(candidate===10&&used[9]))continue;
-        if((candidate===5&&used[6])||(candidate===6&&used[5]))continue;
         var distances=neighbors.map(function(k){return distance(candidate,hues[k])});
         if(distances.some(function(value){return value<40}))continue;
         choices.push({value:candidate,score:distances.length?Math.min.apply(null,distances):999,tie:j});
@@ -635,8 +683,6 @@
       for(var j=0;j<preferred.length;j++){
         var candidate=preferred[(j+offset+index)%preferred.length];
         if(hues.indexOf(candidate)>=0)continue;
-        if((candidate===9&&hues.indexOf(10)>=0)||(candidate===10&&hues.indexOf(9)>=0))continue;
-        if((candidate===5&&hues.indexOf(6)>=0)||(candidate===6&&hues.indexOf(5)>=0))continue;
         var score=neighbors.length?Math.min.apply(null,neighbors.map(function(k){return distance(candidate,hues[k])})):200-j;
         if(score>bestScore){best=candidate;bestScore=score}
       }
@@ -844,7 +890,7 @@
     swipeActive=false;
     if(swipeMoved){
       e.preventDefault();
-      setLogic('已掃動'+(swipeMode==='clear'?'清除':'標記'),'模式：'+swipeMode+'，起點格：'+swipeStartCell,'×');persistProgress();
+      setLogic('已掃動'+(swipeMode==='clear'?'清除':'標記'),'','×');persistProgress();
     }
     swipeSeen={};
   },{passive:false});
@@ -885,7 +931,8 @@
   /* ===== 本機進度存檔：localStorage＋SHA-256 校驗碼防篡改 =====
      只在轉關卡時寫入（nextBtn → newLevel 後呼叫 saveLocalProgress）。
      啟動時優先讀取：校驗通過則恢復，否則回退 URL hash 或從第 1 關開始。 */
-  var LS_KEY='meowdoku-progress-v1',LS_SECRET='meowdoku-cat-2026';
+  var LS_KEY='meowdoku-progress-v1',LS_SECRET='meowdoku-cat-2026',THEME_KEY='meowdoku-theme-v1';
+  var currentTheme='light'; /* 主題記憶體變數：切換即時生效，升關存檔時才寫入 localStorage */
   function sha256hex(str){
     try{
       if(!(window.crypto&&crypto.subtle&&crypto.subtle.digest))return Promise.resolve(null);
@@ -896,13 +943,14 @@
   }
   function saveLocalProgress(){
     try{
-      if(!(window.localStorage&&window.crypto&&crypto.subtle&&crypto.subtle.digest))return;
-      var level=state.level,hearts=state.hearts,score=state.score;
-      sha256hex(level+'|'+hearts+'|'+score+'|'+LS_SECRET).then(function(sum){
+      if(!(window.localStorage&&window.crypto&&crypto.subtle&&crypto.subtle.digest))return Promise.resolve();
+      var level=state.level,hearts=state.hearts,score=state.score,theme=getTheme();
+      try{localStorage.setItem(THEME_KEY,theme)}catch(e){}
+      return sha256hex(level+'|'+hearts+'|'+score+'|'+theme+'|'+LS_SECRET).then(function(sum){
         if(!sum)return;
-        try{localStorage.setItem(LS_KEY,JSON.stringify({v:1,level:level,hearts:hearts,score:score,sum:sum}))}catch(e){}
+        try{localStorage.setItem(LS_KEY,JSON.stringify({v:2,level:level,hearts:hearts,score:score,theme:theme,sum:sum}))}catch(e){}
       }).catch(function(){});
-    }catch(e){}
+    }catch(e){return Promise.resolve()}
   }
   function loadLocalProgress(){
     try{
@@ -912,11 +960,15 @@
       if(!raw)return Promise.resolve(null);
       var d;
       try{d=JSON.parse(raw)}catch(e){return Promise.resolve(null)}
-      if(!d||d.v!==1||typeof d.level!=='number'||typeof d.hearts!=='number'||typeof d.score!=='number'||typeof d.sum!=='string')return Promise.resolve(null);
+      if(!d||(d.v!==1&&d.v!==2)||typeof d.level!=='number'||typeof d.hearts!=='number'||typeof d.score!=='number'||typeof d.sum!=='string')return Promise.resolve(null);
       if(d.level<0||d.level>=TOTAL||d.hearts<1||d.hearts>MAX_HEARTS||d.score<0||!isFinite(d.score))return Promise.resolve(null);
-      return sha256hex(d.level+'|'+d.hearts+'|'+d.score+'|'+LS_SECRET).then(function(sum){
+      var theme2=(d.v===2&&d.theme==='dark')?'dark':'light';
+      var hashInput=d.v===2?(d.level+'|'+d.hearts+'|'+d.score+'|'+theme2+'|'+LS_SECRET):(d.level+'|'+d.hearts+'|'+d.score+'|'+LS_SECRET);
+      return sha256hex(hashInput).then(function(sum){
         if(!sum||sum!==d.sum)return null;
-        return{level:d.level,hearts:d.hearts,score:Math.floor(d.score)};
+        var out={level:d.level,hearts:d.hearts,score:Math.floor(d.score)};
+        if(d.v===2)out.theme=theme2;
+        return out;
       }).catch(function(){return null});
     }catch(e){return Promise.resolve(null)}
   }
@@ -979,7 +1031,7 @@
     });
   }
   var catSVG='<svg class="cat" viewBox="0 0 64 64" aria-hidden="true"><g class="cat-sway"><g class="cat-breathe"><path d="M14 25 11 8l15 9a27 27 0 0 1 12 0l15-9-3 17c4 4 6 10 6 16 0 11-10 18-24 18S8 52 8 41c0-6 2-12 6-16Z" fill="#fffdf8" stroke="#29474f" stroke-width="2.7" stroke-linejoin="round"/><path d="m15 13 3 10 7-4Z" fill="#f5b4ae"/><path d="m49 13-3 10-7-4Z" fill="#f5b4ae"/><g class="cat-blink"><path d="M21 35h.1M43 35h.1" stroke="#29474f" stroke-width="5" stroke-linecap="round"/></g><path d="m29 41 3-2 3 2-3 3Z" fill="#ee7b70" stroke="#29474f" stroke-width="1.2" stroke-linejoin="round"/><path d="M32 44c-1 3-5 3-6 1m6-1c1 3 5 3 6 1" fill="none" stroke="#29474f" stroke-width="2" stroke-linecap="round"/><path d="M19 43 7 40m12 8L8 50m37-7 12-3m-12 8 11 2" fill="none" stroke="#29474f" stroke-width="2" stroke-linecap="round"/></g></g></svg>';
-  document.getElementById('catModeIcon').innerHTML=catSVG;document.getElementById('resultCat').innerHTML=catSVG;
+  document.getElementById('catModeIcon').innerHTML=catSVG;document.getElementById('resultCat').innerHTML=catSVG;document.getElementById('catsRemainingIcon').innerHTML=catSVG;
   function heartSVG(){return '<svg class="heart" viewBox="0 0 24 22" fill="currentColor" aria-hidden="true"><path d="M12 21S1 14.5 1 7.4C1 3.8 3.5 1 7 1c2.1 0 4 1.1 5 2.8C13 2.1 14.9 1 17 1c3.5 0 6 2.8 6 6.4C23 14.5 12 21 12 21Z"/><path class="heart-crack" d="m13.5 3.5-3 5 3 2.8-3.2 5.2 1.2 4"/></svg>'}
   function paintHearts(){state.hearts=Math.min(MAX_HEARTS,Math.max(0,state.hearts));var h=document.getElementById('hearts');h.innerHTML='';for(var i=0;i<MAX_HEARTS;i++){var w=document.createElement('span');w.innerHTML=heartSVG();var svg=w.firstChild;if(i>=state.hearts)svg.classList.add('lost');h.appendChild(svg)}h.setAttribute('aria-label','剩餘'+state.hearts+'次機會')}
   function paintScore(){state.score=Math.max(0,state.score);document.getElementById('scoreValue').textContent=state.score.toLocaleString('zh-Hant')}
@@ -987,8 +1039,9 @@
   function paintMode(){document.getElementById('xModeBtn').setAttribute('aria-pressed',state.mode==='x'?'true':'false');document.getElementById('catModeBtn').setAttribute('aria-pressed',state.mode==='cat'?'true':'false')}
   function chooseMode(mode){state.mode=mode;paintMode();setLogic(mode==='cat'?'已選擇放貓':'已選擇標 X',mode==='cat'?'單擊空白格放貓；玩家手動標記可取消，鎖定 X 不可更改。':'單擊空白格標 X；玩家手動標記可取消，鎖定 X 不可更改。',mode==='cat'?'●':'×')}
   function paintHintButton(){var btn=document.getElementById('hintBtn'),label=document.getElementById('hintLabel'),used=state.hintsRemaining<=0;label.textContent=used?'找貓提示 · 已用完':'找貓提示 · 剩餘 '+state.hintsRemaining+' 次';btn.setAttribute('aria-label',used?'找貓提示，本關已用完':'找貓提示，本關剩餘'+state.hintsRemaining+'次');btn.classList.toggle('hint-used',used)}
+  function paintCatsRemaining(){var el=document.getElementById('catsRemaining'),num=document.getElementById('catsRemainingNum'),n=state.catsRemaining;if(!el||!num)return;num.textContent=n;el.setAttribute('aria-label','剩餘 '+n+' 隻貓')}
   function paintOpeningButton(){var btn=document.getElementById('openingBtn'),label=document.getElementById('openingLabel');btn.hidden=state.restoredEntry;if(state.restoredEntry){btn.disabled=true;return}label.textContent=state.openingAvailable?'開局指引 · 免費':'開局指引 · 已看';btn.disabled=!state.openingAvailable;btn.classList.toggle('guide-used',!state.openingAvailable);btn.setAttribute('aria-label',state.openingAvailable?'查看本關免費開局指引':'本關開局指引已看')}
-  function render(){var p=currentPuzzle();board.innerHTML='';board.style.gridTemplateColumns='repeat('+p.size+',1fr)';board.style.gridTemplateRows='repeat('+p.size+',1fr)';document.getElementById('levelCount').textContent='第 '+(state.level+1)+'／'+TOTAL+' 關 · '+p.label+' · '+p.size+'×'+p.size+' · '+p.colors+' 色';document.getElementById('levelName').textContent=p.name;for(var r=0;r<p.size;r++)for(var c=0;c<p.size;c++){var i=r*p.size+c,b=document.createElement('button');b.type='button';b.className='cell';b.dataset.i=i;b.setAttribute('role','gridcell');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，空白');b.tabIndex=i===state.focus?0:-1;b.style.setProperty('--cell-bg',palette[p.regionHues[p.regions[r][c]]]);b.addEventListener('keydown',onKey);board.appendChild(b)}paintHearts();paintScore();paintMode();paintHintButton();paintOpeningButton();updateAll(false)}
+  function render(){var p=currentPuzzle();board.innerHTML='';board.style.gridTemplateColumns='repeat('+p.size+',1fr)';board.style.gridTemplateRows='repeat('+p.size+',1fr)';document.getElementById('levelCount').textContent='第 '+(state.level+1)+'／'+TOTAL+' 關 · '+p.label+' · '+p.size+'×'+p.size+' · '+p.colors+' 色';document.getElementById('levelName').textContent=p.name;for(var r=0;r<p.size;r++)for(var c=0;c<p.size;c++){var i=r*p.size+c,b=document.createElement('button');b.type='button';b.className='cell';b.dataset.i=i;b.setAttribute('role','gridcell');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，空白');b.tabIndex=i===state.focus?0:-1;b.style.background=(currentTheme==='dark'?paletteDark:paletteLight)[p.regionHues[p.regions[r][c]]];b.addEventListener('keydown',onKey);board.appendChild(b)}paintHearts();paintScore();paintMode();paintHintButton();paintOpeningButton();paintCatsRemaining();updateAll(false)}
   function updateCell(i,animate){var b=board.children[i],p=currentPuzzle(),r=Math.floor(i/p.size),c=i%p.size,v=state.cells[i],lockedX=!!state.lockedXs[i];b.innerHTML=v==='cat'?catSVG:(v==='x'?'<span class="cross" aria-hidden="true"></span>':'');if(v==='cat'&&animate)b.querySelector('.cat').classList.add('pop');b.setAttribute('aria-disabled',lockedX?'true':'false');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，'+(v==='cat'?'貓咪':v==='x'?(lockedX?'已排除，鎖定':'已排除'):'空白'))}
   function snapshot(){state.history.push(state.cells.slice());if(state.history.length>100)state.history.shift()}
   function focusCell(i){state.focus=i;board.querySelectorAll('.cell').forEach(function(x,j){x.tabIndex=j===i?0:-1})}
@@ -997,7 +1050,7 @@
     if(state.locked||state.pendingCells[i]||state.lockedXs[i]||state.cells[i]!=='')return;
     snapshot();state.moves++;state.cells[i]='x';updateCell(i,false);soundClick();setLogic('已標記不能放','目前是「標 X」模式；玩家手動標記可取消，鎖定 X 不可更改。','×');persistProgress()
   }
-  function removeMark(i){if(state.locked||state.pendingCells[i]||state.lockedXs[i]||state.cells[i]==='')return;snapshot();state.moves++;state.cells[i]='';updateCell(i,false);setLogic('已取消標記','目前選擇的標記模式保持不變。','↶');persistProgress()}
+  function removeMark(i){if(state.locked||state.pendingCells[i]||state.lockedXs[i]||state.cells[i]===''||state.cells[i]==='cat')return;snapshot();state.moves++;state.cells[i]='';updateCell(i,false);setLogic('已取消標記','目前選擇的標記模式保持不變。','↶');persistProgress()}
   function conflicts(a,b,p){var ar=Math.floor(a/p.size),ac=a%p.size,br=Math.floor(b/p.size),bc=b%p.size;return ar===br||ac===bc||p.regions[ar][ac]===p.regions[br][bc]||(Math.abs(ar-br)<=1&&Math.abs(ac-bc)<=1)}
   function commitWrongPlacement(i){
     var scoreBeforePenalty=state.score;
@@ -1039,7 +1092,7 @@
       },1500);
       return;
     }
-    persistProgress();setLogic('已放置貓咪','已自動切回「標 X」模式。','✓');vibrate(25);checkWin()
+    persistProgress();state.catsRemaining--;paintCatsRemaining();setLogic('已放置貓咪','已自動切回「標 X」模式。','✓');vibrate(25);checkWin()
   }
   function updateAll(animate){for(var i=0;i<state.cells.length;i++)updateCell(i,animate&&state.cells[i]==='cat')}
   function clearOpeningGuideVisuals(){board.querySelectorAll('.opening-region,.opening-target').forEach(function(cell){cell.classList.remove('opening-region','opening-target')});logicNote.classList.remove('guide-active')}
@@ -1093,6 +1146,33 @@
   }
   function openResultDialog(dialog){lockPageScroll();dialog.showModal();dialog.scrollTop=0}
   function closeResultDialog(){var dialog=document.getElementById('resultDialog');if(dialog.open)dialog.close();unlockPageScroll()}
+  /* ===== 過關時版本檢查（v35.56） =====
+     玩家點擊「下一關」時檢查 version.txt；有新版則彈提示，
+     無新版或檢查失敗時靜默繼續，不打擾玩家 */
+  var pendingProceed=null;
+  function showUpdateDialog(proceed){
+    pendingProceed=proceed;
+    var d=document.getElementById('updateDialog');
+    if(d&&d.showModal){lockPageScroll();d.showModal()}
+    else if(proceed){proceed()}
+  }
+  function closeUpdateDialog(runProceed){
+    var d=document.getElementById('updateDialog');
+    if(d&&d.open)d.close();
+    unlockPageScroll();
+    var p=pendingProceed;pendingProceed=null;
+    if(runProceed!==false&&p)p();
+  }
+  function checkVersionThen(proceed){
+    try{
+      fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){
+        if(!r.ok)throw 0;return r.text();
+      }).then(function(t){
+        t=(t||'').trim();
+        if(t&&t!==CURRENT_VERSION){showUpdateDialog(proceed)}else{proceed()}
+      }).catch(function(){proceed()});
+    }catch(e){proceed()}
+  }
   function showPromoteVeil(completed){var veil=document.getElementById('promoteVeil');if(!veil)return;var titles={10:['恭喜您，升至初階關卡！','第 11–30 關，迎接新的挑戰'],30:['恭喜您，升至中階關卡！','第 31–50 關，推理難度再提升'],50:['恭喜您，升至高階關卡！','第 51–150 關，10×10 大棋盤全新境界']};if(!titles[completed]){veil.hidden=true;return}document.getElementById('promoteTitle').textContent=titles[completed][0];document.getElementById('promoteSub').textContent=titles[completed][1];var pc=document.getElementById('promoteCat');if(pc&&typeof catSVG!=='undefined')pc.innerHTML=catSVG;veil.classList.remove('closing');veil.hidden=false;var btn=document.getElementById('promoteBtn');if(btn)btn.focus()}
   function hidePromoteVeil(){var veil=document.getElementById('promoteVeil');if(!veil||veil.hidden)return;veil.classList.add('closing');setTimeout(function(){veil.hidden=true;veil.classList.remove('closing')},300)}
   function finish(win){
@@ -1105,13 +1185,13 @@
     }
     var d=document.getElementById('resultDialog'),elapsed=Math.max(1,Math.floor((Date.now()-state.start)/1000)),nextBtn=document.getElementById('nextBtn'),retryBtn=document.getElementById('retryBtn');document.getElementById('timeStat').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');document.getElementById('mistakeStat').textContent=state.mistakes;document.getElementById('hintStat').textContent=state.hintsUsed;document.getElementById('moveStat').textContent=state.moves;document.getElementById('scoreStat').textContent=state.score.toLocaleString('zh-Hant');document.getElementById('resultTitle').textContent=win?(state.level===TOTAL-1?'階段完成':'完成第 '+completed+' 關'):'遊戲完結';document.getElementById('resultText').textContent=win?(state.level===TOTAL-1?('你已完成現階段全部 30 關'+(earned?'，本關獲得 1000 分':'')+(recovered?'，並補回 1 顆心':'')+'。'):('本關完成'+(earned?'，獲得 1000 分':'')+(recovered?'，並補回 1 顆心':'')+'。')):'5 顆心已用完；你來到第 '+completed+' 關，累計 '+state.score.toLocaleString('zh-Hant')+' 分。繼續玩：本關重玩、心回滿、扣5000分（最低 0 分）。';if(win){var finishedAll=state.level===TOTAL-1;nextBtn.textContent=finishedAll?'完成':'下一關';nextBtn.style.display='block';nextBtn.className='primary';nextBtn.autofocus=true;retryBtn.style.display='none';retryBtn.autofocus=false;nextBtn.parentNode.insertBefore(nextBtn,retryBtn)}else{nextBtn.style.display='none';nextBtn.autofocus=false;retryBtn.textContent='繼續玩';retryBtn.style.display='block';retryBtn.className='primary';retryBtn.autofocus=true;nextBtn.parentNode.insertBefore(retryBtn,nextBtn)}d.dataset.win=win?'1':'0';openResultDialog(d);if(win){soundComplete();burst();showPromoteVeil(completed)}
   }
-  function newLevel(index,skipSave,preserveVariant){clearToast();state.level=index;if(!preserveVariant)state.variant=HARDEST_VARIANT[index];var p=currentPuzzle();state.cells=new Array(p.size*p.size).fill('');state.lockedXs={};state.history=[];state.pendingCells={};state.hintsRemaining=2;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.start=Date.now();state.locked=false;state.resultShown=false;state.levelAwarded=false;state.focus=0;state.openingAvailable=true;state.openingGuide=null;state.restoredEntry=false;render();setLogic('本關版圖已準備','先查看免費「開局指引」，或直接選「標 X」／「放貓」開始；本關另有 2 次找貓提示。','↻');if(!skipSave)persistProgress()}
+  function newLevel(index,skipSave,preserveVariant){clearToast();state.level=index;if(!preserveVariant)state.variant=HARDEST_VARIANT[index];var p=currentPuzzle();state.cells=new Array(p.size*p.size).fill('');state.lockedXs={};state.history=[];state.pendingCells={};state.hintsRemaining=2;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.catsRemaining=p.size;state.start=Date.now();state.locked=false;state.resultShown=false;state.levelAwarded=false;state.focus=0;state.openingAvailable=true;state.openingGuide=null;state.restoredEntry=false;render();setLogic('本關版圖已準備','先查看免費「開局指引」，或直接選「標 X」／「放貓」開始；本關另有 2 次找貓提示。','↻');if(!skipSave)persistProgress()}
   function restartLevel(){
     if(state.locked)return;if(Object.keys(state.pendingCells).length){showToast('請先等待錯誤提示完成');return}
-    var p=currentPuzzle();state.cells=new Array(p.size*p.size).fill('');state.lockedXs={};state.history=[];state.focus=0;
-    render();setLogic('已清除所有標記','所有標記（含錯放後鎖定的 X）已全部清除；版圖、積分、心數、失誤數及計時保持不變，可由空白棋盤重新推理。','↻');showToast('已清除所有標記');persistProgress()
+    for(var i=0;i<state.cells.length;i++){if(state.cells[i]!=='cat')state.cells[i]=''}state.lockedXs={};state.history=[];state.focus=0;
+    render();setLogic('已清除 X 標記','已放中的貓咪已鎖定保留；X 標記已全部清除，可繼續推理。','↻');showToast('已清除 X 標記（貓咪保留）');persistProgress()
   }
-  function undo(){if(state.locked||!state.history.length){showToast('沒有可復原的步驟');return}if(Object.keys(state.pendingCells).length){showToast('請先等待錯誤提示完成');return}state.cells=state.history.pop();Object.keys(state.lockedXs).forEach(function(key){state.cells[+key]='x'});updateAll(false);setLogic('已復原一步','錯放後鎖定的 X 會保留；可繼續推理下一個位置。','↶');persistProgress()}
+  function undo(){if(state.locked||!state.history.length){showToast('沒有可復原的步驟');return}if(Object.keys(state.pendingCells).length){showToast('請先等待錯誤提示完成');return}var prev=state.history.pop();for(var i=0;i<state.cells.length;i++){if(state.cells[i]!=='cat')state.cells[i]=prev[i]==='cat'?'':prev[i]}Object.keys(state.lockedXs).forEach(function(key){state.cells[+key]='x'});updateAll(false);setLogic('已復原一步','已放中的貓咪已鎖定，只復原 X 標記。','↶');persistProgress()}
   function healPoisonedLocks(p){
     var lockKeys=Object.keys(state.lockedXs);
     if(!lockKeys.length)return false;
@@ -1207,7 +1287,7 @@
     }
     if(target<0)for(var sr=0;sr<p.size;sr++){var fallbackCell=sr*p.size+sol[sr];if(state.cells[fallbackCell]!=='cat'){target=fallbackCell;break}}
     if(target<0){checkWin();return}
-    snapshot();state.cells[target]='cat';state.moves++;state.hintsUsed++;state.hintsRemaining--;
+    snapshot();state.cells[target]='cat';state.moves++;state.hintsUsed++;state.hintsRemaining--;state.catsRemaining--;paintCatsRemaining();
     var scoreBeforeHint=state.score;changeScore(-100);var deducted=scoreBeforeHint-state.score;
     state.mode='x';paintMode();updateAll(false);soundMeow();paintHintButton();board.children[target].classList.add('hinted');vibrate(35);
     var tr=Math.floor(target/p.size)+1,tc=target%p.size+1,scoreText=deducted?'已扣 '+deducted+' 分，不扣心。':'積分已是 0 分，不再扣分；找貓提示不扣心。';
@@ -1226,13 +1306,13 @@
   }
   function unlockAudio(){if(!muted)ensureAudio()}
   document.addEventListener('pointerdown',unlockAudio,{capture:true,passive:true});document.addEventListener('keydown',unlockAudio,{capture:true});document.addEventListener('visibilitychange',function(){if(!document.hidden&&!muted)ensureAudio()});
-  var rules=document.getElementById('rulesDialog'),result=document.getElementById('resultDialog');document.getElementById('soundBtn').onclick=toggleSound;document.getElementById('xModeBtn').onclick=function(){chooseMode('x')};document.getElementById('catModeBtn').onclick=function(){chooseMode('cat')};document.getElementById('rulesBtn').onclick=function(){rules.showModal()};rules.querySelectorAll('.close-btn,.close-rules').forEach(function(b){b.onclick=function(){rules.close()}});document.getElementById('undoBtn').onclick=undo;document.getElementById('restartBtn').onclick=restartLevel;document.getElementById('openingBtn').onclick=showOpeningGuide;logicNote.addEventListener('click',function(e){if(e.target.closest('.guide-close'))closeOpeningGuide()});document.getElementById('hintBtn').onclick=hint;document.getElementById('promoteBtn').onclick=hidePromoteVeil;document.getElementById('nextBtn').onclick=function(){var won=result.dataset.win==='1',finishedAll=won&&state.level===TOTAL-1;if(finishedAll){closeResultDialog();return}if(!won)return;closeResultDialog();newLevel(state.level+1);saveLocalProgress()};document.getElementById('retryBtn').onclick=function(){var won=result.dataset.win==='1';if(!won){closeResultDialog();clearToast();state.hearts=MAX_HEARTS;state.score=Math.max(0,state.score-5000);state.mode='x';newLevel(state.level,false,true);return}};result.addEventListener('cancel',function(e){e.preventDefault()});result.addEventListener('close',unlockPageScroll);[rules,result].forEach(function(d){d.addEventListener('click',function(e){if(e.target===d&&d===rules)d.close()})});
+  var rules=document.getElementById('rulesDialog'),result=document.getElementById('resultDialog');document.getElementById('soundBtn').onclick=toggleSound;document.getElementById('xModeBtn').onclick=function(){chooseMode('x')};document.getElementById('catModeBtn').onclick=function(){chooseMode('cat')};document.getElementById('rulesBtn').onclick=function(){rules.showModal()};rules.querySelectorAll('.close-btn,.close-rules').forEach(function(b){b.onclick=function(){rules.close()}});document.getElementById('undoBtn').onclick=undo;document.getElementById('restartBtn').onclick=restartLevel;document.getElementById('openingBtn').onclick=showOpeningGuide;logicNote.addEventListener('click',function(e){if(e.target.closest('.guide-close'))closeOpeningGuide()});document.getElementById('hintBtn').onclick=hint;document.getElementById('promoteBtn').onclick=hidePromoteVeil;document.getElementById('nextBtn').onclick=function(){var won=result.dataset.win==='1',finishedAll=won&&state.level===TOTAL-1;if(finishedAll){closeResultDialog();return}if(!won)return;closeResultDialog();checkVersionThen(function(){newLevel(state.level+1);saveLocalProgress()})};document.getElementById('retryBtn').onclick=function(){var won=result.dataset.win==='1';if(!won){closeResultDialog();clearToast();state.hearts=MAX_HEARTS;state.score=Math.max(0,state.score-5000);state.mode='x';newLevel(state.level,false,true);return}};result.addEventListener('cancel',function(e){e.preventDefault()});result.addEventListener('close',unlockPageScroll);[rules,result].forEach(function(d){d.addEventListener('click',function(e){if(e.target===d&&d===rules)d.close()})});
   if(IS_TEST){
     /* 測試版專屬：跳關功能。IS_TEST=false（玩家版）時此整塊不執行，
        頁面上無按鈕、無入口，功能完全不可觸達。 */
     (function(){
-      var nav=document.querySelector('.top-actions');
-      if(!nav)return;
+      var footer=document.querySelector('.footer-note');
+      if(!footer||!footer.parentNode)return;
       var jumpBtn=document.createElement('button');
       jumpBtn.className='quiet-btn';
       jumpBtn.type='button';
@@ -1242,6 +1322,10 @@
       var jumpDialog=document.getElementById('jumpDialog'),jumpForm=document.getElementById('jumpForm'),jumpInput=document.getElementById('jumpInput'),jumpError=document.getElementById('jumpError');
       jumpBtn.onclick=function(){jumpInput.value=String(state.level+1);jumpError.hidden=true;jumpDialog.showModal();jumpInput.focus();jumpInput.select()};
       document.getElementById('jumpCancel').onclick=function(){jumpDialog.close()};
+      /* 版本更新對話框按鈕 */
+      document.getElementById('updateNow').onclick=async function(){closeUpdateDialog(false);newLevel(state.level+1);try{await saveLocalProgress()}catch(e){}location.reload()};
+      document.getElementById('updateLater').onclick=function(){closeUpdateDialog()};
+      (function(){var ud=document.getElementById('updateDialog');ud.addEventListener('cancel',function(e){e.preventDefault();closeUpdateDialog()});ud.addEventListener('click',function(e){if(e.target===ud)closeUpdateDialog()})})();
       jumpDialog.addEventListener('click',function(e){if(e.target===jumpDialog)jumpDialog.close()});
       jumpForm.onsubmit=function(e){
         e.preventDefault();
@@ -1249,15 +1333,50 @@
         if(!Number.isInteger(n)||n<1||n>TOTAL){jumpError.hidden=false;showToast('請輸入 1–150 的關號');jumpInput.focus();return}
         jumpDialog.close();closeResultDialog();clearToast();newLevel(n-1);
       };
-      nav.appendChild(jumpBtn);
+      jumpBtn.className='jump-bottom-btn';
+      footer.parentNode.insertBefore(jumpBtn,footer);
+
+      
     })();
   }
+
+  /* ===== 深淺色主題切換（v35.63）：淺色為預設，深色用截圖色系 ===== */
+  function getTheme(){return currentTheme}
+  function repaintBoardColors(){
+    try{
+      var p=currentPuzzle();if(!p||!p.regionHues||!p.regions||!board||!board.children.length)return;
+      var pal=(currentTheme==='dark'?paletteDark:paletteLight);
+      for(var i=0;i<board.children.length;i++){
+        var r=Math.floor(i/p.size),c=i%p.size;
+        board.children[i].style.background=pal[p.regionHues[p.regions[r][c]]];
+      }
+    }catch(e){}
+  }
+  function applyTheme(theme){
+    var dark=theme==='dark';
+    document.body.classList.toggle('theme-dark',dark);
+    var db=document.getElementById('themeDarkBtn'),lb=document.getElementById('themeLightBtn');
+    if(db)db.classList.toggle('active',dark);
+    if(lb)lb.classList.toggle('active',!dark);
+    repaintBoardColors();
+  }
+  function setTheme(theme){currentTheme=(theme==='dark')?'dark':'light';applyTheme(currentTheme)}
+  function toggleTheme(){setTheme(getTheme()==='dark'?'light':'dark')}
+  /* 啟動時：從 localStorage 恢復主題到記憶體（同步，避免閃爍），按鈕接線 */
+  try{var _st=localStorage.getItem(THEME_KEY);if(_st==='dark')currentTheme='dark'}catch(e){}
+  applyTheme(getTheme());
+  (function(){
+    var db=document.getElementById('themeDarkBtn'),lb=document.getElementById('themeLightBtn');
+    if(db)db.addEventListener('click',function(){setTheme('dark')});
+    if(lb)lb.addEventListener('click',function(){setTheme('light')});
+  })();
   (async function boot(){
     var lsDone=false;
     try{
       var saved=await loadLocalProgress();
       if(saved){
         state.hearts=saved.hearts;state.score=saved.score;
+        if(saved.theme)setTheme(saved.theme);
         newLevel(saved.level);
         setLogic('已恢復上次進度','已從本機存檔恢復：第 '+(saved.level+1)+' 關，積分 '+saved.score.toLocaleString('zh-Hant')+'。','↻');
         setTimeout(function(){showToast('已恢復上次進度：第 '+(saved.level+1)+' 關')},120);

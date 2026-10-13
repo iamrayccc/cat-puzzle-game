@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>進度修復｜貓咪解謎遊戲</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang HK","PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif;background:#faf6ef;color:#5b4a3f;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.card{background:#fffdf8;border:2px solid #ead9c2;border-radius:24px;box-shadow:0 8px 28px rgba(120,90,60,.12);max-width:480px;width:100%;padding:40px 32px;text-align:center}
+.cat{font-size:64px;margin-bottom:16px}
+h1{font-size:26px;color:#4a3b30;margin-bottom:16px}
+p{font-size:16px;line-height:1.8;color:#6b5a4d;margin-bottom:12px}
+.info{background:#f5efe3;border-radius:12px;padding:16px;margin:16px 0;font-size:15px;line-height:2;text-align:left}
+.btn{display:inline-block;background:#e8845c;color:#fff;border:none;border-radius:16px;padding:14px 40px;font-size:18px;font-weight:700;cursor:pointer;margin-top:12px}
+.btn:disabled{background:#ccc;cursor:default}
+.ok{color:#2e7d32;font-weight:700}
+.err{color:#c62828;font-weight:700}
+.ver{margin-top:24px;font-size:12px;color:#b8a894}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="cat">🐱</div>
+<h1>進度修復</h1>
+<p id="msg">正在讀取修復資料……</p>
+<div class="info" id="info" style="display:none"></div>
+<button class="btn" id="btn" style="display:none">開始修復</button>
+<div class="ver">v1.0</div>
+</div>
+<script>
+var LS_KEY='meowdoku-progress-v1';
+var LS_SECRET='meowdoku-cat-2026';
+function b64url(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return s}
+function decodeV5(hash){
+  try{
+    var raw=atob(b64url(hash)),bytes=[];
+    for(var i=0;i<raw.length;i++)bytes.push(raw.charCodeAt(i));
+    if(bytes[0]!==5||bytes.length<17)return null;
+    var level=(bytes[1]<<8)|bytes[2];
+    var score=(bytes[4]*16777216)+(bytes[5]<<16)+(bytes[6]<<8)+bytes[7];
+    var hearts=bytes[8];
+    var b5=(bytes[11]*16777216)+(bytes[12]<<16)+(bytes[13]<<8)+bytes[14];
+    var best=(b5===0xFFFFFFFF)?null:b5;
+    if(level<0||level>=300||hearts<1||hearts>5||score<0)return null;
+    return {level:level,score:score,hearts:hearts,best:best};
+  }catch(e){return null}
+}
+function sha256hex(str){
+  return crypto.subtle.digest('SHA-256',new TextEncoder().encode(str)).then(function(buf){
+    return Array.prototype.map.call(new Uint8Array(buf),function(b){return('0'+b.toString(16)).slice(-2)}).join('');
+  });
+}
+var data=null;
+(function init(){
+  var m=location.hash.match(/^#p=([A-Za-z0-9_-]+)$/);
+  var msg=document.getElementById('msg'),info=document.getElementById('info'),btn=document.getElementById('btn');
+  if(!m){msg.innerHTML='<span class="err">連結無效：找不到修復資料。</span>';return}
+  data=decodeV5(m[1]);
+  if(!data){msg.innerHTML='<span class="err">連結無效：資料格式錯誤。</span>';return}
+  msg.textContent='已讀取修復資料，請按下方按鈕開始修復。';
+  info.style.display='block';
+  info.innerHTML='關卡：第 '+(data.level+1)+' 關<br>積分：'+data.score.toLocaleString()+'<br>最高積分：'+(data.best===null?'（無）':data.best.toLocaleString())+'<br>心數：'+data.hearts;
+  btn.style.display='inline-block';
+  btn.onclick=doRepair;
+})();
+function doRepair(){
+  var msg=document.getElementById('msg'),btn=document.getElementById('btn');
+  btn.disabled=true;btn.textContent='修復中……';
+  if(!(window.localStorage&&window.crypto&&crypto.subtle)){msg.innerHTML='<span class="err">瀏覽器不支援，請使用正常模式開啟。</span>';return}
+  var theme='light';
+  try{
+    var old=localStorage.getItem(LS_KEY);
+    if(old){var d=JSON.parse(old);if(d&&d.theme==='dark')theme='dark'}
+  }catch(e){}
+  var bestStr=(data.best===null||data.best===undefined)?'':Math.floor(data.best);
+  var input=data.level+'|'+data.hearts+'|'+data.score+'|'+bestStr+'|'+theme+'|'+LS_SECRET;
+  sha256hex(input).then(function(sum){
+    if(!sum){msg.innerHTML='<span class="err">修復失敗，請重試。</span>';return}
+    var obj={v:3,level:data.level,hearts:data.hearts,score:data.score,theme:theme,sum:sum};
+    if(data.best!==null&&data.best!==undefined)obj.best=Math.floor(data.best);
+    try{localStorage.setItem(LS_KEY,JSON.stringify(obj))}catch(e){msg.innerHTML='<span class="err">寫入失敗，請檢查瀏覽器設定。</span>';return}
+    msg.innerHTML='<span class="ok">修復完成！</span><br>請按下方按鈕開啟遊戲。';
+    btn.disabled=false;btn.textContent='開啟遊戲';
+    btn.onclick=function(){location.href='./'};
+  });
+}
+</script>
+</body>
+</html>

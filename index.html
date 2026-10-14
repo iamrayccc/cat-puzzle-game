@@ -205,8 +205,11 @@ pointer-events:auto; -webkit-overflow-scrolling:touch;
 .close-btn { width:36px; height:36px; border:0; background:var(--panel-2); border-radius:50%; cursor:pointer; font-size:1.25rem; line-height:1; }
 #leaderboardDialog .close-btn { transform:translateY(-8px); }
 .rules-list { list-style:none; padding:0; margin:22px 0; display:grid; gap:15px; }
-.rules-list li { display:grid; grid-template-columns:38px 1fr; gap:12px; align-items:center; }
-.rule-number { width:38px; height:38px; display:grid; place-items:center; border-radius:12px; background:var(--panel-2); font-weight:900; }
+.rules-list li { display:grid; grid-template-columns:38px 1fr; gap:12px; align-items:center; padding-left:12px; }
+.rules-list .rule-number { width:38px; height:38px; display:grid; align-items:center; justify-items:center; border-radius:12px; background:var(--panel-2); font-weight:900; text-align:center; line-height:1; }
+.rules-list .rule-number.warn { background:#e8913a; color:#fff; font-size:1.3rem; }
+.rules-list li.warn-item { background:#fdf6ec; border:1.5px solid #e8913a; border-radius:14px; padding:10px 12px; }
+.rules-list li.warn-item strong { color:#a8620f; font-size:1.02rem; }
 .rules-list strong { display:block; margin-bottom:2px; }
 .rules-list span { display:block; color:var(--muted); font-size:.88rem; line-height:1.35; }
 .primary { width:100%; min-height:52px; border:0; border-radius:14px; background:var(--accent); color:#fff; font-weight:900; font-size:1rem; cursor:pointer; box-shadow:0 5px 0 var(--accent-dark); }
@@ -224,8 +227,12 @@ pointer-events:auto; -webkit-overflow-scrolling:touch;
 .sheet #nextBtn { margin-top:10px; }
 .result-heading { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:8px; }
 .result-heading h2 { margin:0; }
-.level-up-name { font-weight:900; font-size:1.25em; color:var(--accent); }
+.level-up-name { font-weight:900; font-size:1.25em; color:var(--accent); white-space:nowrap; }
 .level-next { font-size:.72em; color:var(--muted); font-weight:700; white-space:nowrap; }
+/* v38.10 CC 明令：升級彈窗等級名不斷行——貓圖左移騰空間＋標題微縮 */
+#levelUpDialog .result-heading { gap:8px; }
+#levelUpDialog .result-cat { width:36px; height:36px; }
+#levelUpDialog .result-heading h2 { font-size:1.35rem; }
 .result-cat { flex:0 0 auto; width:48px; height:48px; margin:0; color:var(--accent); animation:celebrate .7s ease; }
 @keyframes celebrate { 0%{transform:translateY(20px) scale(.6);opacity:0} 70%{transform:translateY(-8px) scale(1.05)} 100%{transform:none;opacity:1} }
 #resultDialog .sheet { position:relative; }
@@ -440,12 +447,13 @@ body.theme-dark {
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </section>
-<p class="footer-note"><span class="version">Version 2026.10.11.38.4</span></p>
+<p class="footer-note"><span class="version">Version 2026.10.11.39.1</span></p>
 </main>
 <dialog id="rulesDialog">
 <div class="sheet">
 <div class="sheet-head"><div><h2>找出所有躲起來的貓咪</h2></div><button class="close-btn" type="button" aria-label="關閉">×</button></div>
 <ol class="rules-list">
+<li class="warn-item"><span class="rule-number warn">💾</span><div><strong>🐱 開始遊戲前請注意</strong><span>請注意：如你正在使用瀏覽器的無痕／私密模式，遊戲進度將無法保留。請用一般模式開啟，以免進度遺失。</span></div></li>
 <li><span class="rule-number">1</span><div><strong>基本規則</strong><span>每一行、每一列各一隻；每個區域各一隻；貓咪不能彼此相鄰（連斜角也不行），放好後周圍八格都可排除。</span></div></li>
 <li><span class="rule-number">2</span><div><strong>自動模式（放貓自動標 X）</strong><span>關卡名稱旁有 AUTO／OFF 開關，預設為 OFF。開啟後，每次正確放貓，系統會自動在該貓的橫行、直行及周圍八格標 X；誤放不會觸發。開關設定會隨進度保存。</span></div></li>
 <li><span class="rule-number">3</span><div><strong>錯放貓咪會扣心</strong><span>若放貓後棋面再沒有合法解，會先顯示剛放的貓，再提示錯誤並扣 1 顆心，最後把該格改標為鎖定的 X；該 X 不可取消，也不能再次放貓。心用完即遊戲結束。</span></div></li>
@@ -518,9 +526,9 @@ body.theme-dark {
 </dialog>
 <dialog id="jumpDialog">
 <form class="sheet" id="jumpForm" method="dialog">
-<label for="jumpInput">跳到第幾關？（1–300）</label>
-<input id="jumpInput" type="number" min="1" max="300" step="1" inputmode="numeric" required />
-<p class="jump-error" id="jumpError" role="alert" hidden>請輸入 1–300 的關號</p>
+<label for="jumpInput">跳到第幾關？（1–500）</label>
+<input id="jumpInput" type="number" min="1" max="500" step="1" inputmode="numeric" required />
+<p class="jump-error" id="jumpError" role="alert" hidden>請輸入 1–500 的關號</p>
 <div class="jump-actions">
 <button class="secondary" id="jumpCancel" type="button">取消</button>
 <button class="primary" type="submit">跳關</button>
@@ -624,9 +632,29 @@ fetch('data/boards_26.json').then(function(r){return r.json()}),
 fetch('data/boards_27.json').then(function(r){return r.json()}),
 fetch('data/boards_28.json').then(function(r){return r.json()}),
 fetch('data/boards_29.json').then(function(r){return r.json()}),
-fetch('data/boards_30.json').then(function(r){return r.json()})
+fetch('data/boards_30.json').then(function(r){return r.json()}),
+fetch('data/boards_31.json').then(function(r){return r.json()}),
+fetch('data/boards_32.json').then(function(r){return r.json()}),
+fetch('data/boards_33.json').then(function(r){return r.json()}),
+fetch('data/boards_34.json').then(function(r){return r.json()}),
+fetch('data/boards_35.json').then(function(r){return r.json()}),
+fetch('data/boards_36.json').then(function(r){return r.json()}),
+fetch('data/boards_37.json').then(function(r){return r.json()}),
+fetch('data/boards_38.json').then(function(r){return r.json()}),
+fetch('data/boards_39.json').then(function(r){return r.json()}),
+fetch('data/boards_40.json').then(function(r){return r.json()}),
+fetch('data/boards_41.json').then(function(r){return r.json()}),
+fetch('data/boards_42.json').then(function(r){return r.json()}),
+fetch('data/boards_43.json').then(function(r){return r.json()}),
+fetch('data/boards_44.json').then(function(r){return r.json()}),
+fetch('data/boards_45.json').then(function(r){return r.json()}),
+fetch('data/boards_46.json').then(function(r){return r.json()}),
+fetch('data/boards_47.json').then(function(r){return r.json()}),
+fetch('data/boards_48.json').then(function(r){return r.json()}),
+fetch('data/boards_49.json').then(function(r){return r.json()}),
+fetch('data/boards_50.json').then(function(r){return r.json()})
 ]);
-window.VERIFIED_50_DATA=_parts[0].concat(_parts[1],_parts[2],_parts[3],_parts[4],_parts[5],_parts[6],_parts[7],_parts[8],_parts[9],_parts[10],_parts[11],_parts[12],_parts[13],_parts[14],_parts[15],_parts[16],_parts[17],_parts[18],_parts[19],_parts[20],_parts[21],_parts[22],_parts[23],_parts[24],_parts[25],_parts[26],_parts[27],_parts[28],_parts[29]);
+window.VERIFIED_50_DATA=_parts[0].concat(_parts[1],_parts[2],_parts[3],_parts[4],_parts[5],_parts[6],_parts[7],_parts[8],_parts[9],_parts[10],_parts[11],_parts[12],_parts[13],_parts[14],_parts[15],_parts[16],_parts[17],_parts[18],_parts[19],_parts[20],_parts[21],_parts[22],_parts[23],_parts[24],_parts[25],_parts[26],_parts[27],_parts[28],_parts[29],_parts[30],_parts[31],_parts[32],_parts[33],_parts[34],_parts[35],_parts[36],_parts[37],_parts[38],_parts[39],_parts[40],_parts[41],_parts[42],_parts[43],_parts[44],_parts[45],_parts[46],_parts[47],_parts[48],_parts[49]);
 }catch(_e){
 document.body.innerHTML='<div style="padding:40px;text-align:center;font-size:18px;">版圖數據載入失敗，請檢查網路後重新整理。</div>';
 return;
@@ -635,14 +663,14 @@ return;
 IS_TEST = true  → 顯示跳關按鈕（測試版專用）
 玩家版構建時改為 false → 跳關按鈕＋全部相關邏輯完全消除，頁面無按鈕、無入口 */
 var IS_TEST = false; // 玩家版構建時改為 false，跳關功能即完全消除
-var CURRENT_VERSION='2026.10.11.38.4'; // 過關時版本檢查用；發佈新版本時同步更新 version.txt
-var TOTAL=300, MAX_HEARTS=5, PUZZLE_SEED=0x43a7c21d;
+var CURRENT_VERSION='2026.10.11.39.1'; // 過關時版本檢查用；發佈新版本時同步更新 version.txt
+var TOTAL=500, MAX_HEARTS=5, PUZZLE_SEED=0x43a7c21d;
 var paletteLight=['#f3a6a6','#f6c184','#e8da72','#b8db76','#b08968','#7fd6bc','#a7b8c4','#82bde5','#8ea3e1','#aa92dc'],paletteDark=['#eeb7ce','#f1ae77','#ddbc5d','#b5d79b','#a3734f','#67b1b0','#acbed6','#7fbae2','#9179cf','#dc89b5'];
 var first=['暖陽','月光','毛線','紙箱','星夜','清晨','雨聲','魚乾','雲朵','花影'];
 var second=['角落','小徑','迷宮','窗台','走廊','花園','書架','屋頂','庭院','秘境'];
 function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shuffle(a,rand){for(var j=a.length-1;j>0;j--){var k=Math.floor(rand()*(j+1)),v=a[j];a[j]=a[k];a[k]=v}return a}
-var HARDEST_VARIANT=[2,2,1,2,1,2,0,0,1,0,2,2,2,2,2,2,2,2,2,1,1,2,2,2,0,1,2,2,2,1,1,2,2,2,0,1,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,0,0,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1,1,2,0,1,2,2,2,2,2,1,2,2,2,1,0,2,2,2,2,0,1,2,2,2,1,2,2,2,2,1,2,1,2,2,2,2,2,1,1,1,2,1,1,1,2,0,2,2,2,1,1,0,1,2,2,2,2,2,2,1,1,2,2,2,1,2,2,2,2,1,1,0,0,2,1,2,0,2,0,0,0,1,0,0,2,0,2,0,1,1,2,2,2,0,1,1,0,0,0,2,2,1,0,1,2,2,0,1,0,2,1,1,0,0,2,1,0,0,1,0,1,0,2,0,0,1,2,1,0,0,1,2,0,2,1,1,2,1,0,1,0,1,2,1,2,1,0,0,2,2,1,0,1,0,2,1,0,1,2,1,1,2,2,1,0,1,2,2,0,0,1,0,2,1,1,1,1,2,2,0,1,2,2,0,0,0,2,0,2,1,1,2,0,2,0,0,2,0,2,1,0,2,0,1,2,2,2,1,1,0,2,2,1,1,0,2,0,0,0,1];
+var HARDEST_VARIANT=[2,2,1,2,1,2,0,0,1,0,2,2,2,2,2,2,2,2,2,1,1,2,2,2,0,1,2,2,2,1,1,2,2,2,0,1,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,0,0,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1,1,2,0,1,2,2,2,2,2,1,2,2,2,1,0,2,2,2,2,0,1,2,2,2,1,2,2,2,2,1,2,1,2,2,2,2,2,1,1,1,2,1,1,1,2,0,2,2,2,1,1,0,1,2,2,2,2,2,2,1,1,2,2,2,1,2,2,2,2,1,1,0,0,2,1,2,0,2,0,0,0,1,0,0,2,0,2,0,1,1,2,2,2,0,1,1,0,0,0,2,2,1,0,1,2,2,0,1,0,2,1,1,0,0,2,1,0,0,1,0,1,0,2,0,0,1,2,1,0,0,1,2,0,2,1,1,2,1,0,1,0,1,2,1,2,1,0,0,2,2,1,0,1,0,2,1,0,1,2,1,1,2,2,1,0,1,2,2,0,0,1,0,2,1,1,1,1,2,2,0,1,2,2,0,0,0,2,0,2,1,1,2,0,2,0,0,2,0,2,1,0,2,0,1,2,2,2,1,1,0,2,2,1,1,0,2,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2];
 function levelSpec(index){var no=index+1,difficulty=index/(TOTAL-1),isBig=no>50;return{size:isBig?10:9,colors:isBig?10:9,label:no<=10?'入門':no<=30?'初階':no<=50?'中階':'高階',difficulty:difficulty}}
 var VERIFIED_BASES=[{"n":6,"r":"001111011111211111211311255334255444","s":"140352"},{"n":6,"r":"000111241111244444244443444443444455","s":"130524"},{"n":6,"r":"113300113300113322333333433333455333","s":"415302"},{"n":9,"r":"000333333000331112333333322333333333333343333553343333555543663777743333788743333","s":"258640731"},{"n":9,"r":"440000113444444113442444443442444443444444444444455555644447778644447778444447888","s":"362814057"},{"n":9,"r":"211100885221188885228888885448888385848888385888888885888668885887788888888888888","s":"530618427"},{"n":9,"r":"111444400111444444224444444224444334244444444244445444664445744664488744644488444","s":"820735164"},{"n":11,"r":"aa000aa3344aa0011a3344aaa111a3224aaa56aa3224aaa56aaaa44a5556aaaaaaaaa66aaaaaaaaa8aaaa7aaaaa8aaaa7aa99aaaaaaaaaaaaaaaaaaaa","s":"2597a148306"},{"n":11,"r":"11117700000222117000002227777777755777777773557777774737577777746677777777766777777777777777777877777797778777aa997777777","s":"642a8195730"},{"n":11,"r":"110000666661116006666246663366662466633666664666666666666666655666666666666666686676666666866796666666667966666666699aa66","s":"31a40795268"},{"n":11,"r":"000004444410002244444133442444444334444444443344444444488444444555884444665778844444447788944444444999444444449994444aaaa","s":"3a415869027"},{"n":11,"r":"33333111000333332211003333322333333333333333443533333333335333333333333663333377333333333393338833333933388aa33333338aaa3","s":"a8640351729"},{"n":11,"r":"221100aaaaa2211aaaaaaa22aaaaaaaaa55533aa44445553aaa44445557aaaa666aaa7aaaa666aaa7aaaaaaaaaaaaaaaa88aaaaaaaa998aaaaaaaaaaa","s":"52047193a86"},{"n":11,"r":"1100000666611330026666113336266661133366666655533666644555566666666667666666686676666666866666666696666666666966666666aa9","s":"516492730a8"}];
 function transformVerified(base,turn){
@@ -1239,7 +1267,7 @@ function chooseMode(mode){state.mode=mode;paintMode();setLogic(mode==='cat'?'已
 function paintHintButton(){var btn=document.getElementById('hintBtn'),label=document.getElementById('hintLabel'),used=state.hintsRemaining<=0;label.textContent=used?'找貓提示 · 已用完':'找貓提示 · 剩餘 '+state.hintsRemaining+' 次';btn.setAttribute('aria-label',used?'找貓提示，本關已用完':'找貓提示，本關剩餘'+state.hintsRemaining+'次');btn.classList.toggle('hint-used',used)}
 function paintCatsRemaining(){var el=document.getElementById('catsRemaining'),num=document.getElementById('catsRemainingNum'),n=state.catsRemaining;if(!el||!num)return;num.textContent=n;el.setAttribute('aria-label','剩餘 '+n+' 隻貓')}
 function paintOpeningButton(){var btn=document.getElementById('openingBtn'),label=document.getElementById('openingLabel');var noGuide=state.level>=30;btn.hidden=state.restoredEntry||noGuide;if(state.restoredEntry||noGuide){btn.disabled=true;return}label.textContent=state.openingAvailable?'開局指引 · 免費':'開局指引 · 已看';btn.disabled=!state.openingAvailable;btn.classList.toggle('guide-used',!state.openingAvailable);btn.setAttribute('aria-label',state.openingAvailable?'查看本關免費開局指引':'本關開局指引已看')}
-function render(){var p=currentPuzzle();board.querySelectorAll('.cell').forEach(function(b){if(b._catTimer){clearTimeout(b._catTimer);b._catTimer=null}});board.innerHTML='';board.style.gridTemplateColumns='repeat('+p.size+',1fr)';board.style.gridTemplateRows='repeat('+p.size+',1fr)';document.getElementById('levelCount').textContent='第 '+(state.level+1)+'／'+TOTAL+' 關 · '+p.label;document.getElementById('levelName').textContent=p.name;for(var r=0;r<p.size;r++)for(var c=0;c<p.size;c++){var i=r*p.size+c,b=document.createElement('button');b.type='button';b.className='cell';b.dataset.i=i;b.setAttribute('role','gridcell');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，空白');b.tabIndex=i===state.focus?0:-1;b.style.background=(currentTheme==='dark'?paletteDark:paletteLight)[p.regionHues[p.regions[r][c]]];b.addEventListener('keydown',onKey);board.appendChild(b)}paintHearts();paintScore();paintLevelChip();paintMode();paintHintButton();paintOpeningButton();paintCatsRemaining();updateAll(false)}
+function render(){var p=currentPuzzle();board.querySelectorAll('.cell').forEach(function(b){if(b._catTimer){clearTimeout(b._catTimer);b._catTimer=null}});board.innerHTML='';board.style.gridTemplateColumns='repeat('+p.size+',1fr)';board.style.gridTemplateRows='repeat('+p.size+',1fr)';document.getElementById('levelCount').textContent='第 '+(state.level+1)+'／'+TOTAL+' 關';document.getElementById('levelName').textContent=p.name;for(var r=0;r<p.size;r++)for(var c=0;c<p.size;c++){var i=r*p.size+c,b=document.createElement('button');b.type='button';b.className='cell';b.dataset.i=i;b.setAttribute('role','gridcell');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，空白');b.tabIndex=i===state.focus?0:-1;b.style.background=(currentTheme==='dark'?paletteDark:paletteLight)[p.regionHues[p.regions[r][c]]];b.addEventListener('keydown',onKey);board.appendChild(b)}paintHearts();paintScore();paintLevelChip();paintMode();paintHintButton();paintOpeningButton();paintCatsRemaining();updateAll(false)}
 function updateCell(i,animate){var b=board.children[i],p=currentPuzzle(),r=Math.floor(i/p.size),c=i%p.size,v=state.cells[i],lockedX=!!state.lockedXs[i];if(b._catTimer){clearTimeout(b._catTimer);b._catTimer=null}if(v==='cat'){b.innerHTML=catSVG.replace('class="cat"','class="cat cat-svg'+(animate?' animate-once pop':'')+'"');if(animate){b._catTimer=setTimeout(function(){b._catTimer=null;var svg=b.querySelector('.cat-svg');if(svg&&state.cells[i]==='cat'){svg.classList.remove('animate-once');svg.classList.remove('pop')}},4300)}}else{b.innerHTML=v==='x'?'<span class="cross" aria-hidden="true"></span>':''}b.setAttribute('aria-disabled',lockedX?'true':'false');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，'+(v==='cat'?'貓咪':v==='x'?(lockedX?'已排除，鎖定':'已排除'):'空白'))}
 var swayTimer=null;
 function scheduleSway(){if(swayTimer){clearTimeout(swayTimer);swayTimer=null}swayTimer=setTimeout(function(){swayTimer=null;if(!state.locked&&!document.querySelector('dialog[open]')){board.querySelectorAll('.cat-svg').forEach(function(svg){svg.classList.remove('sway-once');void svg.offsetWidth;svg.classList.add('sway-once');setTimeout(function(){svg.classList.remove('sway-once')},1100)})}scheduleSway()},30000)}
@@ -1722,7 +1750,7 @@ jumpDialog.addEventListener('click',function(e){if(e.target===jumpDialog)jumpDia
 jumpForm.onsubmit=function(e){
 e.preventDefault();
 var n=Number(jumpInput.value);
-if(!Number.isInteger(n)||n<1||n>TOTAL){jumpError.hidden=false;showToast('請輸入 1–300 的關號');jumpInput.focus();return}
+if(!Number.isInteger(n)||n<1||n>TOTAL){jumpError.hidden=false;showToast('請輸入 1–500 的關號');jumpInput.focus();return}
 jumpDialog.close();closeResultDialog();clearToast();newLevel(n-1);
 };
 jumpBtn.className='jump-bottom-btn';
@@ -1865,6 +1893,58 @@ clearDialog.querySelector('#clearAllSave').onclick=function(){doClearSave(TEST_K
 clearDialog.addEventListener('click',function(e){if(e.target===clearDialog)clearDialog.close();});
 footer2.parentNode.insertBefore(clearBtn,footer2);
 })();
+})();
+/* 測試版專屬：顯示答案。IS_TEST=false（玩家版）時此整塊不執行，
+頁面上無按鈕、無入口，功能完全不可觸達。純視覺覆蓋，不修改 state.cells，
+不觸發 checkWin/finish，不影響分數心數。 */
+(function(){
+var footer=document.querySelector('.footer-note');
+if(!footer||!footer.parentNode)return;
+/* 動態注入覆蓋層樣式（玩家版零殘留，不寫入主 <style>） */
+var st=document.createElement('style');
+st.textContent='.answer-cat{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:2}'
++'.answer-cat .answer-cat-svg{width:82%;height:82%;opacity:.35}';
+document.head.appendChild(st);
+var answerShown=false;
+var answerBtn=document.createElement('button');
+answerBtn.className='jump-bottom-btn';
+answerBtn.type='button';
+answerBtn.id='answerBtn';
+answerBtn.setAttribute('aria-label','顯示所有貓的正確位置（測試專用）');
+answerBtn.textContent='顯示答案（測試）';
+function isSolutionCell(i,p){var r=Math.floor(i/p.size);return r*p.size+p.solution[r]===i}
+function paintAnswerCell(i){
+var b=board.children[i];
+if(!b||b.querySelector('.answer-cat'))return;
+if(state.cells[i]==='cat')return; /* 已放對的格子維持原樣 */
+var p=currentPuzzle();
+if(!isSolutionCell(i,p))return;
+var s=document.createElement('span');
+s.className='answer-cat';
+s.setAttribute('aria-hidden','true');
+s.innerHTML=catSVG.replace('class="cat"','class="cat answer-cat-svg"');
+b.appendChild(s);
+}
+function showAnswer(){
+answerShown=true;
+var p=currentPuzzle();
+for(var r=0;r<p.size;r++)paintAnswerCell(r*p.size+p.solution[r]);
+answerBtn.textContent='隱藏答案（測試）';
+}
+function hideAnswer(){
+answerShown=false;
+updateAll(false); /* 經下方包裝的 updateCell 重繪，不會補回覆蓋層，棋盤恢復原狀 */
+answerBtn.textContent='顯示答案（測試）';
+}
+answerBtn.onclick=function(){if(answerShown)hideAnswer();else showAnswer()};
+footer.parentNode.insertBefore(answerBtn,footer);
+/* 包裝 updateCell：答案顯示期間，任何格子重繪後自動補回覆蓋層。
+   包裝程式碼本身亦在 if(IS_TEST) 內，玩家版不受影響。 */
+var _updateCell=updateCell;
+updateCell=function(i,animate){
+_updateCell(i,animate);
+if(answerShown)paintAnswerCell(i);
+};
 })();
 }
 /* 移出 if(IS_TEST)：玩家版亦需更新對話框正常運作 */

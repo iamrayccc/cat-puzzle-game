@@ -93,6 +93,9 @@ display:flex; flex-direction:column;
 .hearts.heart-hit { animation:heartHit .85s ease; }
 @keyframes heartHit { 18%{transform:translateX(-3px);background:color-mix(in srgb,var(--bad) 18%,var(--panel))} 36%{transform:translateX(3px)} 54%{transform:translateX(-2px)} 100%{transform:none} }
 .top-actions { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:18px; }
+.second-row { grid-column:1/-1; display:flex; gap:6px; align-items:center; }
+.second-row .quiet-btn { flex:0 1 auto; min-width:0; }
+.second-row .timer-display { flex:1 0 auto; min-width:0; justify-content:flex-start; }
 .top-row { grid-column:1/-1; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:8px; }
 .top-row .quiet-btn { justify-self:start; padding:8px 10px; }
 .top-row .theme-seg { justify-self:center; }
@@ -101,6 +104,9 @@ display:flex; flex-direction:column;
 .quiet-btn:hover, .quiet-btn:focus-visible { background:var(--panel-2); color:var(--ink); outline:none; }
 .quiet-btn.hint-used { opacity:.7; }
 .quiet-btn svg { width:18px; height:18px; }
+/* 遊戲計時器永久顯示（2026-10-17 CC 指示，v39.26.beta）：置於原開局指引位置，靠右對齊 */
+.timer-display { display:flex; align-items:center; justify-content:flex-end; gap:6px; padding:8px 10px; font-weight:800; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.timer-display .timer-icon { font-size:1em; line-height:1; display:inline-flex; align-items:center; }
 .cats-remaining { display:flex; align-items:center; justify-content:flex-end; gap:6px; padding:8px 10px; border-radius:10px; color:var(--ink); font-weight:800; }
 .cats-remaining .cats-icon { width:22px; height:22px; display:inline-flex; }
 .cats-remaining .cats-icon svg { width:100%; height:100%; }
@@ -140,6 +146,7 @@ border-radius:4px;
 .cross { width:72%; height:72%; position:relative; opacity:1; filter:drop-shadow(0 1px 1px rgba(24,50,58,.55)); }
 .cross::before,.cross::after { content:""; position:absolute; left:35%; top:-8%; width:30%; height:116%; border-radius:999px; background:#ffffff; transform:rotate(45deg); }
 .cross::after { transform:rotate(-45deg); }
+.cross.locked::before,.cross.locked::after { background:#ec6f5c; }
 .cat-svg { width:82%; height:82%; filter:drop-shadow(0 2px 0 rgba(255,255,255,.5)); }
 .cat-svg.pop { animation:catPop .28s cubic-bezier(.2,1.8,.4,1); }
 @keyframes catPop { from{transform:scale(.2) rotate(-12deg)} to{transform:scale(1) rotate(0)} }
@@ -342,6 +349,7 @@ pointer-events:auto;
 .stats { grid-template-columns:repeat(2,1fr); }
 .top-actions { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; }
 .quiet-btn { justify-content:center; padding:8px 5px; font-size:.78rem; }
+.timer-display { font-size:.78rem; }
 .cats-remaining { justify-content:flex-end; padding:8px 5px; font-size:.78rem; }
 .logic-note.guide-active { grid-template-columns:30px 1fr; }
 .logic-note.guide-active .guide-close { grid-column:2; justify-self:start; }
@@ -415,18 +423,23 @@ body.theme-dark {
 <span class="cats-icon" id="catsRemainingIcon" aria-hidden="true"></span><span>剩餘 <b id="catsRemainingNum">9</b> 隻</span>
 </div>
 </div>
-<button class="quiet-btn" id="restartBtn" type="button" aria-label="清除本關所有標記，保留同一版圖">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 11a8 8 0 1 1 2.3 6.7"/><path d="M4 5v6h6"/></svg>全部清除
-</button>
-<button class="quiet-btn" id="hintBtn" type="button" aria-label="找貓提示，本關剩餘兩次">
-<svg class="lit-bulb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 1v2M4.2 4.2l1.4 1.4M1 12h2m16 0h2M18.4 5.6l1.4-1.4"/><path class="bulb-glow" d="M8.5 14.5A6 6 0 1 1 15.5 14.5c-.8.7-1.5 1.5-1.5 2.5h-4c0-1-.7-1.8-1.5-2.5Z"/><path d="M9 19h6M10 22h4"/></svg><span id="hintLabel">找貓提示 · 剩餘 2 次</span>
-</button>
+<div class="second-row">
 <button class="quiet-btn" id="undoBtn" type="button">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 8-4 4 4 4"/><path d="M5 12h8a6 6 0 0 1 6 6"/></svg>復原
 </button>
+<button class="quiet-btn" id="restartBtn" type="button" aria-label="清除本關所有標記，保留同一版圖">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 11a8 8 0 1 1 2.3 6.7"/><path d="M4 5v6h6"/></svg>全部清除
+</button>
+<div class="timer-display" id="gameTimer" role="timer" aria-label="本關遊戲時間"><span class="timer-icon" aria-hidden="true">⏱</span><span id="gameTimerText">0秒</span></div>
+<button class="quiet-btn" id="hintBtn" type="button" aria-label="找貓提示，本關剩餘兩次">
+<svg class="lit-bulb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 1v2M4.2 4.2l1.4 1.4M1 12h2m16 0h2M18.4 5.6l1.4-1.4"/><path class="bulb-glow" d="M8.5 14.5A6 6 0 1 1 15.5 14.5c-.8.7-1.5 1.5-1.5 2.5h-4c0-1-.7-1.8-1.5-2.5Z"/><path d="M9 19h6M10 22h4"/></svg><span id="hintLabel">找貓提示 · 剩餘 2 次</span>
+</button>
+</div>
+<!-- 開局指引暫時停用（2026-10-17 CC 指示），代碼保留，日後可重啟。
 <button class="quiet-btn" id="openingBtn" type="button" aria-label="查看本關免費開局指引">
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 19c3-7 7-11 14-14"/><path d="M9 5h10v10"/><circle cx="6" cy="18" r="2"/></svg><span id="openingLabel">開局指引 · 免費</span>
 </button>
+-->
 </nav>
 <section class="controls" aria-label="選擇放置標記">
 <button class="mode-btn" id="xModeBtn" type="button" aria-pressed="true"><span class="mode-icon"><span class="mini-x"></span></span>標 X</button>
@@ -447,7 +460,7 @@ body.theme-dark {
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </section>
-<p class="footer-note"><span class="version">Version 2026.10.11.39.2</span></p>
+<p class="footer-note"><span class="version">Version 2026.10.11.40.0</span></p>
 </main>
 <dialog id="rulesDialog">
 <div class="sheet">
@@ -526,9 +539,9 @@ body.theme-dark {
 </dialog>
 <dialog id="jumpDialog">
 <form class="sheet" id="jumpForm" method="dialog">
-<label for="jumpInput">跳到第幾關？（1–500）</label>
-<input id="jumpInput" type="number" min="1" max="500" step="1" inputmode="numeric" required />
-<p class="jump-error" id="jumpError" role="alert" hidden>請輸入 1–500 的關號</p>
+<label for="jumpInput">跳到第幾關？（1–600）</label>
+<input id="jumpInput" type="number" min="1" max="600" step="1" inputmode="numeric" required />
+<p class="jump-error" id="jumpError" role="alert" hidden>請輸入 1–600 的關號</p>
 <div class="jump-actions">
 <button class="secondary" id="jumpCancel" type="button">取消</button>
 <button class="primary" type="submit">跳關</button>
@@ -652,9 +665,19 @@ fetch('data/boards_46.json').then(function(r){return r.json()}),
 fetch('data/boards_47.json').then(function(r){return r.json()}),
 fetch('data/boards_48.json').then(function(r){return r.json()}),
 fetch('data/boards_49.json').then(function(r){return r.json()}),
-fetch('data/boards_50.json').then(function(r){return r.json()})
+fetch('data/boards_50.json').then(function(r){return r.json()}),
+fetch('data/boards_51.json').then(function(r){return r.json()}),
+fetch('data/boards_52.json').then(function(r){return r.json()}),
+fetch('data/boards_53.json').then(function(r){return r.json()}),
+fetch('data/boards_54.json').then(function(r){return r.json()}),
+fetch('data/boards_55.json').then(function(r){return r.json()}),
+fetch('data/boards_56.json').then(function(r){return r.json()}),
+fetch('data/boards_57.json').then(function(r){return r.json()}),
+fetch('data/boards_58.json').then(function(r){return r.json()}),
+fetch('data/boards_59.json').then(function(r){return r.json()}),
+fetch('data/boards_60.json').then(function(r){return r.json()})
 ]);
-window.VERIFIED_50_DATA=_parts[0].concat(_parts[1],_parts[2],_parts[3],_parts[4],_parts[5],_parts[6],_parts[7],_parts[8],_parts[9],_parts[10],_parts[11],_parts[12],_parts[13],_parts[14],_parts[15],_parts[16],_parts[17],_parts[18],_parts[19],_parts[20],_parts[21],_parts[22],_parts[23],_parts[24],_parts[25],_parts[26],_parts[27],_parts[28],_parts[29],_parts[30],_parts[31],_parts[32],_parts[33],_parts[34],_parts[35],_parts[36],_parts[37],_parts[38],_parts[39],_parts[40],_parts[41],_parts[42],_parts[43],_parts[44],_parts[45],_parts[46],_parts[47],_parts[48],_parts[49]);
+window.VERIFIED_50_DATA=_parts[0].concat(_parts[1],_parts[2],_parts[3],_parts[4],_parts[5],_parts[6],_parts[7],_parts[8],_parts[9],_parts[10],_parts[11],_parts[12],_parts[13],_parts[14],_parts[15],_parts[16],_parts[17],_parts[18],_parts[19],_parts[20],_parts[21],_parts[22],_parts[23],_parts[24],_parts[25],_parts[26],_parts[27],_parts[28],_parts[29],_parts[30],_parts[31],_parts[32],_parts[33],_parts[34],_parts[35],_parts[36],_parts[37],_parts[38],_parts[39],_parts[40],_parts[41],_parts[42],_parts[43],_parts[44],_parts[45],_parts[46],_parts[47],_parts[48],_parts[49],_parts[50],_parts[51],_parts[52],_parts[53],_parts[54],_parts[55],_parts[56],_parts[57],_parts[58],_parts[59]);
 }catch(_e){
 document.body.innerHTML='<div style="padding:40px;text-align:center;font-size:18px;">版圖數據載入失敗，請檢查網路後重新整理。</div>';
 return;
@@ -663,14 +686,14 @@ return;
 IS_TEST = true  → 顯示跳關按鈕（測試版專用）
 玩家版構建時改為 false → 跳關按鈕＋全部相關邏輯完全消除，頁面無按鈕、無入口 */
 var IS_TEST = false; // 玩家版構建時改為 false，跳關功能即完全消除
-var CURRENT_VERSION='2026.10.11.39.2'; // 過關時版本檢查用；發佈新版本時同步更新 version.txt
-var TOTAL=500, MAX_HEARTS=5, PUZZLE_SEED=0x43a7c21d;
+var CURRENT_VERSION='2026.10.11.40.0'; // 過關時版本檢查用；發佈新版本時同步更新 version.txt
+var TOTAL=600, MAX_HEARTS=5, PUZZLE_SEED=0x43a7c21d;
 var paletteLight=['#f3a6a6','#f6c184','#e8da72','#b8db76','#b08968','#7fd6bc','#a7b8c4','#82bde5','#8ea3e1','#aa92dc'],paletteDark=['#eeb7ce','#f1ae77','#ddbc5d','#b5d79b','#a3734f','#67b1b0','#acbed6','#7fbae2','#9179cf','#dc89b5'];
 var first=['暖陽','月光','毛線','紙箱','星夜','清晨','雨聲','魚乾','雲朵','花影'];
 var second=['角落','小徑','迷宮','窗台','走廊','花園','書架','屋頂','庭院','秘境'];
 function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shuffle(a,rand){for(var j=a.length-1;j>0;j--){var k=Math.floor(rand()*(j+1)),v=a[j];a[j]=a[k];a[k]=v}return a}
-var HARDEST_VARIANT=[2,2,1,2,1,2,0,0,1,0,2,2,2,2,2,2,2,2,2,1,1,2,2,2,0,1,2,2,2,1,1,2,2,2,0,1,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,0,0,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1,1,2,0,1,2,2,2,2,2,1,2,2,2,1,0,2,2,2,2,0,1,2,2,2,1,2,2,2,2,1,2,1,2,2,2,2,2,1,1,1,2,1,1,1,2,0,2,2,2,1,1,0,1,2,2,2,2,2,2,1,1,2,2,2,1,2,2,2,2,1,1,0,0,2,1,2,0,2,0,0,0,1,0,0,2,0,2,0,1,1,2,2,2,0,1,1,0,0,0,2,2,1,0,1,2,2,0,1,0,2,1,1,0,0,2,1,0,0,1,0,1,0,2,0,0,1,2,1,0,0,1,2,0,2,1,1,2,1,0,1,0,1,2,1,2,1,0,0,2,2,1,0,1,0,2,1,0,1,2,1,1,2,2,1,0,1,2,2,0,0,1,0,2,1,1,1,1,2,2,0,1,2,2,0,0,0,2,0,2,1,1,2,0,2,0,0,2,0,2,1,0,2,0,1,2,2,2,1,1,0,2,2,1,1,0,2,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2];
+var HARDEST_VARIANT=[2,2,1,2,1,2,0,0,1,0,2,2,2,2,2,2,2,2,2,1,1,2,2,2,0,1,2,2,2,1,1,2,2,2,0,1,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,0,0,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1,1,2,0,1,2,2,2,2,2,1,2,2,2,1,0,2,2,2,2,0,1,2,2,2,1,2,2,2,2,1,2,1,2,2,2,2,2,1,1,1,2,1,1,1,2,0,2,2,2,1,1,0,1,2,2,2,2,2,2,1,1,2,2,2,1,2,2,2,2,1,1,0,0,2,1,2,0,2,0,0,0,1,0,0,2,0,2,0,1,1,2,2,2,0,1,1,0,0,0,2,2,1,0,1,2,2,0,1,0,2,1,1,0,0,2,1,0,0,1,0,1,0,2,0,0,1,2,1,0,0,1,2,0,2,1,1,2,1,0,1,0,1,2,1,2,1,0,0,2,2,1,0,1,0,2,1,0,1,2,1,1,2,2,1,0,1,2,2,0,0,1,0,2,1,1,1,1,2,2,0,1,2,2,0,0,0,2,0,2,1,1,2,0,2,0,0,2,0,2,1,0,2,0,1,2,2,2,1,1,0,2,2,1,1,0,2,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,0,2,0,1,0,0,2,0,2,0,1,0,1,1,0,0,2,2,2,0,0,2,2,0,0,0,0,1,0,0,2,0,2,0,1,0,1,0,0,0,0,0,2,0,2,0,0,0,0,1,2,0,0,0,0,1,0,2,0,2,1,1,0,2,0,0,1,0,0,2,0,2,2,1,0,2,0,2,0,2,2,0,0,1,2,1,0,2,1,1,1,2,0];
 function levelSpec(index){var no=index+1,difficulty=index/(TOTAL-1),isBig=no>50;return{size:isBig?10:9,colors:isBig?10:9,label:no<=10?'入門':no<=30?'初階':no<=50?'中階':'高階',difficulty:difficulty}}
 var VERIFIED_BASES=[{"n":6,"r":"001111011111211111211311255334255444","s":"140352"},{"n":6,"r":"000111241111244444244443444443444455","s":"130524"},{"n":6,"r":"113300113300113322333333433333455333","s":"415302"},{"n":9,"r":"000333333000331112333333322333333333333343333553343333555543663777743333788743333","s":"258640731"},{"n":9,"r":"440000113444444113442444443442444443444444444444455555644447778644447778444447888","s":"362814057"},{"n":9,"r":"211100885221188885228888885448888385848888385888888885888668885887788888888888888","s":"530618427"},{"n":9,"r":"111444400111444444224444444224444334244444444244445444664445744664488744644488444","s":"820735164"},{"n":11,"r":"aa000aa3344aa0011a3344aaa111a3224aaa56aa3224aaa56aaaa44a5556aaaaaaaaa66aaaaaaaaa8aaaa7aaaaa8aaaa7aa99aaaaaaaaaaaaaaaaaaaa","s":"2597a148306"},{"n":11,"r":"11117700000222117000002227777777755777777773557777774737577777746677777777766777777777777777777877777797778777aa997777777","s":"642a8195730"},{"n":11,"r":"110000666661116006666246663366662466633666664666666666666666655666666666666666686676666666866796666666667966666666699aa66","s":"31a40795268"},{"n":11,"r":"000004444410002244444133442444444334444444443344444444488444444555884444665778844444447788944444444999444444449994444aaaa","s":"3a415869027"},{"n":11,"r":"33333111000333332211003333322333333333333333443533333333335333333333333663333377333333333393338833333933388aa33333338aaa3","s":"a8640351729"},{"n":11,"r":"221100aaaaa2211aaaaaaa22aaaaaaaaa55533aa44445553aaa44445557aaaa666aaa7aaaa666aaa7aaaaaaaaaaaaaaaa88aaaaaaaa998aaaaaaaaaaa","s":"52047193a86"},{"n":11,"r":"1100000666611330026666113336266661133366666655533666644555566666666667666666686676666666866666666696666666666966666666aa9","s":"516492730a8"}];
 function transformVerified(base,turn){
@@ -1003,8 +1026,11 @@ out.push(variants);
 return out;
 }
 var puzzles=buildVariantPuzzles();validateFirstFive(puzzles);
-var state={level:0,variant:0,cells:[],lockedXs:{},history:[],hearts:MAX_HEARTS,hintsRemaining:2,mistakes:0,hintsUsed:0,moves:0,catsRemaining:0,score:0,best:undefined,maxCompleted:0,pendingLevelUp:false,pendingLevelUpName:'',hadBest:false,mode:'x',start:Date.now(),locked:false,pendingCells:{},resultShown:false,levelAwarded:false,focus:0,milestoneRewards:{},openingAvailable:true,openingGuide:null,restoredEntry:false};
-function currentPuzzle(){return puzzles[state.level][state.variant]}
+var state={level:0,variant:0,cells:[],lockedXs:{},history:[],hearts:MAX_HEARTS,hintsRemaining:2,mistakes:0,hintsUsed:0,moves:0,catsRemaining:0,score:0,best:undefined,maxCompleted:0,pendingLevelUp:false,pendingLevelUpName:'',hadBest:false,mode:'x',start:Date.now(),activeMs:0,lastResume:Date.now(),locked:false,pendingCells:{},resultShown:false,levelAwarded:false,focus:0,milestoneRewards:{},openingAvailable:true,openingGuide:null,restoredEntry:false};
+/* ===== 計時器後台暫停（2026-10-17 CC 批准，v39.23.beta）：Page Visibility API，頁面隱藏時凍結累計 */ function getActiveMs(){try{if(typeof state==='undefined'||!state)return 0;var b=state.activeMs||0;if(document.hidden)return b;return b+(Date.now()-(state.lastResume||state.start||Date.now()));}catch(_){return 0;}} document.addEventListener('visibilitychange',function(){try{if(typeof state==='undefined'||!state)return;if(document.hidden){state.activeMs=(state.activeMs||0)+(Date.now()-(state.lastResume||state.start||Date.now()));}else{state.lastResume=Date.now();}if(typeof updateGameTimer==='function'){try{updateGameTimer();}catch(_){}}}catch(_){}});
+/* 遊戲計時器永久顯示（2026-10-17 CC 指示，v39.26.beta）：置於原開局指引位置，靠右對齊；格式為 xx分xx秒；使用 getActiveMs()，後台暫停。 */
+window.updateGameTimer=function(){try{var tt=document.getElementById('gameTimerText');if(!tt)return;var ms=getActiveMs(),s=Math.floor(ms/1000),m=Math.floor(s/60);s=s%60;tt.textContent=(m>0?m+'分':'')+s+'秒';}catch(_){}};
+setInterval(function(){try{updateGameTimer();}catch(_){}},1000); function currentPuzzle(){return puzzles[state.level][state.variant]}
 var board=document.getElementById('board'),toast=document.getElementById('toast'),logicNote=document.getElementById('logicNote');
 /* 放大點擊熱區：棋盤層統一處理點擊，判給最近的格子中心（擴展量＝格邊長×0.45） */
 function onBoardClick(e){
@@ -1116,8 +1142,10 @@ return btoa(raw).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 function persistProgress(){
 var hash='#p='+encodeProgress();
 if(location.hash!==hash)history.replaceState(null,'',hash);
-saveLocalProgress();
-saveHintsProgress();
+var _p=null;
+try{_p=saveLocalProgress();}catch(e){_p=null}
+try{saveHintsProgress();}catch(e){}
+return _p;
 }
 function clearProgress(){if(location.hash)history.replaceState(null,'',location.pathname+location.search)}
 function restoreProgress(){
@@ -1137,7 +1165,7 @@ if(score<0||bytes[sb+4]<1||bytes[sb+4]>MAX_HEARTS||bytes[sb+5]>2)return false;
 var cells=[],lockedXs={},power=[1,3,9,27,81];
 for(var n=0;n<needed;n++){var packed=bytes[headLen+n];if(packed>242)return false;for(var j=0;j<5&&cells.length<p.size*p.size;j++){var value=Math.floor(packed/power[j])%3;cells.push(value===1?'x':(value===2?'cat':''))}}
 for(var k=0;k<lockBytes;k++){var lockBits=bytes[headLen+needed+k];for(var bit=0;bit<8&&k*8+bit<cells.length;bit++)if(lockBits&(1<<bit)){var lockedIndex=k*8+bit;if(cells[lockedIndex]!=='x')return false;lockedXs[lockedIndex]=true}}
-state.level=level;state.variant=variant;state.cells=cells;state.lockedXs=lockedXs;state.score=score;if(version===5){var b5=(bytes[11]*16777216)+(bytes[12]<<16)+(bytes[13]<<8)+bytes[14];if(b5!==0xFFFFFFFF)state.best=b5;state.maxCompleted=(bytes[15]<<8)|bytes[16];}state.hearts=bytes[sb+4];state.hintsRemaining=Math.min(bytes[sb+5],2);state.levelAwarded=!!(bytes[sb+6]&1);state.history=[];state.pendingCells={};state.mistakes=0;state.hintsUsed=2-state.hintsRemaining;state.moves=0;state.catsRemaining=p.size-cells.filter(function(c){return c==='cat'}).length;state.start=Date.now();
+state.level=level;state.variant=variant;state.cells=cells;state.lockedXs=lockedXs;state.score=score;if(version===5){var b5=(bytes[11]*16777216)+(bytes[12]<<16)+(bytes[13]<<8)+bytes[14];if(b5!==0xFFFFFFFF)state.best=b5;state.maxCompleted=(bytes[15]<<8)|bytes[16];}state.hearts=bytes[sb+4];state.hintsRemaining=Math.min(bytes[sb+5],2);state.levelAwarded=!!(bytes[sb+6]&1);state.history=[];state.pendingCells={};state.mistakes=0;state.hintsUsed=2-state.hintsRemaining;state.moves=0;state.catsRemaining=p.size-cells.filter(function(c){return c==='cat'}).length;state.start=Date.now();state.activeMs=0;state.lastResume=Date.now();
 return true;
 }catch(err){return false}
 }
@@ -1331,9 +1359,9 @@ function paintMode(){document.getElementById('xModeBtn').setAttribute('aria-pres
 function chooseMode(mode){state.mode=mode;paintMode();setLogic(mode==='cat'?'已選擇放貓':'已選擇標 X',mode==='cat'?'單擊空白格放貓；玩家手動標記可取消，鎖定 X 不可更改。':'單擊空白格標 X；玩家手動標記可取消，鎖定 X 不可更改。',mode==='cat'?'●':'×')}
 function paintHintButton(){var btn=document.getElementById('hintBtn'),label=document.getElementById('hintLabel'),used=state.hintsRemaining<=0;label.textContent=used?'找貓提示 · 已用完':'找貓提示 · 剩餘 '+state.hintsRemaining+' 次';btn.setAttribute('aria-label',used?'找貓提示，本關已用完':'找貓提示，本關剩餘'+state.hintsRemaining+'次');btn.classList.toggle('hint-used',used)}
 function paintCatsRemaining(){var el=document.getElementById('catsRemaining'),num=document.getElementById('catsRemainingNum'),n=state.catsRemaining;if(!el||!num)return;num.textContent=n;el.setAttribute('aria-label','剩餘 '+n+' 隻貓')}
-function paintOpeningButton(){var btn=document.getElementById('openingBtn'),label=document.getElementById('openingLabel');var noGuide=state.level>=30;btn.hidden=state.restoredEntry||noGuide;if(state.restoredEntry||noGuide){btn.disabled=true;return}label.textContent=state.openingAvailable?'開局指引 · 免費':'開局指引 · 已看';btn.disabled=!state.openingAvailable;btn.classList.toggle('guide-used',!state.openingAvailable);btn.setAttribute('aria-label',state.openingAvailable?'查看本關免費開局指引':'本關開局指引已看')}
+function paintOpeningButton(){var btn=document.getElementById('openingBtn'),label=document.getElementById('openingLabel');if(!btn)return;var noGuide=state.level>=30;btn.hidden=state.restoredEntry||noGuide;if(state.restoredEntry||noGuide){btn.disabled=true;return}label.textContent=state.openingAvailable?'開局指引 · 免費':'開局指引 · 已看';btn.disabled=!state.openingAvailable;btn.classList.toggle('guide-used',!state.openingAvailable);btn.setAttribute('aria-label',state.openingAvailable?'查看本關免費開局指引':'本關開局指引已看')}
 function render(){var p=currentPuzzle();board.querySelectorAll('.cell').forEach(function(b){if(b._catTimer){clearTimeout(b._catTimer);b._catTimer=null}});board.innerHTML='';board.style.gridTemplateColumns='repeat('+p.size+',1fr)';board.style.gridTemplateRows='repeat('+p.size+',1fr)';document.getElementById('levelCount').textContent='第 '+(state.level+1)+'／'+TOTAL+' 關';document.getElementById('levelName').textContent=p.name;for(var r=0;r<p.size;r++)for(var c=0;c<p.size;c++){var i=r*p.size+c,b=document.createElement('button');b.type='button';b.className='cell';b.dataset.i=i;b.setAttribute('role','gridcell');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，空白');b.tabIndex=i===state.focus?0:-1;b.style.background=(currentTheme==='dark'?paletteDark:paletteLight)[p.regionHues[p.regions[r][c]]];b.addEventListener('keydown',onKey);board.appendChild(b)}paintHearts();paintScore();paintLevelChip();paintMode();paintHintButton();paintOpeningButton();paintCatsRemaining();updateAll(false)}
-function updateCell(i,animate){var b=board.children[i],p=currentPuzzle(),r=Math.floor(i/p.size),c=i%p.size,v=state.cells[i],lockedX=!!state.lockedXs[i];if(b._catTimer){clearTimeout(b._catTimer);b._catTimer=null}if(v==='cat'){b.innerHTML=catSVG.replace('class="cat"','class="cat cat-svg'+(animate?' animate-once pop':'')+'"');if(animate){b._catTimer=setTimeout(function(){b._catTimer=null;var svg=b.querySelector('.cat-svg');if(svg&&state.cells[i]==='cat'){svg.classList.remove('animate-once');svg.classList.remove('pop')}},4300)}}else{b.innerHTML=v==='x'?'<span class="cross" aria-hidden="true"></span>':''}b.setAttribute('aria-disabled',lockedX?'true':'false');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，'+(v==='cat'?'貓咪':v==='x'?(lockedX?'已排除，鎖定':'已排除'):'空白'))}
+function updateCell(i,animate){var b=board.children[i],p=currentPuzzle(),r=Math.floor(i/p.size),c=i%p.size,v=state.cells[i],lockedX=!!state.lockedXs[i];if(b._catTimer){clearTimeout(b._catTimer);b._catTimer=null}if(v==='cat'){b.innerHTML=catSVG.replace('class="cat"','class="cat cat-svg'+(animate?' animate-once pop':'')+'"');if(animate){b._catTimer=setTimeout(function(){b._catTimer=null;var svg=b.querySelector('.cat-svg');if(svg&&state.cells[i]==='cat'){svg.classList.remove('animate-once');svg.classList.remove('pop')}},4300)}}else{b.innerHTML=v==='x'?'<span class="cross'+(lockedX?' locked':'')+'" aria-hidden="true"></span>':''}b.setAttribute('aria-disabled',lockedX?'true':'false');b.setAttribute('aria-label','第'+(r+1)+'行，第'+(c+1)+'列，'+(v==='cat'?'貓咪':v==='x'?(lockedX?'已排除，鎖定':'已排除'):'空白'))}
 var swayTimer=null;
 function scheduleSway(){if(swayTimer){clearTimeout(swayTimer);swayTimer=null}swayTimer=setTimeout(function(){swayTimer=null;if(!state.locked&&!document.querySelector('dialog[open]')){board.querySelectorAll('.cat-svg').forEach(function(svg){svg.classList.remove('sway-once');void svg.offsetWidth;svg.classList.add('sway-once');setTimeout(function(){svg.classList.remove('sway-once')},1100)})}scheduleSway()},30000)}
 function snapshot(){state.history.push(state.cells.slice());if(state.history.length>100)state.history.shift()}
@@ -1474,15 +1502,25 @@ function showLevelUpVeil(levelName){var next=nextLevelName(levelName),html='恭�
 function finish(win){
 if(state.resultShown)return;state.resultShown=true;state.locked=true;if(!win)clearProgress();
 var completed=state.level+1,recovered=false,earned=false,firstCompletion=win&&!state.levelAwarded;
-if(firstCompletion){state.levelAwarded=true;changeScore(1000);earned=true;var bonusLines=['過關獎勵 ＋1000'],bonusTotal=1000;if(state.hintsUsed===0){changeScore(400);bonusLines.push('不用找貓提示獎勵 ＋400');bonusTotal+=400}var elMs=Date.now()-state.start;if(elMs<=120000){changeScore(500);bonusLines.push('2 分鐘內完成獎勵 ＋500');bonusTotal+=500}else if(elMs<=300000){changeScore(300);bonusLines.push('5 分鐘內完成獎勵 ＋300');bonusTotal+=300}else if(elMs<=480000){changeScore(100);bonusLines.push('8 分鐘內完成獎勵 ＋100');bonusTotal+=100}var scoreBreakdown={lines:bonusLines,total:bonusTotal}}
+if(firstCompletion){state.levelAwarded=true;changeScore(1000);earned=true;var bonusLines=['過關獎勵 ＋1000'],bonusTotal=1000;if(state.hintsUsed===0){changeScore(400);bonusLines.push('不用找貓提示獎勵 ＋400');bonusTotal+=400}var elMs=getActiveMs();if(elMs<=120000){changeScore(500);bonusLines.push('2 分鐘內完成獎勵 ＋500');bonusTotal+=500}else if(elMs<=300000){changeScore(300);bonusLines.push('5 分鐘內完成獎勵 ＋300');bonusTotal+=300}else if(elMs<=480000){changeScore(100);bonusLines.push('8 分鐘內完成獎勵 ＋100');bonusTotal+=100}var scoreBreakdown={lines:bonusLines,total:bonusTotal}}
 if(win&&firstCompletion){var oldLvName=currentLevelName();if(state.best===undefined||state.best===null||state.score>state.best)state.best=Math.floor(state.score);state.maxCompleted=Math.max(state.maxCompleted,state.level+1);var newLvName=currentLevelName();if(newLvName!==oldLvName&&state.hadBest){state.pendingLevelUp=true;state.pendingLevelUpName=newLvName}paintLevelChip();saveLocalProgress()}
 if(firstCompletion&&completed%10===0&&!state.milestoneRewards[completed]){
 state.milestoneRewards[completed]=true;
 if(state.hearts<MAX_HEARTS){state.hearts=Math.min(MAX_HEARTS,state.hearts+1);recovered=true;paintHearts();persistProgress()}
 }
-var d=document.getElementById('resultDialog'),elapsed=Math.max(1,Math.floor((Date.now()-state.start)/1000)),nextBtn=document.getElementById('nextBtn'),retryBtn=document.getElementById('retryBtn');document.getElementById('timeStat').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');document.getElementById('mistakeStat').textContent=state.mistakes;document.getElementById('hintStat').textContent=state.hintsUsed;document.getElementById('moveStat').textContent=state.moves;document.getElementById('scoreStat').textContent=state.score.toLocaleString('zh-Hant');var crownEl=document.getElementById('scoreCrown');if(crownEl){crownEl.style.display=(win&&state.best!==undefined&&state.best!==null&&Math.floor(state.score)>=Math.floor(state.best))?'block':'none'}document.getElementById('levelStat').textContent=currentLevelName();document.getElementById('resultTitle').textContent=win?(state.level===TOTAL-1?'階段完成':'完成第 '+completed+' 關'):'遊戲完結';var rtEl=document.getElementById('resultText');if(win){rtEl.style.display='none'}else{rtEl.style.display='block';rtEl.textContent='5 顆心已用完；你來到第 '+completed+' 關，累計 '+state.score.toLocaleString('zh-Hant')+' 分。繼續玩：本關重玩、心回滿、扣5000分（最低 0 分）。';}var bdEl=document.getElementById('scoreBreakdown');if(win&&earned&&typeof scoreBreakdown!=='undefined'){bdEl.innerHTML='計分明細<br>'+scoreBreakdown.lines.join('<br>')+'<br><b>本關合計 ＋'+scoreBreakdown.total+'</b>';bdEl.style.display='block'}else{bdEl.style.display='none'}var bsEl=document.getElementById('bestStat');if(win&&bsEl){var bTxt=(state.best===undefined||state.best===null)?'–':Math.floor(state.best).toLocaleString('zh-Hant');bsEl.textContent='個人紀錄：累計最高積分 '+bTxt;bsEl.style.display='block'}else if(bsEl){bsEl.style.display='none'}if(win){var finishedAll=state.level===TOTAL-1;nextBtn.textContent=finishedAll?'完成':'下一關';nextBtn.style.display='block';nextBtn.className='primary';nextBtn.autofocus=true;retryBtn.style.display='none';retryBtn.autofocus=false;nextBtn.parentNode.insertBefore(nextBtn,retryBtn)}else{nextBtn.style.display='none';nextBtn.autofocus=false;retryBtn.textContent='繼續玩';retryBtn.style.display='block';retryBtn.className='primary';retryBtn.autofocus=true;nextBtn.parentNode.insertBefore(retryBtn,nextBtn)}d.dataset.win=win?'1':'0';if(win)lbOnLevelComplete(completed,firstCompletion);openResultDialog(d);if(win){soundComplete();burst()}
+var d=document.getElementById('resultDialog'),elapsed=Math.max(1,Math.floor(getActiveMs()/1000)),nextBtn=document.getElementById('nextBtn'),retryBtn=document.getElementById('retryBtn');document.getElementById('timeStat').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');document.getElementById('mistakeStat').textContent=state.mistakes;document.getElementById('hintStat').textContent=state.hintsUsed;document.getElementById('moveStat').textContent=state.moves;document.getElementById('scoreStat').textContent=state.score.toLocaleString('zh-Hant');var crownEl=document.getElementById('scoreCrown');if(crownEl){crownEl.style.display=(win&&state.best!==undefined&&state.best!==null&&Math.floor(state.score)>=Math.floor(state.best))?'block':'none'}document.getElementById('levelStat').textContent=currentLevelName();document.getElementById('resultTitle').textContent=win?(state.level===TOTAL-1?'階段完成':'完成第 '+completed+' 關'):'遊戲完結';var rtEl=document.getElementById('resultText');if(win){rtEl.style.display='none'}else{rtEl.style.display='block';rtEl.textContent='5 顆心已用完；你來到第 '+completed+' 關，累計 '+state.score.toLocaleString('zh-Hant')+' 分。繼續玩：本關重玩、心回滿、扣5000分（最低 0 分）。';}var bdEl=document.getElementById('scoreBreakdown');if(win&&earned&&typeof scoreBreakdown!=='undefined'){bdEl.innerHTML='計分明細<br>'+scoreBreakdown.lines.join('<br>')+'<br><b>本關合計 ＋'+scoreBreakdown.total+'</b>';bdEl.style.display='block'}else{bdEl.style.display='none'}var bsEl=document.getElementById('bestStat');if(win&&bsEl){var bTxt=(state.best===undefined||state.best===null)?'–':Math.floor(state.best).toLocaleString('zh-Hant');bsEl.textContent='個人紀錄：累計最高積分 '+bTxt;bsEl.style.display='block'}else if(bsEl){bsEl.style.display='none'}if(win){var finishedAll=state.level===TOTAL-1;nextBtn.textContent=finishedAll?'完成':'下一關';nextBtn.style.display='block';nextBtn.className='primary';nextBtn.autofocus=true;retryBtn.style.display='none';retryBtn.autofocus=false;nextBtn.parentNode.insertBefore(nextBtn,retryBtn)}else{nextBtn.style.display='none';nextBtn.autofocus=false;retryBtn.textContent='繼續玩';retryBtn.style.display='block';retryBtn.className='primary';retryBtn.autofocus=true;nextBtn.parentNode.insertBefore(retryBtn,nextBtn)}d.dataset.win=win?'1':'0';
+(function(){
+var _showUI=function(){openResultDialog(d);if(win){soundComplete();burst()};};
+var _doUpload=function(){if(win)lbOnLevelComplete(completed,firstCompletion);};
+/*v39.16：等待存檔寫入完成後再上傳，消除 D1 一關滯後（saveLocalProgress 為非同步，直接讀取會拿到舊資料）*/
+try{
+var _pp=persistProgress();
+if(_pp&&_pp.then){_pp.then(function(){_doUpload();_showUI();},function(){_doUpload();_showUI();});}
+else{_doUpload();_showUI();}
+}catch(e){try{_doUpload();}catch(_){}try{_showUI();}catch(_){}}
+})();
 }
-function newLevel(index,skipSave,preserveVariant){clearToast();scheduleSway();state.level=index;state.hadBest=(typeof state.best==='number'&&state.best>0);if(!preserveVariant)state.variant=HARDEST_VARIANT[index];var p=currentPuzzle();state.cells=new Array(p.size*p.size).fill('');state.lockedXs={};state.history=[];state.pendingCells={};state.hintsRemaining=2;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.catsRemaining=p.size;state.start=Date.now();state.locked=false;state.resultShown=false;state.levelAwarded=false;state.focus=0;state.openingAvailable=index<30;state.openingGuide=null;state.restoredEntry=false;render();setLogic('本關版圖已準備','先查看免費「開局指引」，或直接選「標 X」／「放貓」開始；本關另有 2 次找貓提示。','↻');if(!skipSave)persistProgress()}
+function newLevel(index,skipSave,preserveVariant){if(typeof window.__resetAnswerShown==='function')window.__resetAnswerShown();clearToast();scheduleSway();state.level=index;state.hadBest=(typeof state.best==='number'&&state.best>0);if(!preserveVariant)state.variant=HARDEST_VARIANT[index];var p=currentPuzzle();state.cells=new Array(p.size*p.size).fill('');state.lockedXs={};state.history=[];state.pendingCells={};state.hintsRemaining=2;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.catsRemaining=p.size;state.start=Date.now();state.activeMs=0;state.lastResume=Date.now();state.locked=false;state.resultShown=false;state.levelAwarded=false;state.focus=0;state.openingAvailable=index<30;state.openingGuide=null;state.restoredEntry=false;render();setLogic('本關版圖已準備','先查看免費「開局指引」，或直接選「標 X」／「放貓」開始；本關另有 2 次找貓提示。','↻');if(!skipSave)persistProgress()}
 function restartLevel(){
 if(state.locked)return;if(Object.keys(state.pendingCells).length){showToast('請先等待錯誤提示完成');return}
 for(var i=0;i<state.cells.length;i++){if(state.cells[i]!=='cat')state.cells[i]=''}state.lockedXs={};state.history=[];state.focus=0;
@@ -1626,10 +1664,89 @@ function lbFireSubmit(){
     fetch(LB_API+'/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(){}).catch(function(){});
   }catch(_){}
 }
+/* D1 玩家資料備份（2026-10-15 CC 批准，v39.9.beta）：fire-and-forget，絕不阻塞玩家；與排行榜完全獨立 */
+var BACKUP_API='https://meowdoku-leaderboard.iamraymondchiu.workers.dev';
+function backupGetPlayerId(){
+  try{
+    var k='meowdoku-player-id-v1'+_storeSfx;
+    var v=localStorage.getItem(k);
+    if(v)return v;
+    v=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'pid-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
+    try{localStorage.setItem(k,v)}catch(_){}
+    return v;
+  }catch(_){return 'pid-tmp-'+Math.random().toString(36).slice(2,10)}
+}
+function backupGetRecoveryCode(){
+  try{
+    var k='meowdoku-recovery-code-v1'+_storeSfx;
+    var v=localStorage.getItem(k);
+    if(v)return v;
+    var chars='ABCDEFGHJKMNPQRSTUVWXYZ23456789',code='';
+    for(var i=0;i<12;i++)code+=chars.charAt(Math.floor(Math.random()*chars.length));
+    v=code.slice(0,4)+'-'+code.slice(4,8)+'-'+code.slice(8);
+    try{localStorage.setItem(k,v)}catch(_){}
+    return v;
+  }catch(_){return 'XXXX-XXXX-XXXX'}
+}
+function backupFireUpload(){
+  try{
+    var v3raw=null,hintsraw=null;
+    try{v3raw=localStorage.getItem(LS_KEY)}catch(_){}
+    try{hintsraw=localStorage.getItem(HINTS_KEY)}catch(_){}
+    if(!v3raw)return;
+    var v3d=null,hd=null;
+    try{v3d=JSON.parse(v3raw)}catch(_){}
+    try{hd=JSON.parse(hintsraw)}catch(_){}
+    var payload={player_id:backupGetPlayerId(),recovery_code:backupGetRecoveryCode(),nickname:lbGetNickname(),save_json:JSON.stringify({v3:v3raw,hints:hintsraw}),
+      max_level:v3d?(v3d.level+1):null,hearts:v3d?v3d.hearts:null,score:v3d?v3d.score:null,best:(v3d&&v3d.best!==undefined)?v3d.best:null,theme:v3d?v3d.theme:null,
+      hints:hd?hd.hints:null};
+    fetch(BACKUP_API+'/backup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(){}).catch(function(){});
+  }catch(_){}
+}
+function backupDownload(code,onProgress){
+  var q=String(code||'').toUpperCase();
+  var prog=(typeof onProgress==='function')?onProgress:function(){};
+  var url=BACKUP_API+'/backup?'+(/^[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(q)?'recovery_code=':'player_id=')+encodeURIComponent(q);
+  return fetch(url).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()}).then(function(j){
+    if(!j||!j.ok||!j.save_json)throw new Error('bad_backup');
+    var outer;try{outer=JSON.parse(j.save_json)}catch(e){throw new Error('bad_backup')}
+    if(!outer||typeof outer.v3!=='string')throw new Error('bad_backup');
+    prog('雲端下載成功');
+    return backupVerifyV3(outer.v3).then(function(v3ok){
+      if(!v3ok)throw new Error('bad_v3_hash');
+      if(outer.hints&&typeof outer.hints==='string'){
+        if(!backupVerifyHints(outer.hints))throw new Error('bad_hints_hash');
+      }
+      prog('資料驗證成功');
+      try{localStorage.setItem(LS_KEY,outer.v3)}catch(e){throw new Error('write_fail')}
+      try{if(outer.hints)localStorage.setItem(HINTS_KEY,outer.hints)}catch(e){}
+      try{localStorage.setItem('meowdoku-recovery-code-v1'+_storeSfx,q)}catch(e){}
+      try{if(j.nickname)localStorage.setItem('meowdoku-nickname-v1',j.nickname)}catch(e){} // v39.19：恢復時一併採用雲端暱稱，避免舊紀錄配新暱稱
+      prog('覆蓋本地資料成功');
+      return {nickname:j.nickname||'',updated_at:j.updated_at||''};
+    });
+  });
+}
+function backupVerifyV3(raw){
+  var d;try{d=JSON.parse(raw)}catch(e){return Promise.resolve(false)}
+  if(!d||d.v!==3||typeof d.level!=='number'||typeof d.hearts!=='number'||typeof d.score!=='number')return Promise.resolve(false);
+  if(d.level<0||d.level>=TOTAL||d.hearts<1||d.hearts>MAX_HEARTS||d.score<0||!isFinite(d.score))return Promise.resolve(false);
+  if(d.best!==undefined&&(typeof d.best!=='number'||d.best<0||!isFinite(d.best)))return Promise.resolve(false);
+  var theme2=d.theme==='dark'?'dark':'light';
+  var bestStr=(d.best===undefined||d.best===null)?'':Math.floor(d.best);
+  return sha256hex(d.level+'|'+d.hearts+'|'+d.score+'|'+bestStr+'|'+theme2+'|'+LS_SECRET).then(function(sum){return !!sum&&sum===d.sum});
+}
+function backupVerifyHints(raw){
+  var d;try{d=JSON.parse(raw)}catch(e){return false}
+  if(!d||d.v!==1||typeof d.level!=='number'||typeof d.hints!=='number'||d.hints<0||d.hints>2||Math.floor(d.hints)!==d.hints||!isFinite(d.level))return false;
+  var sum=sha256hexSync(d.level+'|'+d.hints+'|'+LS_SECRET);
+  return !!sum&&sum===d.sum;
+}
 function lbOnLevelComplete(completed,firstCompletion){
   lbFirstComp=!!firstCompletion;
   lbAutoPending=!!firstCompletion&&(completed%10===0);
   if(lbGetNickname()){lbFireSubmit()}
+  if(IS_TEST)backupFireUpload();
 }
 function lbFetchJson(url,ms){
   return new Promise(function(resolve,reject){
@@ -1684,9 +1801,9 @@ function lbLoadAndRender(){
   selfEl.textContent='\u8f09\u5165\u4e2d\u2026';listEl.innerHTML='';errEl.hidden=true;
   // 先上傳最新分數（失敗／超時不阻塞），再並行取排名
   lbSubmitNow().then(function(){
-    var board=lbBoard(),pid=encodeURIComponent(lbGetPlayerId());
+    var board=lbBoard();
     var pTop=lbFetchJson(LB_API+'/top?board='+board+'&limit=10',10000);
-    var pRank=lbFetchJson(LB_API+'/rank?board='+board+'&player_id='+pid,10000).catch(function(){return null});
+    var pRank=lbFetchJson(LB_API+'/rank?board='+board+'&nickname='+encodeURIComponent(lbGetNickname()),10000).catch(function(){return null});
     Promise.all([pTop,pRank]).then(function(res){
       lbRender(res[0]&&res[0].top?res[0].top:[],res[1],lbGetNickname());
     }).catch(function(){lbShowError()});
@@ -1762,7 +1879,7 @@ function lbCheckNicknameOnBoot(){
   try{
     if(!lbGetNickname()){
       lbOpenNicknameDialog(function(){
-        try{if(typeof state!=='undefined'&&state)state.start=Date.now()}catch(_){}
+        try{if(typeof state!=='undefined'&&state){state.start=Date.now();state.activeMs=0;state.lastResume=Date.now();}}catch(_){}
       });
     }
   }catch(_){}
@@ -1793,7 +1910,7 @@ document.getElementById('nicknameInput').addEventListener('input',function(){
   }
 });
 (function(){var d=document.getElementById('nicknameDialog');if(!d)return;d.addEventListener('cancel',function(e){e.preventDefault()});d.addEventListener('close',function(){unlockPageScroll();var cb=lbNickCallback;lbNickCallback=null;if(cb)cb()})})();
-document.getElementById('soundBtn').onclick=toggleSound;document.getElementById('xModeBtn').onclick=function(){chooseMode('x')};document.getElementById('catModeBtn').onclick=function(){chooseMode('cat')};document.getElementById('rulesBtn').onclick=function(){rules.showModal()};rules.querySelectorAll('.close-btn,.close-rules').forEach(function(b){b.onclick=function(){rules.close()}});document.getElementById('undoBtn').onclick=undo;document.getElementById('restartBtn').onclick=restartLevel;document.getElementById('openingBtn').onclick=showOpeningGuide;logicNote.addEventListener('click',function(e){if(e.target.closest('.guide-close'))closeOpeningGuide()});document.getElementById('hintBtn').onclick=hint;document.getElementById('nextBtn').onclick=function(){var won=result.dataset.win==='1',finishedAll=won&&state.level===TOTAL-1;if(finishedAll){closeResultDialog();return}if(!won)return;closeResultDialog();function lbProceedNext(){if(state.pendingLevelUp){state.pendingLevelUp=false;showLevelUpVeil(state.pendingLevelUpName);return}checkVersionThen(function(){newLevel(state.level+1);saveLocalProgress()})}if(lbAutoPending){lbAutoPending=false;lbOpenAuto(lbProceedNext);return}lbProceedNext()};
+document.getElementById('soundBtn').onclick=toggleSound;document.getElementById('xModeBtn').onclick=function(){chooseMode('x')};document.getElementById('catModeBtn').onclick=function(){chooseMode('cat')};document.getElementById('rulesBtn').onclick=function(){rules.showModal()};rules.querySelectorAll('.close-btn,.close-rules').forEach(function(b){b.onclick=function(){rules.close()}});document.getElementById('undoBtn').onclick=undo;document.getElementById('restartBtn').onclick=restartLevel;var _ob=document.getElementById('openingBtn');if(_ob)_ob.onclick=showOpeningGuide;logicNote.addEventListener('click',function(e){if(e.target.closest('.guide-close'))closeOpeningGuide()});document.getElementById('hintBtn').onclick=hint;document.getElementById('nextBtn').onclick=function(){var won=result.dataset.win==='1',finishedAll=won&&state.level===TOTAL-1;if(finishedAll){closeResultDialog();return}if(!won)return;closeResultDialog();function lbProceedNext(){if(state.pendingLevelUp){state.pendingLevelUp=false;showLevelUpVeil(state.pendingLevelUpName);return}checkVersionThen(function(){newLevel(state.level+1);saveLocalProgress()})}if(lbAutoPending){lbAutoPending=false;lbOpenAuto(lbProceedNext);return}lbProceedNext()};
 document.getElementById('levelUpBtn').onclick=function(){var d=document.getElementById('levelUpDialog');if(d.open)d.close();unlockPageScroll();checkVersionThen(function(){newLevel(state.level+1);saveLocalProgress()})};document.getElementById('retryBtn').onclick=function(){var won=result.dataset.win==='1';if(!won){closeResultDialog();clearToast();state.hearts=MAX_HEARTS;state.score=Math.max(0,state.score-5000);state.mode='x';newLevel(state.level,false,true);return}};result.addEventListener('cancel',function(e){e.preventDefault()});result.addEventListener('close',unlockPageScroll);[rules,result].forEach(function(d){d.addEventListener('click',function(e){if(e.target===d&&d===rules)d.close()})});
 if(IS_TEST){
 /* 測試版專屬：跳關功能。IS_TEST=false（玩家版）時此整塊不執行，
@@ -1815,7 +1932,7 @@ jumpDialog.addEventListener('click',function(e){if(e.target===jumpDialog)jumpDia
 jumpForm.onsubmit=function(e){
 e.preventDefault();
 var n=Number(jumpInput.value);
-if(!Number.isInteger(n)||n<1||n>TOTAL){jumpError.hidden=false;showToast('請輸入 1–500 的關號');jumpInput.focus();return}
+if(!Number.isInteger(n)||n<1||n>TOTAL){jumpError.hidden=false;showToast('請輸入 1–600 的關號');jumpInput.focus();return}
 jumpDialog.close();closeResultDialog();clearToast();newLevel(n-1);
 };
 jumpBtn.className='jump-bottom-btn';
@@ -1941,8 +2058,8 @@ clearDialog.innerHTML='<div class="sheet">'+
 '<button class="secondary" id="clearSaveCancel" type="button">取消</button>'+
 '</div></div>';
 document.body.appendChild(clearDialog);
-var TEST_KEYS=['meowdoku-progress-v1-test','meowdoku-theme-v1-test','meowdoku-automode-v1-test','meowdoku-hints-v1-test'];
-var PLAYER_KEYS=['meowdoku-progress-v1','meowdoku-theme-v1','meowdoku-automode-v1'];
+var TEST_KEYS=['meowdoku-progress-v1-test','meowdoku-theme-v1-test','meowdoku-automode-v1-test','meowdoku-hints-v1-test','meowdoku-recovery-code-v1-test','meowdoku-player-id-v1-test'];
+var PLAYER_KEYS=['meowdoku-progress-v1','meowdoku-theme-v1','meowdoku-automode-v1','meowdoku-recovery-code-v1','meowdoku-player-id-v1'];
 function doClearSave(keys,label){
 try{for(var i=0;i<keys.length;i++){localStorage.removeItem(keys[i]);}}catch(e){}
 clearProgress();
@@ -1957,6 +2074,229 @@ clearDialog.querySelector('#clearAllSave').onclick=function(){doClearSave(TEST_K
 clearDialog.addEventListener('click',function(e){if(e.target===clearDialog)clearDialog.close();});
 footer2.parentNode.insertBefore(clearBtn,footer2);
 })();
+})();
+
+/* 測試版專屬：雲端備份 UI（設計貓，v39.9.beta） */
+var bkStyle=document.createElement('style');
+bkStyle.textContent=
+'#backupDialog[open],#backupInputDialog[open],#backupConfirmDialog[open]{position:fixed;inset:0;width:auto;height:100dvh;margin:0;padding:16px;display:flex;align-items:center;justify-content:center;}'+
+'#backupDialog .sheet,#backupInputDialog .sheet,#backupConfirmDialog .sheet{width:min(92vw,400px);text-align:center;}'+
+'#backupDialog .sheet h2,#backupInputDialog .sheet h2,#backupConfirmDialog .sheet h2{margin-bottom:12px;}'+
+'#backupDialog .sheet p,#backupConfirmDialog .sheet p{margin-bottom:14px;}'+
+'.recovery-code-row{display:flex;align-items:center;justify-content:center;margin:10px 0 12px;}'+
+'#recoveryCodeText{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.6rem;font-weight:900;letter-spacing:.12em;color:var(--ink);background:var(--panel-2);border:1px dashed var(--soft-line);border-radius:10px;padding:8px 14px;white-space:nowrap;}'+
+'.backup-hint{font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:16px;}'+
+'#backupInputDialog label{display:block;margin-bottom:8px;font-weight:700;}'+
+'#recoveryCodeInput{width:100%;box-sizing:border-box;text-align:center;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.3rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);color:var(--ink);margin-bottom:10px;}'+
+'#backupInputDialog .jump-actions{grid-template-columns:1fr 1fr;}'+
+'#backupConfirmDialog .jump-actions{grid-template-columns:1fr 1fr;}'+
+'.backup-status{margin-top:12px;font-weight:700;}'+
+'.backup-status.ok{color:#2e7d32;}'+
+'.backup-status.err{color:#c62828;}'+
+'.recovery-link{color:#ff0000!important;text-decoration:underline!important;text-decoration-color:#ff0000!important;text-underline-offset:3px;cursor:pointer;background:none!important;border:none!important;padding:0!important;font-size:.95rem;font-weight:900;font-family:inherit;}'+
+'#restoreDataLink{font-size:.85rem;margin-right:10px;}'+
+'.recovery-link:hover{color:#d50000!important;}'+
+'body.theme-dark .recovery-link{color:#ff5252!important;text-decoration-color:#ff5252!important;}'+
+'body.theme-dark .recovery-link:hover{color:#ff8a80!important;}'+
+'.backup-warn{color:#ff0000;font-weight:700;}'+
+'body.theme-dark .backup-warn{color:#ff5252;}'+
+'.backup-screenshot-note{font-size:.8rem;color:#ff0000;font-weight:700;}'+
+'body.theme-dark .backup-screenshot-note{color:#ff5252;}';
+document.head.appendChild(bkStyle);
+
+/* 測試版專屬：雲端備份 UI。IS_TEST=false（玩家版）時此整塊不執行，
+   頁面上無按鈕、無入口，功能完全不可觸達。 */
+(function(){
+var footerBk=document.querySelector('.footer-note');
+if(!footerBk||!footerBk.parentNode)return;
+
+/* --- 入口一：「恢復我的資料」（頁底版本左側，紅色連結） --- */
+var restoreLink=document.createElement('button');
+restoreLink.className='recovery-link';
+restoreLink.type='button';
+restoreLink.id='restoreDataLink';
+restoreLink.setAttribute('aria-label','恢復我的資料');
+restoreLink.textContent='恢復我的資料';
+/* 入口一置於頁底左側（向左對齊），版本文字置於右側（向右對齊） */
+var versionSpan=footerBk.querySelector('.version');
+if(versionSpan){
+  footerBk.insertBefore(restoreLink,versionSpan);
+}else{
+  footerBk.insertBefore(restoreLink,footerBk.firstChild);
+}
+footerBk.style.display='flex';
+footerBk.style.justifyContent='space-between';
+footerBk.style.alignItems='center';
+
+/* --- 入口二：「我的恢復碼」（過關對話框左下角，紅色連結） --- */
+var myCodeLink=document.createElement('button');
+myCodeLink.className='recovery-link';
+myCodeLink.type='button';
+myCodeLink.id='myRecoveryCodeLink';
+myCodeLink.setAttribute('aria-label','我的恢復碼');
+myCodeLink.textContent='我的恢復碼';
+/* 插入到結果對話框排名榜按鈕之後 */
+var lbBtn=document.getElementById('lbOpenBtn');
+if(lbBtn&&lbBtn.parentNode){
+  var wrap2=document.createElement('div');
+  wrap2.style.textAlign='left';
+  wrap2.style.marginTop='10px';
+  wrap2.appendChild(myCodeLink);
+  lbBtn.parentNode.insertBefore(wrap2,lbBtn.nextSibling);
+}
+
+/* --- 主對話框：顯示恢復碼 --- */
+var bkDialog=document.createElement('dialog');
+bkDialog.id='backupDialog';
+bkDialog.innerHTML='<div class="sheet">'+
+'<h2>您的恢復碼 <span class="backup-screenshot-note">（請截圖妥善保管）</span></h2>'+
+'<div class="recovery-code-row">'+
+'<span id="recoveryCodeText">----</span>'+
+'</div>'+
+'<p>適用情況：資料損壞、無痕模式後資料遺失、更換手機。</p>'+
+'<p><b class="backup-warn">請勿分享給他人，任何人取得此碼即可恢復您的遊戲進度。</b></p>'+
+'<div class="jump-actions" style="grid-template-columns:1fr;">'+
+'<button class="primary" id="restoreFromCloudBtn" type="button">從雲端恢復</button>'+
+'<button class="secondary" id="backupCloseBtn" type="button">關閉</button>'+
+'</div>'+
+'<p class="backup-status" id="backupStatus" role="status" hidden></p>'+
+'</div>';
+document.body.appendChild(bkDialog);
+
+/* --- 輸入對話框：輸入恢復碼 --- */
+var bkInputDialog=document.createElement('dialog');
+bkInputDialog.id='backupInputDialog';
+bkInputDialog.innerHTML='<div class="sheet">'+
+'<h2>從雲端恢復</h2>'+
+'<label for="recoveryCodeInput">請輸入 12 位恢復碼</label>'+
+'<input id="recoveryCodeInput" type="text" maxlength="14" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" />'+
+'<p class="jump-error" id="recoveryCodeError" role="alert" hidden>格式不正確，請輸入 12 位恢復碼（如 K7M2-P9Q4-X3Y8）</p>'+
+'<div class="jump-actions">'+
+'<button class="secondary" id="recoveryInputCancel" type="button">取消</button>'+
+'<button class="primary" id="recoveryGoBtn" type="button">確認恢復</button>'+
+'</div></div>';
+document.body.appendChild(bkInputDialog);
+
+/* --- 確認對話框：覆蓋警告 --- */
+var bkConfirmDialog=document.createElement('dialog');
+bkConfirmDialog.id='backupConfirmDialog';
+bkConfirmDialog.innerHTML='<div class="sheet">'+
+'<h2>確認恢復</h2>'+
+'<p>恢復將用雲端備份覆蓋本機進度及暱稱，是否繼續？</p>'+
+'<div class="jump-actions">'+
+'<button class="secondary" id="backupConfirmCancel" type="button">取消</button>'+
+'<button class="primary" id="backupConfirmYes" type="button">確認</button>'+
+'</div></div>';
+document.body.appendChild(bkConfirmDialog);
+
+/* --- 事件邏輯 --- */
+var pendingCode=''; // 待恢復的碼（輸入框→確認框傳遞）
+
+function showStatus(msg,ok){
+  var st=bkDialog.querySelector('#backupStatus');
+  st.textContent=msg;
+  st.className='backup-status '+(ok?'ok':'err');
+  st.hidden=false;
+}
+function hideStatus(){bkDialog.querySelector('#backupStatus').hidden=true;}
+function clearStatus(){
+  var st=bkDialog.querySelector('#backupStatus');
+  st.innerHTML='';
+  st.className='backup-status';
+  st.hidden=false;
+}
+function addStatusLine(msg,ok){
+  var st=bkDialog.querySelector('#backupStatus');
+  var line=document.createElement('div');
+  line.textContent=msg;
+  line.style.color=ok?'#2e7d32':'#c62828';
+  st.appendChild(line);
+  st.hidden=false;
+}
+
+function openBackupDialog(){
+  hideStatus();
+  try{
+    var code=(typeof backupGetRecoveryCode==='function')?backupGetRecoveryCode():'----';
+    bkDialog.querySelector('#recoveryCodeText').textContent=code;
+  }catch(e){
+    bkDialog.querySelector('#recoveryCodeText').textContent='----';
+  }
+  bkDialog.showModal();
+}
+if(restoreLink)restoreLink.onclick=openBackupDialog;
+if(myCodeLink)myCodeLink.onclick=openBackupDialog;
+bkDialog.querySelector('#backupCloseBtn').onclick=function(){bkDialog.close();};
+bkDialog.addEventListener('click',function(e){if(e.target===bkDialog)bkDialog.close();});
+
+
+
+/* 從雲端恢復 → 輸入框 */
+bkDialog.querySelector('#restoreFromCloudBtn').onclick=function(){
+  bkDialog.close();
+  bkInputDialog.querySelector('#recoveryCodeInput').value='';
+  bkInputDialog.querySelector('#recoveryCodeError').hidden=true;
+  bkInputDialog.showModal();
+};
+bkInputDialog.querySelector('#recoveryInputCancel').onclick=function(){bkInputDialog.close();};
+bkInputDialog.addEventListener('click',function(e){if(e.target===bkInputDialog)bkInputDialog.close();});
+/* 輸入時自動轉大寫 */
+bkInputDialog.querySelector('#recoveryCodeInput').addEventListener('input',function(e){
+  var v=e.target.value.toUpperCase().replace(/[^A-Z2-9]/g,'');
+  if(v.length>12)v=v.slice(0,12);
+  var f=v;
+  if(v.length>8)f=v.slice(0,4)+'-'+v.slice(4,8)+'-'+v.slice(8);
+  else if(v.length>4)f=v.slice(0,4)+'-'+v.slice(4);
+  if(e.target.value!==f)e.target.value=f;
+});
+
+/* 確認恢復 → 格式驗證 → 確認框 */
+bkInputDialog.querySelector('#recoveryGoBtn').onclick=function(){
+  var v=bkInputDialog.querySelector('#recoveryCodeInput').value.trim().toUpperCase().replace(/-/g,'');
+  if(/^[A-Z2-9]{12}$/.test(v))v=v.slice(0,4)+'-'+v.slice(4,8)+'-'+v.slice(8);
+  if(!/^[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(v)){
+    bkInputDialog.querySelector('#recoveryCodeError').hidden=false;
+    return;
+  }
+  pendingCode=v;
+  bkInputDialog.close();
+  bkConfirmDialog.showModal();
+};
+bkConfirmDialog.querySelector('#backupConfirmCancel').onclick=function(){bkConfirmDialog.close();};
+bkConfirmDialog.addEventListener('click',function(e){if(e.target===bkConfirmDialog)bkConfirmDialog.close();});
+
+/* 確認 → 調用 backupDownload */
+bkConfirmDialog.querySelector('#backupConfirmYes').onclick=function(){
+  bkConfirmDialog.close();
+  bkDialog.showModal();
+  clearStatus();addStatusLine('正在從雲端恢復…',true);
+  if(typeof backupDownload!=='function'){
+    showStatus('恢復功能尚未就緒',false);
+    return;
+  }
+  backupDownload(pendingCode,function(m){try{addStatusLine(m,true);}catch(_){}}).then(function(){
+    try{
+      var vv=localStorage.getItem(LS_KEY);
+      if(!vv)throw new Error('verify_fail');
+      var vp=JSON.parse(vv);
+      if(!vp||vp.v!==3||typeof vp.level!=='number')throw new Error('verify_fail');
+    }catch(ve){
+      addStatusLine('恢復寫入驗證失敗，請重試',false);
+      return;
+    }
+    try{if(history.replaceState)history.replaceState(null,'',location.pathname+location.search);}catch(_){}
+    addStatusLine('恢復成功（含暱稱），正在重新載入',true);
+    setTimeout(function(){location.reload();},900);
+  }).catch(function(err){
+    var msg=(err&&err.message)?err.message:'恢復失敗';
+    if(/not_found/i.test(msg)||/http 404/i.test(msg))msg='找不到備份，請檢查恢復碼是否正確';
+    else if(/bad/i.test(msg)||/http 400/i.test(msg))msg='備份資料已損壞，無法恢復';
+    else if(/http/i.test(msg))msg='未能修復，請檢查網路後再試';
+    addStatusLine(msg,false);
+  });
+};
+
+/* 入口已在上方直接插入，無需額外插入 */
 })();
 /* 測試版專屬：顯示答案。IS_TEST=false（玩家版）時此整塊不執行，
 頁面上無按鈕、無入口，功能完全不可觸達。純視覺覆蓋，不修改 state.cells，
@@ -2001,6 +2341,8 @@ updateAll(false); /* 經下方包裝的 updateCell 重繪，不會補回覆蓋�
 answerBtn.textContent='顯示答案（測試）';
 }
 answerBtn.onclick=function(){if(answerShown)hideAnswer();else showAnswer()};
+/* 供 newLevel() 轉關時重置：清除「顯示答案」旗標，避免標示殘留並洩漏新一關答案 */
+window.__resetAnswerShown=function(){if(answerShown)hideAnswer();};
 footer.parentNode.insertBefore(answerBtn,footer);
 /* 包裝 updateCell：答案顯示期間，任何格子重繪後自動補回覆蓋層。
    包裝程式碼本身亦在 if(IS_TEST) 內，玩家版不受影響。 */

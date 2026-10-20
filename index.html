@@ -265,6 +265,11 @@ pointer-events:auto;
 #updateDialog .sheet { width:min(92vw,400px); text-align:center; }
 #updateDialog .sheet h2 { margin-bottom:12px; }
 #updateDialog .sheet p { margin-bottom:18px; }
+#autoTipDialog .sheet { width:min(92vw,400px); text-align:center; }
+#autoTipDialog .sheet p { margin-bottom:18px; }
+#incognitoTipDialog .sheet { width:min(92vw,400px); text-align:center; }
+#incognitoTipDialog .sheet p { margin-bottom:18px; }
+#incognitoTipDialog .jump-actions { grid-template-columns:1fr; }
 /* ===== 排名榜（v37.64） ===== */
 #lbOpenBtn{margin-top:10px;width:100%;font-size:1rem;}
 #lbOpenBtn .lb-trophy{font-size:1.5em;line-height:1;}
@@ -586,7 +591,7 @@ body.theme-dark {
 <ol class="rules-list">
 <li class="warn-item"><span class="rule-number warn">💾</span><div><strong>🐱 開始遊戲前請注意</strong><span>請注意：如你正在使用瀏覽器的無痕／私密模式，遊戲進度將無法保留。請用一般模式開啟，以免進度遺失。</span><span style="margin-top:1.35em;"><span style="display:inline;color:#ff0000;font-weight:bold;">雲端修復</span>：遊戲進度自動備份至雲端。如因資料損壞或更換手機後需取回進度，點擊頁底「恢復我的資料」，輸入您的恢復碼即可。</span></div></li>
 <li><span class="rule-number">1</span><div><strong>基本規則</strong><span>每一行、每一列各一隻；每個區域各一隻；貓咪不能彼此相鄰（連斜角也不行），放好後周圍八格都可排除。</span></div></li>
-<li><span class="rule-number">2</span><div><strong>自動模式（放貓自動標 X）</strong><span>關卡名稱旁有 AUTO／OFF 開關，預設為開啟。開啟後，每次正確放貓，系統會自動在該貓的橫行、直行及周圍八格標 X；誤放不會觸發。開關設定會隨進度保存。</span></div></li>
+<li><span class="rule-number">2</span><div><strong>自動模式（放貓自動標 X）</strong><span>新玩家預設為關閉，讓您先親手標記、熟習規則；到達第 10 關時，遊戲會提示您一次，可即時開啟。您亦可隨時以關卡名稱旁的 AUTO／OFF 開關切換。開啟後，每次正確放貓，系統會自動在該貓的橫行、直行、周圍八格及其所屬色區的其餘全部格標 X；誤放不會觸發。開關設定會隨進度保存。</span></div></li>
 <li><span class="rule-number">3</span><div><strong>錯放貓咪會扣心</strong><span>若放貓後棋面再沒有合法解，會先顯示剛放的貓，再提示錯誤並扣 1 顆心，最後把該格改標為鎖定的 X；該 X 不可取消，也不能再次放貓。心用完即遊戲結束。</span></div></li>
 <li><span class="rule-number">4</span><div><strong>開局指引</strong><span>只在第 1–30 關提供，第 31 關起不再提供；非進度恢復進入關卡時，可查看一次不直接落子的起手推理；高亮只教一步，由你親自標記，也不會消耗找貓提示。</span></div></li>
 <li><span class="rule-number">5</span><div><strong>找貓提示</strong><span>每關可使用 2 次「找貓提示」；提示不扣心；用完後，到下一關會回復 2 次。</span></div></li>
@@ -594,6 +599,7 @@ body.theme-dark {
 <table class="level-table">
 <tr><th>項目</th><th>規則</th></tr>
 <tr><td>過關</td><td>＋1000 分</td></tr>
+<tr><td>關卡加成</td><td>每 10 關一階：第 1–9 關 ＋0 分、第 10–19 關 ＋10 分、如此類推，關號愈高加成愈多</td></tr>
 <tr><td>全程不用找貓提示</td><td>＋400 分</td></tr>
 <tr><td>2 分鐘內完成</td><td>＋500 分</td></tr>
 <tr><td>5 分鐘內完成</td><td>＋300 分</td></tr>
@@ -684,9 +690,9 @@ body.theme-dark {
 </dialog>
 <dialog id="jumpDialog">
 <form class="sheet" id="jumpForm" method="dialog">
-<label for="jumpInput">跳到第幾關？（1–600）</label>
-<input id="jumpInput" type="number" min="1" max="600" step="1" inputmode="numeric" required />
-<p class="jump-error" id="jumpError" role="alert" hidden>請輸入 1–600 的關號</p>
+<label for="jumpInput" id="jumpLabel">跳到第幾關？</label>
+<input id="jumpInput" type="number" min="1" step="1" inputmode="numeric" required />
+<p class="jump-error" id="jumpError" role="alert" hidden></p>
 <div class="jump-actions">
 <button class="secondary" id="jumpCancel" type="button">取消</button>
 <button class="primary" type="submit">跳關</button>
@@ -723,6 +729,31 @@ body.theme-dark {
 <div class="jump-actions">
 <button class="secondary" id="updateLater" type="button">稍後</button>
 <button class="primary" id="updateNow" type="button">立即更新</button>
+</div>
+</div>
+</dialog>
+<dialog id="autoTipDialog" aria-labelledby="autoTipTitle">
+<div class="sheet">
+<div class="result-heading">
+<div class="result-cat" id="autoTipCat"></div>
+<h2 id="autoTipTitle">自動標記功能</h2>
+</div>
+<p>開啟自動標記後，每次正確放貓，系統會自動在該貓的橫行、直行、周圍八格及其所屬色區的其餘全部格標 X，讓您專心推理。您可隨時以關卡名稱旁的 AUTO／OFF 開關切換。</p>
+<div class="jump-actions">
+<button class="secondary" id="autoTipLaterBtn" type="button">暫時不用</button>
+<button class="primary" id="autoTipOnBtn" type="button">立即開啟</button>
+</div>
+</div>
+</dialog>
+<dialog id="incognitoTipDialog" aria-labelledby="incognitoTipTitle">
+<div class="sheet">
+<div class="result-heading">
+<div class="result-cat" id="incognitoTipCat"></div>
+<h2 id="incognitoTipTitle">開始遊戲前請注意</h2>
+</div>
+<p>請注意：如你正在使用瀏覽器的無痕／私密模式，遊戲進度將無法保留。請用一般模式開啟，以免進度遺失。</p>
+<div class="jump-actions">
+<button class="primary" id="incognitoTipOkBtn" type="button">知道了</button>
 </div>
 </div>
 </dialog>
@@ -820,9 +851,19 @@ fetch('data/boards_56.json').then(function(r){return r.json()}),
 fetch('data/boards_57.json').then(function(r){return r.json()}),
 fetch('data/boards_58.json').then(function(r){return r.json()}),
 fetch('data/boards_59.json').then(function(r){return r.json()}),
-fetch('data/boards_60.json').then(function(r){return r.json()})
+fetch('data/boards_60.json').then(function(r){return r.json()}),
+fetch('data/boards_61.json').then(function(r){return r.json()}),
+fetch('data/boards_62.json').then(function(r){return r.json()}),
+fetch('data/boards_63.json').then(function(r){return r.json()}),
+fetch('data/boards_64.json').then(function(r){return r.json()}),
+fetch('data/boards_65.json').then(function(r){return r.json()}),
+fetch('data/boards_66.json').then(function(r){return r.json()}),
+fetch('data/boards_67.json').then(function(r){return r.json()}),
+fetch('data/boards_68.json').then(function(r){return r.json()}),
+fetch('data/boards_69.json').then(function(r){return r.json()}),
+fetch('data/boards_70.json').then(function(r){return r.json()})
 ]);
-window.VERIFIED_50_DATA=_parts[0].concat(_parts[1],_parts[2],_parts[3],_parts[4],_parts[5],_parts[6],_parts[7],_parts[8],_parts[9],_parts[10],_parts[11],_parts[12],_parts[13],_parts[14],_parts[15],_parts[16],_parts[17],_parts[18],_parts[19],_parts[20],_parts[21],_parts[22],_parts[23],_parts[24],_parts[25],_parts[26],_parts[27],_parts[28],_parts[29],_parts[30],_parts[31],_parts[32],_parts[33],_parts[34],_parts[35],_parts[36],_parts[37],_parts[38],_parts[39],_parts[40],_parts[41],_parts[42],_parts[43],_parts[44],_parts[45],_parts[46],_parts[47],_parts[48],_parts[49],_parts[50],_parts[51],_parts[52],_parts[53],_parts[54],_parts[55],_parts[56],_parts[57],_parts[58],_parts[59]);
+window.VERIFIED_50_DATA=_parts[0].concat(_parts[1],_parts[2],_parts[3],_parts[4],_parts[5],_parts[6],_parts[7],_parts[8],_parts[9],_parts[10],_parts[11],_parts[12],_parts[13],_parts[14],_parts[15],_parts[16],_parts[17],_parts[18],_parts[19],_parts[20],_parts[21],_parts[22],_parts[23],_parts[24],_parts[25],_parts[26],_parts[27],_parts[28],_parts[29],_parts[30],_parts[31],_parts[32],_parts[33],_parts[34],_parts[35],_parts[36],_parts[37],_parts[38],_parts[39],_parts[40],_parts[41],_parts[42],_parts[43],_parts[44],_parts[45],_parts[46],_parts[47],_parts[48],_parts[49],_parts[50],_parts[51],_parts[52],_parts[53],_parts[54],_parts[55],_parts[56],_parts[57],_parts[58],_parts[59],_parts[60],_parts[61],_parts[62],_parts[63],_parts[64],_parts[65],_parts[66],_parts[67],_parts[68],_parts[69]);
 }catch(_e){
 document.body.innerHTML='<div style="padding:40px;text-align:center;font-size:18px;">版圖數據載入失敗，請檢查網路後重新整理。</div>';
 return;
@@ -831,16 +872,16 @@ return;
 IS_TEST = true  → 顯示跳關按鈕（測試版專用）
 玩家版構建時改為 false → 跳關按鈕＋全部相關邏輯完全消除，頁面無按鈕、無入口 */
 var IS_TEST = false; // 玩家版構建時改為 false，跳關功能即完全消除
-var CURRENT_VERSION='2026.10.11.40.25'; // v40.25.beta；頁底版本文字由 JS 動態填入 CURRENT_VERSION（CC 硬規則：頁底顯示必須與發佈版本一致） // 過關時版本檢查用；發佈新版本時同步更新 version.txt
+var CURRENT_VERSION='2026.10.20.41'; // v40.25.beta；頁底版本文字由 JS 動態填入 CURRENT_VERSION（CC 硬規則：頁底顯示必須與發佈版本一致） // 過關時版本檢查用；發佈新版本時同步更新 version.txt
 /* 2026-10-18 v40.10.beta：頁底版本文字動態填入，確保永遠與發佈版本一致（CC 硬規則） */
 try{var _fvEl=document.querySelector('.footer-note .version');if(_fvEl)_fvEl.textContent='Version '+CURRENT_VERSION;}catch(_fvE){}
-var TOTAL=600, MAX_HEARTS=5, PUZZLE_SEED=0x43a7c21d;
+var TOTAL=700, MAX_HEARTS=5, PUZZLE_SEED=0x43a7c21d;
 var paletteLight=['#f3a6a6','#f6c184','#e8da72','#b8db76','#b08968','#7fd6bc','#a7b8c4','#82bde5','#8ea3e1','#aa92dc'],paletteDark=['#eeb7ce','#f1ae77','#ddbc5d','#b5d79b','#a3734f','#67b1b0','#acbed6','#7fbae2','#9179cf','#dc89b5'];
 var first=['暖陽','月光','毛線','紙箱','星夜','清晨','雨聲','魚乾','雲朵','花影'];
 var second=['角落','小徑','迷宮','窗台','走廊','花園','書架','屋頂','庭院','秘境'];
 function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shuffle(a,rand){for(var j=a.length-1;j>0;j--){var k=Math.floor(rand()*(j+1)),v=a[j];a[j]=a[k];a[k]=v}return a}
-var HARDEST_VARIANT=[2,2,1,2,1,2,0,0,1,0,2,2,2,2,2,2,2,2,2,1,1,2,2,2,0,1,2,2,2,1,1,2,2,2,0,1,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,0,0,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1,1,2,0,1,2,2,2,2,2,1,2,2,2,1,0,2,2,2,2,0,1,2,2,2,1,2,2,2,2,1,2,1,2,2,2,2,2,1,1,1,2,1,1,1,2,0,2,2,2,1,1,0,1,2,2,2,2,2,2,1,1,2,2,2,1,2,2,2,2,1,1,0,0,2,1,2,0,2,0,0,0,1,0,0,2,0,2,0,1,1,2,2,2,0,1,1,0,0,0,2,2,1,0,1,2,2,0,1,0,2,1,1,0,0,2,1,0,0,1,0,1,0,2,0,0,1,2,1,0,0,1,2,0,2,1,1,2,1,0,1,0,1,2,1,2,1,0,0,2,2,1,0,1,0,2,1,0,1,2,1,1,2,2,1,0,1,2,2,0,0,1,0,2,1,1,1,1,2,2,0,1,2,2,0,0,0,2,0,2,1,1,2,0,2,0,0,2,0,2,1,0,2,0,1,2,2,2,1,1,0,2,2,1,1,0,2,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,0,2,0,1,0,0,2,0,2,0,1,0,1,1,0,0,2,2,2,0,0,2,2,0,0,0,0,1,0,0,2,0,2,0,1,0,1,0,0,0,0,0,2,0,2,0,0,0,0,1,2,0,0,0,0,1,0,2,0,2,1,1,0,2,0,0,1,0,0,2,0,2,2,1,0,2,0,2,0,2,2,0,0,1,2,1,0,2,1,1,1,2,0];
+var HARDEST_VARIANT=[2,2,1,2,1,2,0,0,1,0,2,2,2,2,2,2,2,2,2,1,1,2,2,2,0,1,2,2,2,1,1,2,2,2,0,1,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,0,0,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1,1,2,0,1,2,2,2,2,2,1,2,2,2,1,0,2,2,2,2,0,1,2,2,2,1,2,2,2,2,1,2,1,2,2,2,2,2,1,1,1,2,1,1,1,2,0,2,2,2,1,1,0,1,2,2,2,2,2,2,1,1,2,2,2,1,2,2,2,2,1,1,0,0,2,1,2,0,2,0,0,0,1,0,0,2,0,2,0,1,1,2,2,2,0,1,1,0,0,0,2,2,1,0,1,2,2,0,1,0,2,1,1,0,0,2,1,0,0,1,0,1,0,2,0,0,1,2,1,0,0,1,2,0,2,1,1,2,1,0,1,0,1,2,1,2,1,0,0,2,2,1,0,1,0,2,1,0,1,2,1,1,2,2,1,0,1,2,2,0,0,1,0,2,1,1,1,1,2,2,0,1,2,2,0,0,0,2,0,2,1,1,2,0,2,0,0,2,0,2,1,0,2,0,1,2,2,2,1,1,0,2,2,1,1,0,2,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,0,2,0,1,0,0,2,0,2,0,1,0,1,1,0,0,2,2,2,0,0,2,2,0,0,0,0,1,0,0,2,0,2,0,1,0,1,0,0,0,0,0,2,0,2,0,0,0,0,1,2,0,0,0,0,1,0,2,0,2,1,1,0,2,0,0,1,0,0,2,0,2,2,1,0,2,0,2,0,2,2,0,0,1,2,1,0,2,1,1,1,2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,0,0,0,0,1,0,0,0,0,0,0,0,2,0,0,2,0,0,2,0,0,0,0,0,2,1,0,0,0,0,0,2,0,0,0,0,2,2,0,0,0,0,2,0,1,0,1,0,0,0,0,0,0,0,1,0];
 function levelSpec(index){var no=index+1,difficulty=index/(TOTAL-1),isBig=no>50;return{size:isBig?10:9,colors:isBig?10:9,label:no<=10?'入門':no<=30?'初階':no<=50?'中階':'高階',difficulty:difficulty}}
 var VERIFIED_BASES=[{"n":6,"r":"001111011111211111211311255334255444","s":"140352"},{"n":6,"r":"000111241111244444244443444443444455","s":"130524"},{"n":6,"r":"113300113300113322333333433333455333","s":"415302"},{"n":9,"r":"000333333000331112333333322333333333333343333553343333555543663777743333788743333","s":"258640731"},{"n":9,"r":"440000113444444113442444443442444443444444444444455555644447778644447778444447888","s":"362814057"},{"n":9,"r":"211100885221188885228888885448888385848888385888888885888668885887788888888888888","s":"530618427"},{"n":9,"r":"111444400111444444224444444224444334244444444244445444664445744664488744644488444","s":"820735164"},{"n":11,"r":"aa000aa3344aa0011a3344aaa111a3224aaa56aa3224aaa56aaaa44a5556aaaaaaaaa66aaaaaaaaa8aaaa7aaaaa8aaaa7aa99aaaaaaaaaaaaaaaaaaaa","s":"2597a148306"},{"n":11,"r":"11117700000222117000002227777777755777777773557777774737577777746677777777766777777777777777777877777797778777aa997777777","s":"642a8195730"},{"n":11,"r":"110000666661116006666246663366662466633666664666666666666666655666666666666666686676666666866796666666667966666666699aa66","s":"31a40795268"},{"n":11,"r":"000004444410002244444133442444444334444444443344444444488444444555884444665778844444447788944444444999444444449994444aaaa","s":"3a415869027"},{"n":11,"r":"33333111000333332211003333322333333333333333443533333333335333333333333663333377333333333393338833333933388aa33333338aaa3","s":"a8640351729"},{"n":11,"r":"221100aaaaa2211aaaaaaa22aaaaaaaaa55533aa44445553aaa44445557aaaa666aaa7aaaa666aaa7aaaaaaaaaaaaaaaa88aaaaaaaa998aaaaaaaaaaa","s":"52047193a86"},{"n":11,"r":"1100000666611330026666113336266661133366666655533666644555566666666667666666686676666666866666666696666666666966666666aa9","s":"516492730a8"}];
 function transformVerified(base,turn){
@@ -1321,7 +1362,7 @@ return true;
 啟動時優先讀取：校驗通過則恢復，否則回退 URL hash 或從第 1 關開始。 */
 var _storeSfx=IS_TEST?'-test':'',LS_KEY='meowdoku-progress-v1'+_storeSfx,LS_SECRET='meowdoku-cat-2026',THEME_KEY='meowdoku-theme-v1'+_storeSfx,AUTO_MODE_KEY='meowdoku-automode-v1'+_storeSfx,HINTS_KEY='meowdoku-hints-v1'+_storeSfx;
 var currentTheme='dark'; /* 主題記憶體變數：預設深色；切換即時生效，升關存檔時才寫入 localStorage */
-var autoMode=true; /* 自動標 X 模式：預設開啟；正確放貓後自動標記橫行／直行／周圍 8 格 */
+var autoMode=false; /* 自動標 X 模式：v41.1.beta 起新玩家預設關閉；現有玩家依 AUTO_MODE_KEY 及啟動載入段的世代回填決定，此初始值只作用於完全無痕跡的新玩家 */
 function sha256hex(str){
 try{
 if(!(window.crypto&&crypto.subtle&&crypto.subtle.digest))return Promise.resolve(null);
@@ -1390,7 +1431,7 @@ if(!raw)return Promise.resolve(null);
 var d;
 try{d=JSON.parse(raw)}catch(e){return Promise.resolve(null)}
 if(!d||(d.v!==1&&d.v!==2&&d.v!==3)||typeof d.level!=='number'||typeof d.hearts!=='number'||typeof d.score!=='number'||typeof d.sum!=='string')return Promise.resolve(null);
-if(d.level<0||d.level>=TOTAL||d.hearts<1||d.hearts>MAX_HEARTS||d.score<0||!isFinite(d.score))return Promise.resolve(null);
+if(d.level<0||d.level>=TOTAL||d.hearts<0||d.hearts>MAX_HEARTS||d.score<0||!isFinite(d.score))return Promise.resolve(null);
 var best=undefined;
 if(d.v===3){
 if(d.best!==undefined&&(typeof d.best!=='number'||d.best<0||!isFinite(d.best)))return Promise.resolve(null);
@@ -1864,7 +1905,7 @@ function showLevelUpVeil(levelName){var next=nextLevelName(levelName),html='恭�
 function finish(win){
 if(state.resultShown)return;state.resultShown=true;state.locked=true;if(!win)clearProgress();
 var completed=state.level+1,recovered=false,earned=false,firstCompletion=win&&(completed>state.maxCompleted);/* v40.18.beta 防刷分（2026-10-18 CC 批准）：firstCompletion 改用 maxCompleted（持久化）判斷，取代未持久化的 levelAwarded。關閉分頁重進後重玩同一關 completed>maxCompleted 為假，不再加分。最高關無豁免（2026-10-14 永久規則已於今日撤銷）。 */
-if(firstCompletion){state.levelAwarded=true;changeScore(1000);earned=true;var bonusLines=['過關獎勵 ＋1000'],bonusTotal=1000;if(state.hintsUsed===0){changeScore(400);bonusLines.push('不用找貓提示獎勵 ＋400');bonusTotal+=400}var elMs=getActiveMs();if(elMs<=120000){changeScore(500);bonusLines.push('2 分鐘內完成獎勵 ＋500');bonusTotal+=500}else if(elMs<=300000){changeScore(300);bonusLines.push('5 分鐘內完成獎勵 ＋300');bonusTotal+=300}else if(elMs<=480000){changeScore(100);bonusLines.push('8 分鐘內完成獎勵 ＋100');bonusTotal+=100}var scoreBreakdown={lines:bonusLines,total:bonusTotal}}
+if(firstCompletion){state.levelAwarded=true;changeScore(1000);earned=true;var bonusLines=['過關獎勵 ＋1000'],bonusTotal=1000;if(state.hintsUsed===0){changeScore(400);bonusLines.push('不用找貓提示獎勵 ＋400');bonusTotal+=400}var elMs=getActiveMs();if(elMs<=120000){changeScore(500);bonusLines.push('2 分鐘內完成獎勵 ＋500');bonusTotal+=500}else if(elMs<=300000){changeScore(300);bonusLines.push('5 分鐘內完成獎勵 ＋300');bonusTotal+=300}else if(elMs<=480000){changeScore(100);bonusLines.push('8 分鐘內完成獎勵 ＋100');bonusTotal+=100}/* v41.0.beta 關卡加成（2026-10-20 CC 定案）：首次過關加算 ⌊completed÷10⌋×10，與找貓提示互相獨立，恆列入計分明細（含 +0） */var levelBonus=Math.floor(completed/10)*10;changeScore(levelBonus);bonusLines.push('關卡加成 ＋'+levelBonus);bonusTotal+=levelBonus;var scoreBreakdown={lines:bonusLines,total:bonusTotal}}
 if(win&&firstCompletion){var oldLvName=currentLevelName();if(state.best===undefined||state.best===null||state.score>state.best)state.best=Math.floor(state.score);state.maxCompleted=Math.max(state.maxCompleted,state.level+1);saveMaxCompletedProgress();var newLvName=currentLevelName();if(newLvName!==oldLvName&&state.hadBest){state.pendingLevelUp=true;state.pendingLevelUpName=newLvName}paintLevelChip();saveLocalProgress()}
 if(firstCompletion&&completed%10===0&&!state.milestoneRewards[completed]){
 state.milestoneRewards[completed]=true;
@@ -1878,7 +1919,7 @@ if(state.hearts<MAX_HEARTS){state.hearts=Math.min(MAX_HEARTS,state.hearts+1);rec
    再檢查 lbAutoPending（排行榜）。重疊關（30、60…）順序為：抽獎 → 排行榜 → 下一關。
    抽獎獎勵（加分／加心）在 lotteryApplyPrize 內即時寫入存檔並上傳，
    如為新最佳積分亦觸發 lbFireSubmit，排行榜彈窗開啟時讀取的已是更新後數據。 */
-if(firstCompletion&&completed%15===0&&completed>state.maxLotteryLevel){
+if(win&&completed%15===0&&completed>state.maxLotteryLevel){
 state.pendingLottery=completed;
 }
 var d=document.getElementById('resultDialog'),elapsed=Math.max(1,Math.floor(getActiveMs()/1000)),nextBtn=document.getElementById('nextBtn'),retryBtn=document.getElementById('retryBtn');document.getElementById('timeStat').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');document.getElementById('mistakeStat').textContent=state.mistakes;document.getElementById('hintStat').textContent=state.hintsUsed;document.getElementById('moveStat').textContent=state.moves;document.getElementById('scoreStat').textContent=state.score.toLocaleString('zh-Hant');var crownEl=document.getElementById('scoreCrown');if(crownEl){crownEl.style.display=(win&&state.best!==undefined&&state.best!==null&&Math.floor(state.score)>=Math.floor(state.best))?'block':'none'}document.getElementById('levelStat').textContent=currentLevelName();document.getElementById('resultTitle').textContent=win?(state.level===TOTAL-1?'階段完成':'完成第 '+completed+' 關'):'遊戲完結';var rtEl=document.getElementById('resultText');if(win){rtEl.style.display='none'}else{rtEl.style.display='block';rtEl.textContent='5 顆心已用完；你來到第 '+completed+' 關，累計 '+state.score.toLocaleString('zh-Hant')+' 分。繼續玩：本關重玩、心回滿、扣5000分（最低 0 分）。';}var bdEl=document.getElementById('scoreBreakdown');if(win&&earned&&typeof scoreBreakdown!=='undefined'){bdEl.innerHTML='計分明細<br>'+scoreBreakdown.lines.join('<br>')+'<br><b>本關合計 ＋'+scoreBreakdown.total+'</b>';bdEl.style.display='block'}else{bdEl.style.display='none'}var bsEl=document.getElementById('bestStat');if(win&&bsEl){var bTxt=(state.best===undefined||state.best===null)?'–':Math.floor(state.best).toLocaleString('zh-Hant');bsEl.textContent='個人紀錄：累計最高積分 '+bTxt;bsEl.style.display='block'}else if(bsEl){bsEl.style.display='none'}if(win){var finishedAll=state.level===TOTAL-1;nextBtn.textContent=finishedAll?'完成':'下一關';nextBtn.style.display='block';nextBtn.className='primary';nextBtn.autofocus=true;retryBtn.style.display='none';retryBtn.autofocus=false;nextBtn.parentNode.insertBefore(nextBtn,retryBtn)}else{nextBtn.style.display='none';nextBtn.autofocus=false;retryBtn.textContent='繼續玩';retryBtn.style.display='block';retryBtn.className='primary';retryBtn.autofocus=true;nextBtn.parentNode.insertBefore(retryBtn,nextBtn)}d.dataset.win=win?'1':'0';
@@ -1893,7 +1934,7 @@ else{_doUpload();_showUI();}
 }catch(e){try{_doUpload();}catch(_){}try{_showUI();}catch(_){}}
 })();
 }
-function newLevel(index,skipSave,preserveVariant){if(typeof window.__resetAnswerShown==='function')window.__resetAnswerShown();clearToast();scheduleSway();state.level=index;state.hadBest=(typeof state.best==='number'&&state.best>0);if(!preserveVariant)state.variant=HARDEST_VARIANT[index];var p=currentPuzzle();state.cells=new Array(p.size*p.size).fill('');state.lockedXs={};state.history=[];state.pendingCells={};state.hintsRemaining=2;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.catsRemaining=p.size;state.start=Date.now();state.activeMs=0;state.lastResume=Date.now();state.locked=false;state.resultShown=false;state.levelAwarded=false;state.focus=0;state.openingAvailable=index<30;state.openingGuide=null;state.restoredEntry=false;render();setLogic('本關版圖已準備','先查看免費「開局指引」，或直接選「標 X」／「放貓」開始；本關另有 2 次找貓提示。','↻');if(!skipSave)persistProgress()}
+function newLevel(index,skipSave,preserveVariant){if(typeof window.__resetAnswerShown==='function')window.__resetAnswerShown();clearToast();scheduleSway();state.level=index;state.hadBest=(typeof state.best==='number'&&state.best>0);if(!preserveVariant)state.variant=HARDEST_VARIANT[index];var p=currentPuzzle();state.cells=new Array(p.size*p.size).fill('');state.lockedXs={};state.history=[];state.pendingCells={};state.hintsRemaining=2;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.catsRemaining=p.size;state.start=Date.now();state.activeMs=0;state.lastResume=Date.now();state.locked=false;state.resultShown=false;state.levelAwarded=false;state.focus=0;state.openingAvailable=index<30;state.openingGuide=null;state.restoredEntry=false;render();setLogic('本關版圖已準備','先查看免費「開局指引」，或直接選「標 X」／「放貓」開始；本關另有 2 次找貓提示。','↻');if(!skipSave)persistProgress();maybeShowAutoTip();maybeShowIncognitoTip()}
 function restartLevel(){
 if(state.locked)return;if(Object.keys(state.pendingCells).length){showToast('請先等待錯誤提示完成');return}
 for(var i=0;i<state.cells.length;i++){if(state.cells[i]!=='cat')state.cells[i]=''}state.lockedXs={};state.history=[];state.focus=0;
@@ -2314,15 +2355,15 @@ jumpBtn.type='button';
 jumpBtn.id='jumpBtn';
 jumpBtn.setAttribute('aria-label','跳到指定關卡（測試專用）');
 jumpBtn.textContent='跳關（測試）';
-var jumpDialog=document.getElementById('jumpDialog'),jumpForm=document.getElementById('jumpForm'),jumpInput=document.getElementById('jumpInput'),jumpError=document.getElementById('jumpError');
-jumpBtn.onclick=function(){jumpInput.value=String(state.level+1);jumpError.hidden=true;jumpDialog.showModal();jumpInput.focus();jumpInput.select()};
+var jumpDialog=document.getElementById('jumpDialog'),jumpForm=document.getElementById('jumpForm'),jumpInput=document.getElementById('jumpInput'),jumpError=document.getElementById('jumpError'),jumpLabel=document.getElementById('jumpLabel');
+jumpBtn.onclick=function(){jumpLabel.textContent='跳到第幾關？（1–'+TOTAL+'）';jumpInput.value=String(state.level+1);jumpError.hidden=true;jumpDialog.showModal();jumpInput.focus();jumpInput.select()};
 document.getElementById('jumpCancel').onclick=function(){jumpDialog.close()};
 /* 版本更新對話框按鈕 */
 jumpDialog.addEventListener('click',function(e){if(e.target===jumpDialog)jumpDialog.close()});
 jumpForm.onsubmit=function(e){
 e.preventDefault();
 var n=Number(jumpInput.value);
-if(!Number.isInteger(n)||n<1||n>TOTAL){jumpError.hidden=false;showToast('請輸入 1–600 的關號');jumpInput.focus();return}
+if(!Number.isInteger(n)||n<1||n>TOTAL){jumpError.textContent='請輸入 1–'+TOTAL+' 的關號';jumpError.hidden=false;showToast('請輸入 1–'+TOTAL+' 的關號');jumpInput.focus();return}
 jumpDialog.close();closeResultDialog();clearToast();newLevel(n-1);
 };
 jumpBtn.className='jump-bottom-btn';
@@ -2585,8 +2626,8 @@ clearDialog.innerHTML='<div class="sheet">'+
 '<button class="secondary" id="clearSaveCancel" type="button">取消</button>'+
 '</div></div>';
 document.body.appendChild(clearDialog);
-var TEST_KEYS=['meowdoku-progress-v1-test','meowdoku-theme-v1-test','meowdoku-automode-v1-test','meowdoku-hints-v1-test','meowdoku-recovery-code-v1-test','meowdoku-player-id-v1-test'];
-var PLAYER_KEYS=['meowdoku-progress-v1','meowdoku-theme-v1','meowdoku-automode-v1','meowdoku-recovery-code-v1','meowdoku-player-id-v1'];
+var TEST_KEYS=['meowdoku-progress-v1-test','meowdoku-theme-v1-test','meowdoku-automode-v1-test','meowdoku-hints-v1-test','meowdoku-recovery-code-v1-test','meowdoku-player-id-v1-test','meowdoku-lottery-v1-test','meowdoku-maxcompleted-v1-test','meowdoku-defaults-migrated-v40_25-test'];
+var PLAYER_KEYS=['meowdoku-progress-v1','meowdoku-theme-v1','meowdoku-automode-v1','meowdoku-recovery-code-v1','meowdoku-player-id-v1','meowdoku-lottery-v1','meowdoku-maxcompleted-v1','meowdoku-hints-v1','meowdoku-defaults-migrated-v40_25'];
 function doClearSave(keys,label){
 try{for(var i=0;i<keys.length;i++){localStorage.removeItem(keys[i]);}}catch(e){}
 clearProgress();
@@ -2959,6 +3000,50 @@ function getAutoMode(){return autoMode}
 function paintAutoMode(){var on=document.getElementById('autoOnBtn'),off=document.getElementById('autoOffBtn');if(on)on.classList.toggle('active',autoMode);if(off)off.classList.toggle('active',!autoMode)}
 function setAutoMode(on){autoMode=!!on;paintAutoMode();/* v40.7.beta：寫入後讀回驗證，確保 localStorage 確實保存（2026-10-18 CC 發現未保存問題） */
 try{var _want=autoMode?'on':'off';localStorage.setItem(AUTO_MODE_KEY,_want);var _got=null;try{_got=localStorage.getItem(AUTO_MODE_KEY)}catch(_){}if(_got!==_want){try{localStorage.setItem(AUTO_MODE_KEY,_want)}catch(_){}}}catch(e){}}
+/* ===== 第 10 關 AUTO 提示（v41.2.beta，CC 2026-10-20 最終定案簡化） =====
+觸發條件只有兩項：進入第 10 關、且當刻 AUTO 處於關閉，即彈出提示；不設旗標、不儲存顯示紀錄、
+不分新／舊玩家、不設次數限制，每次符合條件的進入均顯示。唯一護防：心數耗盡的完結恢復流程優先，不疊加顯示 */
+/* 世代快照（供啟動載入段的世代回填使用）：遷移鍵是否在「本次啟動的遷移段執行前」已存在。
+v40.25 遷移段會在任何首次啟動時寫入遷移鍵，事後讀取無法分辨 v40.25 世代與本版新生代，故必須在此（遷移段之前）先快照 */
+var _migExistedAtBoot=false;try{_migExistedAtBoot=!!localStorage.getItem('meowdoku-defaults-migrated-v40_25'+_storeSfx)}catch(e){}
+function maybeShowAutoTip(){
+if(state.level!==9)return;
+if(autoMode)return;
+if(state.hearts<=0)return; /* 心數耗盡的完結恢復流程優先，不疊加顯示；無旗標，下次符合條件進入時自然再顯示 */
+var d=document.getElementById('autoTipDialog');if(!d||d.open||!d.showModal)return;
+var pc=document.getElementById('autoTipCat');if(pc&&typeof catSVG!=='undefined')pc.innerHTML=catSVG;
+lockPageScroll();d.showModal();d.scrollTop=0;
+}
+(function(){
+var d=document.getElementById('autoTipDialog');if(!d)return;
+d.addEventListener('cancel',function(e){e.preventDefault()}); /* 封截 Esc：只可按掣關閉 */
+var onBtn=document.getElementById('autoTipOnBtn'),laterBtn=document.getElementById('autoTipLaterBtn');
+if(onBtn)onBtn.addEventListener('click',function(){setAutoMode(true);if(d.open)d.close();unlockPageScroll();showToast('自動標記已開啟')});
+if(laterBtn)laterBtn.addEventListener('click',function(){if(d.open)d.close();unlockPageScroll()});
+})();
+/* ===== 第 10 關 AUTO 提示（完） ===== */
+/* ===== 第 1 關無痕模式提醒（v41.2.beta，CC 2026-10-20 定案） =====
+觸發條件只有一項：進入第 1 關即顯示；不設旗標、不儲存顯示紀錄、不做無痕偵測，每次進入均顯示。
+時序：暱稱未設定時待暱稱對話框關閉後才顯示，不與暱稱對話框疊加；心數耗盡的完結恢復流程優先，不疊加顯示 */
+function maybeShowIncognitoTip(){
+if(state.level!==0)return;
+if(state.hearts<=0)return; /* 心數耗盡的完結恢復流程優先，不疊加顯示；無旗標，下次符合條件進入時自然再顯示 */
+var nickD=document.getElementById('nicknameDialog');
+if(nickD&&nickD.open){nickD.addEventListener('close',function h(){nickD.removeEventListener('close',h);maybeShowIncognitoTip()});return}
+if(!lbGetNickname()){ /* 暱稱未設定：啟動流程隨後會開啟暱稱對話框，待其關閉後再顯示 */
+if(nickD)nickD.addEventListener('close',function h(){nickD.removeEventListener('close',h);maybeShowIncognitoTip()});
+return}
+var d=document.getElementById('incognitoTipDialog');if(!d||d.open||!d.showModal)return;
+var pc=document.getElementById('incognitoTipCat');if(pc&&typeof catSVG!=='undefined')pc.innerHTML=catSVG;
+lockPageScroll();d.showModal();d.scrollTop=0;
+}
+(function(){
+var d=document.getElementById('incognitoTipDialog');if(!d)return;
+d.addEventListener('cancel',function(e){e.preventDefault()}); /* 封截 Esc：只可按掣關閉 */
+var okBtn=document.getElementById('incognitoTipOkBtn');
+if(okBtn)okBtn.addEventListener('click',function(){if(d.open)d.close();unlockPageScroll()});
+})();
+/* ===== 第 1 關無痕模式提醒（完） ===== */
 function autoMarkX(i,p){
 var pr=Math.floor(i/p.size),pc=i%p.size,marked=0;
 function tryMark(idx){if(idx===i)return;if(state.cells[idx]!==''||state.lockedXs[idx]||state.pendingCells[idx])return;state.cells[idx]='x';updateCell(idx,false);marked++}
@@ -2968,6 +3053,9 @@ for(var c=0;c<p.size;c++)tryMark(pr*p.size+c);
 for(var r=0;r<p.size;r++)tryMark(r*p.size+pc);
 /* 周圍 8 格 */
 for(var dr=-1;dr<=1;dr++)for(var dc=-1;dc<=1;dc++){if(dr===0&&dc===0)continue;var r=pr+dr,c=pc+dc;if(r>=0&&r<p.size&&c>=0&&c<p.size)tryMark(r*p.size+c)}
+/* 同色區其餘格（v40.32.beta 延伸：一區一貓，該貓所在色區的其餘格必然不是貓） */
+var myReg=p.regions[pr][pc];
+for(var rr2=0;rr2<p.size;rr2++)for(var cc2=0;cc2<p.size;cc2++)if(p.regions[rr2][cc2]===myReg)tryMark(rr2*p.size+cc2);
 return marked;
 }
 function toggleTheme(){setTheme(getTheme()==='dark'?'light':'dark')}
@@ -2985,7 +3073,10 @@ try{localStorage.setItem(_migKey,'1')}catch(e){}
 }catch(e){}
 /* 啟動時：從 localStorage 恢復主題到記憶體（同步，避免閃爍），按鈕接線 */
 try{var _st=localStorage.getItem(THEME_KEY);if(_st==='dark'||_st==='light')currentTheme=_st}catch(e){}
-try{var _am=localStorage.getItem(AUTO_MODE_KEY);if(_am==='on')autoMode=true;else if(_am==='off')autoMode=false}catch(e){}
+try{var _am=localStorage.getItem(AUTO_MODE_KEY);if(_am==='on')autoMode=true;else if(_am==='off')autoMode=false;else{/* v41.1.beta 世代回填：無 AUTO_MODE_KEY 但有 v40.25 遷移鍵或主題鍵＝v40.25 世代玩家，其原有效預設為 on，維持不變並補寫原值；有進度而無遷移鍵者已由上方 v40.25 遷移段按其舊預設寫入 off，不落入此分支；完全無痕跡的新玩家維持新預設 off */
+var _genTrace=false,_anyProg=false;try{_genTrace=!!(_migExistedAtBoot||localStorage.getItem(THEME_KEY));_anyProg=!!localStorage.getItem(LS_KEY)}catch(e){}
+if(_genTrace){autoMode=true;try{localStorage.setItem(AUTO_MODE_KEY,'on')}catch(e){}}
+else if(!_anyProg){try{localStorage.setItem(AUTO_MODE_KEY,'off')}catch(e){}}}}catch(e){} /* 完全無痕跡的新玩家：把新預設 off 落盤為其設定紀錄，避免下次啟動被遷移鍵誤判世代 */
 applyTheme(getTheme());paintAutoMode();
 (function(){
 var db=document.getElementById('themeDarkBtn'),lb=document.getElementById('themeLightBtn');
@@ -3012,8 +3103,13 @@ if(saved.theme)setTheme(saved.theme);
 newLevel(saved.level,true);  // skipSave：恢復期間先不寫入，避免 newLevel 污染 hints key
 if(hs&&hs.level===saved.level&&hs.hints>=0&&hs.hints<=2){state.hintsRemaining=hs.hints;paintHintButton();}
 persistProgress();  // state 已完全恢復，一次寫入正確值（含 hash、v3、hints）
+if(state.hearts<=0){
+/* 劇毒存檔修復（v40.30.beta）：hearts=0 存檔＝上次完結未按「繼續玩」；比照 hash 恢復路徑，鎖定並重現完結流程，不顯示成功 toast */
+state.locked=true;setLogic('已恢復上次進度','錯放懲罰已保存；5 顆心已用完。','!');setTimeout(function(){finish(false)},120);
+}else{
 setLogic('已恢復上次進度','已從本機存檔恢復：第 '+(saved.level+1)+' 關，積分 '+saved.score.toLocaleString('zh-Hant')+'。','↻');
 setTimeout(function(){showToast('已恢復上次進度：第 '+(saved.level+1)+' 關')},120);
+}
 lsDone=true;
 }
 }catch(e){lsDone=false}
@@ -3021,6 +3117,7 @@ if(lsDone){lbCheckNicknameOnBoot();return;}
 if(restoreProgress()){
 var restoredPuzzle=currentPuzzle(),healedOnLoad=healPoisonedLocks(restoredPuzzle);
 render();updateAll(false);scheduleSway();
+maybeShowIncognitoTip(); /* hash 恢復路徑不經 newLevel，於此補觸發第 1 關無痕提醒（函數內含關卡、心數及暱稱時序判定） */
 if(state.hearts<=0){
 state.locked=true;setLogic('已恢復上次進度','錯放懲罰已保存；5 顆心已用完。','!');setTimeout(function(){finish(false)},120)
 }else{

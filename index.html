@@ -270,6 +270,10 @@ pointer-events:auto;
 #incognitoTipDialog .sheet { width:min(92vw,400px); text-align:center; }
 #incognitoTipDialog .sheet p { margin-bottom:18px; }
 #incognitoTipDialog .jump-actions { grid-template-columns:1fr; }
+#recCodeTipDialog .sheet { width:min(92vw,400px); text-align:center; }
+#recCodeTipDialog .sheet p { margin-bottom:18px; }
+#recCodeTipDialog .jump-actions { grid-template-columns:1fr; }
+#recCodeTipText { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:1.6rem; font-weight:900; letter-spacing:.12em; color:var(--ink); background:var(--panel-2); border:1px dashed var(--soft-line); border-radius:10px; padding:8px 14px; white-space:nowrap; }
 /* ===== 排名榜（v37.64） ===== */
 #lbOpenBtn{margin-top:10px;width:100%;font-size:1rem;}
 #lbOpenBtn .lb-trophy{font-size:1.5em;line-height:1;}
@@ -757,6 +761,21 @@ body.theme-dark {
 </div>
 </div>
 </dialog>
+<dialog id="recCodeTipDialog" aria-labelledby="recCodeTipTitle">
+<div class="sheet">
+<div class="result-heading">
+<div class="result-cat" id="recCodeTipCat"></div>
+<h2 id="recCodeTipTitle">請保存您的恢復碼</h2>
+</div>
+<p>換手機或遺失進度時，可用以下恢復碼取回遊戲紀錄。請截圖妥善保管，切勿分享給他人；日後可於『我的恢復碼』再次查看：</p>
+<div class="recovery-code-row">
+<span id="recCodeTipText">----</span>
+</div>
+<div class="jump-actions">
+<button class="primary" id="recCodeTipOkBtn" type="button">知道了</button>
+</div>
+</div>
+</dialog>
 <dialog id="leaderboardDialog" aria-labelledby="leaderboardTitle">
 <div class="sheet">
 <div class="sheet-head">
@@ -872,7 +891,7 @@ return;
 IS_TEST = true  → 顯示跳關按鈕（測試版專用）
 玩家版構建時改為 false → 跳關按鈕＋全部相關邏輯完全消除，頁面無按鈕、無入口 */
 var IS_TEST = false; // 玩家版構建時改為 false，跳關功能即完全消除
-var CURRENT_VERSION='2026.10.21.41.4'; // v40.25.beta；頁底版本文字由 JS 動態填入 CURRENT_VERSION（CC 硬規則：頁底顯示必須與發佈版本一致） // 過關時版本檢查用；發佈新版本時同步更新 version.txt
+var CURRENT_VERSION='2026.10.21.41.9'; // v40.25.beta；頁底版本文字由 JS 動態填入 CURRENT_VERSION（CC 硬規則：頁底顯示必須與發佈版本一致） // 過關時版本檢查用；發佈新版本時同步更新 version.txt
 /* 2026-10-18 v40.10.beta：頁底版本文字動態填入，確保永遠與發佈版本一致（CC 硬規則） */
 try{var _fvEl=document.querySelector('.footer-note .version');if(_fvEl)_fvEl.textContent='Version '+CURRENT_VERSION;}catch(_fvE){}
 var TOTAL=700, MAX_HEARTS=5, PUZZLE_SEED=0x43a7c21d;
@@ -1888,15 +1907,26 @@ unlockPageScroll();
 var p=pendingProceed;pendingProceed=null;
 if(runProceed!==false&&p)p();
 }
+/* v41.5.beta（CC 批准）：版本檢查加 5 秒超時及單次保證——請求懸掛（例如電話喚醒後
+網絡重建期間 Promise 永不落定）時不再卡住前進；逾時視同檢查失敗，靜默前進。
+proceed 經 once 旗標包裹全程只執行一次；逾時後遲到的回應完全忽略（不前進、不彈提示）；
+顯示新版本提示前先清除計時器，避免彈窗開啟期間誤觸超時前進。 */
 function checkVersionThen(proceed){
+var done=false,timer=null;
+function go(){if(done)return;done=true;if(timer!==null){clearTimeout(timer);timer=null;}proceed();}
+timer=setTimeout(function(){timer=null;go();},5000);
 try{
 fetch('version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){
 if(!r.ok)throw 0;return r.text();
 }).then(function(t){
+if(done)return; /* 已逾時前進：遲到回應完全忽略 */
 t=(t||'').trim();
-if(t&&t!==CURRENT_VERSION){showUpdateDialog(proceed)}else{proceed()}
-}).catch(function(){proceed()});
-}catch(e){proceed()}
+if(t&&t!==CURRENT_VERSION){
+if(timer!==null){clearTimeout(timer);timer=null;} /* 顯示提示前先清除計時器，彈窗開啟期間不誤觸超時 */
+showUpdateDialog(go);
+}else{go()}
+}).catch(function(){go()});
+}catch(e){go()}
 }
 /* ===== 玩家等級提升恭喜（v37.0）：取代舊晉級恭喜彈窗 ===== */
 var LEVEL_ORDER=['新手','初階','中階','高階','好手','高手','精英','專家','大師','宗師','傳奇','殿堂','皇者1段','皇者2段','皇者3段','至尊1段','至尊2段','至尊3段','神話1段','神話2段','神話3段'];
@@ -1934,7 +1964,7 @@ else{_doUpload();_showUI();}
 }catch(e){try{_doUpload();}catch(_){}try{_showUI();}catch(_){}}
 })();
 }
-function newLevel(index,skipSave,preserveVariant){if(typeof window.__resetAnswerShown==='function')window.__resetAnswerShown();clearToast();scheduleSway();state.level=index;state.hadBest=(typeof state.best==='number'&&state.best>0);if(!preserveVariant)state.variant=HARDEST_VARIANT[index];var p=currentPuzzle();state.cells=new Array(p.size*p.size).fill('');state.lockedXs={};state.history=[];state.pendingCells={};state.hintsRemaining=2;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.catsRemaining=p.size;state.start=Date.now();state.activeMs=0;state.lastResume=Date.now();state.locked=false;state.resultShown=false;state.levelAwarded=false;state.focus=0;state.openingAvailable=index<30;state.openingGuide=null;state.restoredEntry=false;render();setLogic('本關版圖已準備','直接選「標 X」／「放貓」開始；本關另有 2 次找貓提示。','↻');if(!skipSave)persistProgress();maybeShowAutoTip();maybeShowIncognitoTip()}
+function newLevel(index,skipSave,preserveVariant){if(typeof window.__resetAnswerShown==='function')window.__resetAnswerShown();clearToast();scheduleSway();state.level=index;state.hadBest=(typeof state.best==='number'&&state.best>0);if(!preserveVariant)state.variant=HARDEST_VARIANT[index];var p=currentPuzzle();state.cells=new Array(p.size*p.size).fill('');state.lockedXs={};state.history=[];state.pendingCells={};state.hintsRemaining=2;state.mistakes=0;state.hintsUsed=0;state.moves=0;state.catsRemaining=p.size;state.start=Date.now();state.activeMs=0;state.lastResume=Date.now();state.locked=false;state.resultShown=false;state.levelAwarded=false;state.focus=0;state.openingAvailable=index<30;state.openingGuide=null;state.restoredEntry=false;render();setLogic('本關版圖已準備','直接選「標 X」／「放貓」開始；本關另有 2 次找貓提示。','↻');if(!skipSave)persistProgress();maybeShowAutoTip();maybeShowIncognitoTip();maybeShowRecCodeTip()}
 function restartLevel(){
 if(state.locked)return;if(Object.keys(state.pendingCells).length){showToast('請先等待錯誤提示完成');return}
 for(var i=0;i<state.cells.length;i++){if(state.cells[i]!=='cat')state.cells[i]=''}state.lockedXs={};state.history=[];state.focus=0;
@@ -2113,7 +2143,7 @@ function backupFireUpload(){
     var v3d=null,hd=null;
     try{v3d=JSON.parse(v3raw)}catch(_){}
     try{hd=JSON.parse(hintsraw)}catch(_){}
-    var payload={player_id:backupGetPlayerId(),recovery_code:backupGetRecoveryCode(),nickname:lbGetNickname(),save_json:JSON.stringify({v3:v3raw,hints:hintsraw,lottery:lotteryraw,maxcompleted:maxcompletedraw}),
+    var payload={board:(IS_TEST?'test':'prod'),player_id:backupGetPlayerId(),recovery_code:backupGetRecoveryCode(),nickname:lbGetNickname(),save_json:JSON.stringify({v3:v3raw,hints:hintsraw,lottery:lotteryraw,maxcompleted:maxcompletedraw}),
       max_level:v3d?(v3d.level+1):null,hearts:v3d?v3d.hearts:null,score:v3d?v3d.score:null,best:(v3d&&v3d.best!==undefined)?v3d.best:null,theme:v3d?v3d.theme:null,
       hints:hd?hd.hints:null};
     fetch(BACKUP_API+'/backup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(){}).catch(function(){});
@@ -2122,7 +2152,7 @@ function backupFireUpload(){
 function backupDownload(code,onProgress){
   var q=String(code||'').toUpperCase();
   var prog=(typeof onProgress==='function')?onProgress:function(){};
-  var url=BACKUP_API+'/backup?'+(/^[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(q)?'recovery_code=':'player_id=')+encodeURIComponent(q);
+  var url=BACKUP_API+'/backup?'+(/^[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(q)?'recovery_code=':'player_id=')+encodeURIComponent(q)+'&board='+(IS_TEST?'test':'prod');
   return fetch(url).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()}).then(function(j){
     if(!j||!j.ok||!j.save_json)throw new Error('bad_backup');
     var outer;try{outer=JSON.parse(j.save_json)}catch(e){throw new Error('bad_backup')}
@@ -3044,6 +3074,38 @@ var okBtn=document.getElementById('incognitoTipOkBtn');
 if(okBtn)okBtn.addEventListener('click',function(){if(d.open)d.close();unlockPageScroll()});
 })();
 /* ===== 第 1 關無痕模式提醒（完） ===== */
+/* ===== 第 5 關保存恢復碼提示（v41.8.beta 重做，CC 2026-10-21 定奪；v41.9.beta 文案補充及計時補償，CC 2026-10-21 採納試玩貓建議並即時建造） =====
+觸發條件只有一項：進入第 5 關即顯示，做法完全比照第 1 關無痕提醒與第 10 關
+AUTO 提示——專屬彈窗、觸發函數通過守衛後直接 showModal；不設旗標、不儲存
+顯示紀錄、不分新／舊玩家、不論首次或重玩，每次符合守衛的進入均顯示。唯一
+守衛：心數耗盡的完結恢復流程優先，不疊加顯示。恢復碼於開啟時以既有取碼
+函數 backupGetRecoveryCode() 填入顯示行：本地已有恢復碼即顯示既有碼；本地
+無碼時該函數即場產生新碼並寫入本地恢復碼鍵，行為與玩家手動開啟「我的恢復
+碼」完全一致。v41.7.beta 舊做法另設無碼不顯示守衛、轉手呼叫既有恢復碼彈窗
+開啟函數及多重對話框銜接守衛，致 CC 親測無彈窗，本版全數移除。hash 恢復
+路徑不經 newLevel，於啟動段另補觸發。全版本適用，不置於 if(IS_TEST) 內。
+v41.9.beta 兩項補充：(1) 內文加「切勿分享給他人；日後可於『我的恢復碼』
+再次查看」，提醒玩家勿分享並告知後路；(2) 計時補償——newLevel 於顯示提示
+前已重置本關計時起點，提示停留（閱讀及截圖）會計入本關用時，故玩家按
+「知道了」關閉提示時，比照暱稱對話框關閉回調的既有處理，一併重置
+state.start／state.activeMs／state.lastResume，令本關計時由關閉提示一刻
+重新起算。Esc 已封截，關閉路徑只有「知道了」按鈕一途；newLevel 掛鉤與
+hash 補觸發兩條開啟路徑共用同一個「知道了」關閉處理，故同樣受補償。 */
+function maybeShowRecCodeTip(){
+if(state.level!==4)return;
+if(state.hearts<=0)return; /* 心數耗盡的完結恢復流程優先，不疊加顯示；無旗標，下次符合條件進入時自然再顯示 */
+var d=document.getElementById('recCodeTipDialog');if(!d||d.open||!d.showModal)return;
+var pc=document.getElementById('recCodeTipCat');if(pc&&typeof catSVG!=='undefined')pc.innerHTML=catSVG;
+var codeEl=document.getElementById('recCodeTipText');if(codeEl)codeEl.textContent=backupGetRecoveryCode();
+lockPageScroll();d.showModal();d.scrollTop=0;
+}
+(function(){
+var d=document.getElementById('recCodeTipDialog');if(!d)return;
+d.addEventListener('cancel',function(e){e.preventDefault()}); /* 封截 Esc：只可按掣關閉 */
+var okBtn=document.getElementById('recCodeTipOkBtn');
+if(okBtn)okBtn.addEventListener('click',function(){if(d.open)d.close();unlockPageScroll();state.start=Date.now();state.activeMs=0;state.lastResume=Date.now()}); /* v41.9.beta 計時補償：關閉提示時重置本關計時起點（同暱稱對話框關閉回調寫法），提示停留不計入本關用時 */
+})();
+/* ===== 第 5 關保存恢復碼提示（完） ===== */
 function autoMarkX(i,p){
 var pr=Math.floor(i/p.size),pc=i%p.size,marked=0;
 function tryMark(idx){if(idx===i)return;if(state.cells[idx]!==''||state.lockedXs[idx]||state.pendingCells[idx])return;state.cells[idx]='x';updateCell(idx,false);marked++}
@@ -3087,7 +3149,7 @@ if(aon)aon.addEventListener('click',function(){setAutoMode(true)});
 if(aoff)aoff.addEventListener('click',function(){setAutoMode(false)});
 })();
 (async function boot(){
-var lsDone=false;
+var lsDone=false,bootLotteryLevel=0;
 try{
 var saved=await loadLocalProgress();
 if(saved){
@@ -3100,24 +3162,47 @@ if(saved.best!==undefined&&saved.best!==null)state.best=Math.floor(saved.best);
 state.maxCompleted=saved.level;
 try{var _mc=loadMaxCompletedProgress();if(typeof _mc==='number'&&_mc>state.maxCompleted)state.maxCompleted=_mc;}catch(e){}
 if(saved.theme)setTheme(saved.theme);
-newLevel(saved.level,true);  // skipSave：恢復期間先不寫入，避免 newLevel 污染 hints key
-if(hs&&hs.level===saved.level&&hs.hints>=0&&hs.hints<=2){state.hintsRemaining=hs.hints;paintHintButton();}
+/* v41.5.beta 載入自動前進（CC 批准）：「已過關、未前進」狀態——maxCompleted 恰為
+saved.level+1、心數>0、尚未完成最後一關——下次載入直接開啟下一關，不再要求重玩
+已完成關卡。差異大於 1（回頭重玩低關）或 hearts<=0（完結待處理）均不觸發，行為不變。 */
+var effLevel=saved.level,autoFwd=false;
+if(state.hearts>0&&state.maxCompleted===saved.level+1&&state.maxCompleted<TOTAL){effLevel=state.maxCompleted;autoFwd=true;}
+newLevel(effLevel,true);  // skipSave：恢復期間先不寫入，避免 newLevel 污染 hints key
+if(hs&&hs.level===effLevel&&hs.hints>=0&&hs.hints<=2){state.hintsRemaining=hs.hints;paintHintButton();}
 persistProgress();  // state 已完全恢復，一次寫入正確值（含 hash、v3、hints）
 if(state.hearts<=0){
 /* 劇毒存檔修復（v40.30.beta）：hearts=0 存檔＝上次完結未按「繼續玩」；比照 hash 恢復路徑，鎖定並重現完結流程，不顯示成功 toast */
 state.locked=true;setLogic('已恢復上次進度','錯放懲罰已保存；5 顆心已用完。','!');setTimeout(function(){finish(false)},120);
+}else if(autoFwd){
+setLogic('已恢復上次進度','第 '+state.maxCompleted+' 關已完成，已直接開啟第 '+(effLevel+1)+' 關。','↻');
+setTimeout(function(){showToast('上一關已完成，已直接開啟第 '+(effLevel+1)+' 關')},120);
 }else{
 setLogic('已恢復上次進度','已從本機存檔恢復：第 '+(saved.level+1)+' 關，積分 '+saved.score.toLocaleString('zh-Hant')+'。','↻');
 setTimeout(function(){showToast('已恢復上次進度：第 '+(saved.level+1)+' 關')},120);
 }
+/* 抽獎承接：自動前進且剛完成關卡為 15 的倍數且該次抽獎未領取時，進入新關後呈現
+該次待領抽獎（發獎沿用 lotteryApplyPrize 既有寫入及上傳路徑）。排行榜自動顯示及
+升級彈窗於自動前進時略過（純顯示；提交及升級判定數據已於 finish 時完成）。 */
+bootLotteryLevel=(autoFwd&&state.maxCompleted%15===0&&state.maxCompleted>state.maxLotteryLevel)?state.maxCompleted:0;
 lsDone=true;
 }
 }catch(e){lsDone=false}
-if(lsDone){lbCheckNicknameOnBoot();return;}
+if(lsDone){
+if(bootLotteryLevel>0){
+/* 抽獎呈現次序：暱稱已設定即直接呈現；未設定時排在暱稱對話框關閉之後（沿用
+lbOpenNicknameDialog 的關閉回調，其計時重置行為與 lbCheckNicknameOnBoot 一致），
+避免暱稱對話框與抽獎同時開啟。抽獎關閉後玩家留在新關，不作任何前進。 */
+var presentBootLottery=function(){try{lotteryOpenModal(bootLotteryLevel,function(){})}catch(_){}};
+if(lbGetNickname()){lbCheckNicknameOnBoot();presentBootLottery();}
+else{lbOpenNicknameDialog(function(){try{if(typeof state!=='undefined'&&state){state.start=Date.now();state.activeMs=0;state.lastResume=Date.now();}}catch(_){}presentBootLottery();});}
+}else{lbCheckNicknameOnBoot();}
+return;
+}
 if(restoreProgress()){
 var restoredPuzzle=currentPuzzle(),healedOnLoad=healPoisonedLocks(restoredPuzzle);
 render();updateAll(false);scheduleSway();
 maybeShowIncognitoTip(); /* hash 恢復路徑不經 newLevel，於此補觸發第 1 關無痕提醒（函數內含關卡、心數及暱稱時序判定） */
+maybeShowRecCodeTip(); /* hash 恢復路徑不經 newLevel，於此補觸發第 5 關保存恢復碼提示（函數內含關卡、心數及恢復碼判定） */
 if(state.hearts<=0){
 state.locked=true;setLogic('已恢復上次進度','錯放懲罰已保存；5 顆心已用完。','!');setTimeout(function(){finish(false)},120)
 }else{

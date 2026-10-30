@@ -887,7 +887,7 @@ body.theme-dark {
 <div class="result-cat" id="incognitoTipCat"></div>
 <h2 id="incognitoTipTitle">開始遊戲前請注意</h2>
 </div>
-<p>請注意：如你正在使用瀏覽器的無痕／私密模式，遊戲進度將無法保留。請用一般模式開啟，以免進度遺失。</p>
+<p>請注意：如您正在使用瀏覽器的無痕／私密模式，遊戲進度將無法保留。請用一般模式開啟，以免進度遺失。</p>
 <div class="jump-actions">
 <button class="primary" id="incognitoTipOkBtn" type="button">知道了</button>
 </div>
@@ -1061,9 +1061,19 @@ fetch('data/boards_96.json').then(function(r){return r.json()}),
 fetch('data/boards_97.json').then(function(r){return r.json()}),
 fetch('data/boards_98.json').then(function(r){return r.json()}),
 fetch('data/boards_99.json').then(function(r){return r.json()}),
-fetch('data/boards_100.json').then(function(r){return r.json()})
+fetch('data/boards_100.json').then(function(r){return r.json()}),
+fetch('data/boards_101.json').then(function(r){return r.json()}),
+fetch('data/boards_102.json').then(function(r){return r.json()}),
+fetch('data/boards_103.json').then(function(r){return r.json()}),
+fetch('data/boards_104.json').then(function(r){return r.json()}),
+fetch('data/boards_105.json').then(function(r){return r.json()}),
+fetch('data/boards_106.json').then(function(r){return r.json()}),
+fetch('data/boards_107.json').then(function(r){return r.json()}),
+fetch('data/boards_108.json').then(function(r){return r.json()}),
+fetch('data/boards_109.json').then(function(r){return r.json()}),
+fetch('data/boards_110.json').then(function(r){return r.json()})
 ]);
-window.VERIFIED_50_DATA=_parts[0].concat(_parts[1],_parts[2],_parts[3],_parts[4],_parts[5],_parts[6],_parts[7],_parts[8],_parts[9],_parts[10],_parts[11],_parts[12],_parts[13],_parts[14],_parts[15],_parts[16],_parts[17],_parts[18],_parts[19],_parts[20],_parts[21],_parts[22],_parts[23],_parts[24],_parts[25],_parts[26],_parts[27],_parts[28],_parts[29],_parts[30],_parts[31],_parts[32],_parts[33],_parts[34],_parts[35],_parts[36],_parts[37],_parts[38],_parts[39],_parts[40],_parts[41],_parts[42],_parts[43],_parts[44],_parts[45],_parts[46],_parts[47],_parts[48],_parts[49],_parts[50],_parts[51],_parts[52],_parts[53],_parts[54],_parts[55],_parts[56],_parts[57],_parts[58],_parts[59],_parts[60],_parts[61],_parts[62],_parts[63],_parts[64],_parts[65],_parts[66],_parts[67],_parts[68],_parts[69],_parts[70],_parts[71],_parts[72],_parts[73],_parts[74],_parts[75],_parts[76],_parts[77],_parts[78],_parts[79],_parts[80],_parts[81],_parts[82],_parts[83],_parts[84],_parts[85],_parts[86],_parts[87],_parts[88],_parts[89],_parts[90],_parts[91],_parts[92],_parts[93],_parts[94],_parts[95],_parts[96],_parts[97],_parts[98],_parts[99]);
+window.VERIFIED_50_DATA=_parts[0].concat(_parts[1],_parts[2],_parts[3],_parts[4],_parts[5],_parts[6],_parts[7],_parts[8],_parts[9],_parts[10],_parts[11],_parts[12],_parts[13],_parts[14],_parts[15],_parts[16],_parts[17],_parts[18],_parts[19],_parts[20],_parts[21],_parts[22],_parts[23],_parts[24],_parts[25],_parts[26],_parts[27],_parts[28],_parts[29],_parts[30],_parts[31],_parts[32],_parts[33],_parts[34],_parts[35],_parts[36],_parts[37],_parts[38],_parts[39],_parts[40],_parts[41],_parts[42],_parts[43],_parts[44],_parts[45],_parts[46],_parts[47],_parts[48],_parts[49],_parts[50],_parts[51],_parts[52],_parts[53],_parts[54],_parts[55],_parts[56],_parts[57],_parts[58],_parts[59],_parts[60],_parts[61],_parts[62],_parts[63],_parts[64],_parts[65],_parts[66],_parts[67],_parts[68],_parts[69],_parts[70],_parts[71],_parts[72],_parts[73],_parts[74],_parts[75],_parts[76],_parts[77],_parts[78],_parts[79],_parts[80],_parts[81],_parts[82],_parts[83],_parts[84],_parts[85],_parts[86],_parts[87],_parts[88],_parts[89],_parts[90],_parts[91],_parts[92],_parts[93],_parts[94],_parts[95],_parts[96],_parts[97],_parts[98],_parts[99],_parts[100],_parts[101],_parts[102],_parts[103],_parts[104],_parts[105],_parts[106],_parts[107],_parts[108],_parts[109]);
 }catch(_e){
 document.body.innerHTML='<div style="padding:40px;text-align:center;font-size:18px;">版圖數據載入失敗，請檢查網路後重新整理。</div>';
 return;
@@ -1072,16 +1082,16 @@ return;
 IS_TEST = true  → 顯示跳關按鈕（測試版專用）
 玩家版構建時改為 false → 跳關按鈕＋全部相關邏輯完全消除，頁面無按鈕、無入口 */
 var IS_TEST = false; // 玩家版構建時改為 false，跳關功能即完全消除
-var CURRENT_VERSION='2026.10.24.44.21'; // v44.20.beta；頁底版本文字由 JS 動態填入 CURRENT_VERSION（CC 硬規則：頁底顯示必須與發佈版本一致） // 過關時版本檢查用；發佈新版本時同步更新 version.txt
+var CURRENT_VERSION='2026.10.24.44.23'; // v44.20.beta；頁底版本文字由 JS 動態填入 CURRENT_VERSION（CC 硬規則：頁底顯示必須與發佈版本一致） // 過關時版本檢查用；發佈新版本時同步更新 version.txt
 /* 2026-10-18 v40.10.beta：頁底版本文字動態填入，確保永遠與發佈版本一致（CC 硬規則） */
 try{var _fvEl=document.querySelector('.footer-note .version');if(_fvEl)_fvEl.textContent='Version '+CURRENT_VERSION;}catch(_fvE){}
-var TOTAL=1000, MAX_HEARTS=5, PUZZLE_SEED=0x43a7c21d;
+var TOTAL=1100, MAX_HEARTS=5, PUZZLE_SEED=0x43a7c21d;
 var paletteLight=['#f3a6a6','#f6c184','#e8da72','#b8db76','#b08968','#7fd6bc','#a7b8c4','#82bde5','#8ea3e1','#aa92dc'],paletteDark=['#eeb7ce','#f1ae77','#ddbc5d','#b5d79b','#a3734f','#67b1b0','#acbed6','#7fbae2','#9179cf','#dc89b5'];
 var first=['暖陽','月光','毛線','紙箱','星夜','清晨','雨聲','魚乾','雲朵','花影'];
 var second=['角落','小徑','迷宮','窗台','走廊','花園','書架','屋頂','庭院','秘境'];
 function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shuffle(a,rand){for(var j=a.length-1;j>0;j--){var k=Math.floor(rand()*(j+1)),v=a[j];a[j]=a[k];a[k]=v}return a}
-var HARDEST_VARIANT=[2,2,1,2,1,2,0,0,1,0,2,2,2,2,2,2,2,2,2,1,1,2,2,2,0,1,2,2,2,1,1,2,2,2,0,1,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,0,0,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1,1,2,0,1,2,2,2,2,2,1,2,2,2,1,0,2,2,2,2,0,1,2,2,2,1,2,2,2,2,1,2,1,2,2,2,2,2,1,1,1,2,1,1,1,2,0,2,2,2,1,1,0,1,2,2,2,2,2,2,1,1,2,2,2,1,2,2,2,2,1,1,0,0,2,1,2,0,2,0,0,0,1,0,0,2,0,2,0,1,1,2,2,2,0,1,1,0,0,0,2,2,1,0,1,2,2,0,1,0,2,1,1,0,0,2,1,0,0,1,0,1,0,2,0,0,1,2,1,0,0,1,2,0,2,1,1,2,1,0,1,0,1,2,1,2,1,0,0,2,2,1,0,1,0,2,1,0,1,2,1,1,2,2,1,0,1,2,2,0,0,1,0,2,1,1,1,1,2,2,0,1,2,2,0,0,0,2,0,2,1,1,2,0,2,0,0,2,0,2,1,0,2,0,1,2,2,2,1,1,0,2,2,1,1,0,2,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,0,2,0,1,0,0,2,0,2,0,1,0,1,1,0,0,2,2,2,0,0,2,2,0,0,0,0,1,0,0,2,0,2,0,1,0,1,0,0,0,0,0,2,0,2,0,0,0,0,1,2,0,0,0,0,1,0,2,0,2,1,1,0,2,0,0,1,0,0,2,0,2,2,1,0,2,0,2,0,2,2,0,0,1,2,1,0,2,1,1,1,2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,0,0,0,0,1,0,0,0,0,0,0,0,2,0,0,2,0,0,2,0,0,0,0,0,2,1,0,0,0,0,0,2,0,0,0,0,2,2,0,0,0,0,2,0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+var HARDEST_VARIANT=[2,2,1,2,1,2,0,0,1,0,2,2,2,2,2,2,2,2,2,1,1,2,2,2,0,1,2,2,2,1,1,2,2,2,0,1,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,0,0,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1,1,2,0,1,2,2,2,2,2,1,2,2,2,1,0,2,2,2,2,0,1,2,2,2,1,2,2,2,2,1,2,1,2,2,2,2,2,1,1,1,2,1,1,1,2,0,2,2,2,1,1,0,1,2,2,2,2,2,2,1,1,2,2,2,1,2,2,2,2,1,1,0,0,2,1,2,0,2,0,0,0,1,0,0,2,0,2,0,1,1,2,2,2,0,1,1,0,0,0,2,2,1,0,1,2,2,0,1,0,2,1,1,0,0,2,1,0,0,1,0,1,0,2,0,0,1,2,1,0,0,1,2,0,2,1,1,2,1,0,1,0,1,2,1,2,1,0,0,2,2,1,0,1,0,2,1,0,1,2,1,1,2,2,1,0,1,2,2,0,0,1,0,2,1,1,1,1,2,2,0,1,2,2,0,0,0,2,0,2,1,1,2,0,2,0,0,2,0,2,1,0,2,0,1,2,2,2,1,1,0,2,2,1,1,0,2,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,0,2,0,1,0,0,2,0,2,0,1,0,1,1,0,0,2,2,2,0,0,2,2,0,0,0,0,1,0,0,2,0,2,0,1,0,1,0,0,0,0,0,2,0,2,0,0,0,0,1,2,0,0,0,0,1,0,2,0,2,1,1,0,2,0,0,1,0,0,2,0,2,2,1,0,2,0,2,0,2,2,0,0,1,2,1,0,2,1,1,1,2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,0,0,0,0,1,0,0,0,0,0,0,0,2,0,0,2,0,0,2,0,0,0,0,0,2,1,0,0,0,0,0,2,0,0,0,0,2,2,0,0,0,0,2,0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 function levelSpec(index){var no=index+1,difficulty=index/(TOTAL-1),isBig=no>50;return{size:isBig?10:9,colors:isBig?10:9,label:no<=10?'入門':no<=30?'初階':no<=50?'中階':'高階',difficulty:difficulty}}
 var VERIFIED_BASES=[{"n":6,"r":"001111011111211111211311255334255444","s":"140352"},{"n":6,"r":"000111241111244444244443444443444455","s":"130524"},{"n":6,"r":"113300113300113322333333433333455333","s":"415302"},{"n":9,"r":"000333333000331112333333322333333333333343333553343333555543663777743333788743333","s":"258640731"},{"n":9,"r":"440000113444444113442444443442444443444444444444455555644447778644447778444447888","s":"362814057"},{"n":9,"r":"211100885221188885228888885448888385848888385888888885888668885887788888888888888","s":"530618427"},{"n":9,"r":"111444400111444444224444444224444334244444444244445444664445744664488744644488444","s":"820735164"},{"n":11,"r":"aa000aa3344aa0011a3344aaa111a3224aaa56aa3224aaa56aaaa44a5556aaaaaaaaa66aaaaaaaaa8aaaa7aaaaa8aaaa7aa99aaaaaaaaaaaaaaaaaaaa","s":"2597a148306"},{"n":11,"r":"11117700000222117000002227777777755777777773557777774737577777746677777777766777777777777777777877777797778777aa997777777","s":"642a8195730"},{"n":11,"r":"110000666661116006666246663366662466633666664666666666666666655666666666666666686676666666866796666666667966666666699aa66","s":"31a40795268"},{"n":11,"r":"000004444410002244444133442444444334444444443344444444488444444555884444665778844444447788944444444999444444449994444aaaa","s":"3a415869027"},{"n":11,"r":"33333111000333332211003333322333333333333333443533333333335333333333333663333377333333333393338833333933388aa33333338aaa3","s":"a8640351729"},{"n":11,"r":"221100aaaaa2211aaaaaaa22aaaaaaaaa55533aa44445553aaa44445557aaaa666aaa7aaaa666aaa7aaaaaaaaaaaaaaaa88aaaaaaaa998aaaaaaaaaaa","s":"52047193a86"},{"n":11,"r":"1100000666611330026666113336266661133366666655533666644555566666666667666666686676666666866666666696666666666966666666aa9","s":"516492730a8"}];
 function transformVerified(base,turn){
@@ -1389,7 +1399,7 @@ if(p.size!==levelSpec(level).size||!balanced||!regionsConnected(p.regions,p.size
 }
 }
 function buildVariantPuzzles(){
-if(!Array.isArray(window.VERIFIED_50_DATA)||window.VERIFIED_50_DATA.length!==2400)throw new Error('已驗證版圖資料不完整'); // 候選總數 2400＝第 1–700 關各 3 幅（2100）＋第 701–1000 關各 1 幅（300）
+if(!Array.isArray(window.VERIFIED_50_DATA)||window.VERIFIED_50_DATA.length!==2500)throw new Error('已驗證版圖資料不完整'); // 候選總數 2500＝第 1–700 關各 3 幅（2100）＋第 701–1100 關各 1 幅（400）
 var out=[],seen={};
 for(var level=0,cumIdx=0;level<TOTAL;level++){
 var variants=[],spec=levelSpec(level),candCount=level<700?3:1;
@@ -2372,7 +2382,7 @@ if(state.locked||state.buddyAnim)return;if(Object.keys(state.pendingCells).lengt
 for(var i=0;i<state.cells.length;i++){if(state.cells[i]!=='cat')state.cells[i]=''}state.lockedXs={};state.history=[];buddyHistory=[];state.buddyBlue={};buddySaveState();state.focus=0;
 render();setLogic('已清除 X 標記','已放中的貓咪已鎖定保留；X 標記已全部清除，可繼續推理。','↻');showToast('已清除 X 標記（貓咪保留）');persistProgress()
 }
-function undo(){if(state.locked||state.buddyAnim||!state.history.length){showToast(state.buddyAnim?'請先等待小夥伴完成':'沒有可復原的步驟');return}if(Object.keys(state.pendingCells).length){showToast('請先等待錯誤提示完成');return}var prev=state.history.pop();var bh=buddyHistory.pop();if(bh){state.buddyCell=bh.cell;state.buddyDone=state.buddyDone||bh.done;state.buddyBlue=bh.blue} /* v44.20.beta 小夥伴復原漏洞修復：已觸發旗標單向，復原不得由真改回假 */for(var i=0;i<state.cells.length;i++){if(state.cells[i]!=='cat')state.cells[i]=prev[i]==='cat'?'':prev[i]}Object.keys(state.lockedXs).forEach(function(key){state.cells[+key]='x'});Object.keys(state.buddyBlue).forEach(function(key){if(state.cells[+key]!=='x')delete state.buddyBlue[+key]});updateAll(false);setLogic('已復原一步','已放中的貓咪已鎖定，只復原 X 標記。','↶');buddySaveState();persistProgress()}
+function undo(){if(state.locked||state.buddyAnim||!state.history.length){showToast(state.buddyAnim?'請先等待小夥伴完成':'沒有可復原的步驟');return}if(Object.keys(state.pendingCells).length){showToast('請先等待錯誤提示完成');return}var prev=state.history.pop();var bh=buddyHistory.pop();var _blueBefore=Object.keys(state.buddyBlue).length;if(bh){state.buddyCell=bh.cell;state.buddyDone=state.buddyDone||bh.done;state.buddyBlue=bh.blue} /* v44.20.beta 小夥伴復原漏洞修復：已觸發旗標單向，復原不得由真改回假 */for(var i=0;i<state.cells.length;i++){if(state.cells[i]!=='cat')state.cells[i]=prev[i]==='cat'?'':prev[i]}Object.keys(state.lockedXs).forEach(function(key){state.cells[+key]='x'});Object.keys(state.buddyBlue).forEach(function(key){if(state.cells[+key]!=='x')delete state.buddyBlue[+key]});updateAll(false);setLogic('已復原一步','已放中的貓咪已鎖定，只復原 X 標記。','↶');if(Object.keys(state.buddyBlue).length<_blueBefore)showToast('小夥伴開啟的藍色 X 已隨復原抹除'); /* v44.22.beta：本次復原抹除了藍色 X 時補一句小夥伴說明，只增文字提示，復原邏輯不變 */buddySaveState();persistProgress()}
 function healPoisonedLocks(p){
 var lockKeys=Object.keys(state.lockedXs);
 if(!lockKeys.length)return false;
@@ -3882,7 +3892,8 @@ if(laterBtn)laterBtn.addEventListener('click',function(){if(d.open)d.close();unl
 /* ===== 第 10 關 AUTO 提示（完） ===== */
 /* ===== 第 1、15 及 305 關無痕模式提醒（v41.2.beta，CC 2026-10-20 定案；v44.15.beta 追加第 15 關；v44.21.beta 追加第 305 關） =====
 觸發條件只有一項：進入第 1 關、第 15 關或第 305 關即顯示；不設旗標、不儲存顯示紀錄、不做無痕偵測，每次進入均顯示。
-時序：暱稱未設定時待暱稱對話框關閉後才顯示，不與暱稱對話框疊加；心數耗盡的完結恢復流程優先，不疊加顯示 */
+時序：暱稱未設定時待暱稱對話框關閉後才顯示，不與暱稱對話框疊加；心數耗盡的完結恢復流程優先，不疊加顯示
+關閉補償：v44.22.beta 起關閉時比照恢復碼提示重置本關計時起點（計時補償），提示停留不計入本關用時 */
 function maybeShowIncognitoTip(){
 if(state.level!==0&&state.level!==14&&state.level!==304)return;
 if(state.hearts<=0)return; /* 心數耗盡的完結恢復流程優先，不疊加顯示；無旗標，下次符合條件進入時自然再顯示 */
@@ -3899,7 +3910,7 @@ lockPageScroll();d.showModal();d.scrollTop=0;
 var d=document.getElementById('incognitoTipDialog');if(!d)return;
 d.addEventListener('cancel',function(e){e.preventDefault()}); /* 封截 Esc：只可按掣關閉 */
 var okBtn=document.getElementById('incognitoTipOkBtn');
-if(okBtn)okBtn.addEventListener('click',function(){if(d.open)d.close();unlockPageScroll()});
+if(okBtn)okBtn.addEventListener('click',function(){if(d.open)d.close();unlockPageScroll();state.start=Date.now();state.activeMs=0;state.lastResume=Date.now()}); /* v44.22.beta 計時補償：關閉提示時重置本關計時起點，比照恢復碼提示（v41.9.beta 既有寫法），提示停留不計入本關用時 */
 })();
 /* ===== 第 1、15 及 305 關無痕模式提醒（完） ===== */
 /* ===== 501 關 Combo 介紹提示（v44.5.beta，CC 2026-10-24 定案；做法完全比照第 1 關無痕模式提醒） =====

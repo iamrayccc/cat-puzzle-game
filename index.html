@@ -662,6 +662,224 @@ body.theme-dark {
 #wkMissed { display:none; margin-top:4px; font-size:1.05rem; font-weight:800; color:#7a5b12; line-height:1.6; }
 /* ===== WHACK MINIGAME: CSS END ===== */
 
+/* ===== COIN DUEL MINIGAME: CSS START ===== */
+/* 鬥金幣小遊戲（v47.0.beta 合併版）：介面以設計片段為準，邏輯 JS 不動；保留規則見區塊末段註解 */
+
+  .cd-overlay {
+    position: fixed; inset: 0;
+    background: rgba(91, 74, 63, .55);
+    display: none; align-items: center; justify-content: center;
+    z-index: 200; padding: 16px;
+  }
+  .cd-overlay.open { display: flex; }
+  .cd-modal {
+    position: relative; background: #fffdf5;
+    border: 2px solid #d4a93c; border-radius: 21px;
+    box-shadow: 0 12px 36px rgba(212, 169, 60, .55);
+    width: min(92vw, 600px);
+    padding: 44px 20px 24px; text-align: center;
+    max-height: 92vh; overflow-y: auto;
+  }
+  .cd-close {
+    position: absolute; top: 8px; right: 10px;
+    width: 32px; height: 32px; border: none; background: transparent;
+    color: #b89b62; font-size: 1.3rem; line-height: 1; cursor: pointer;
+    border-radius: 50%; display: none;
+  }
+  .cd-close.visible { display: block; }
+  .cd-title-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; color: #7a5b12;
+  }
+  .cd-title-emoji { font-size: 26px; line-height: 1; flex: 0 0 auto; }
+  .cd-title {
+    font-family: "Zen Maru Gothic", "Noto Sans TC", sans-serif;
+    font-weight: 800; font-size: 1.15rem; color: #7a5b12;
+    margin: 0 0 8px; letter-spacing: 0.04em; text-align: center; line-height: 1.15;
+  }
+  .cd-tagline {
+    text-align: center; color: #8a6f45;
+    font-size: 0.9rem; line-height: 1.6; margin: 0 4px;
+  }
+  .cd-fair-note {
+    text-align: center; color: #c0392b;
+    font-size: 0.78rem; line-height: 1.5; margin: 4px 4px 0;
+  }
+  .cd-status {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px; margin-top: 14px;
+  }
+  .cd-stat {
+    border: 1.5px solid #d9cfb8; border-radius: 12px;
+    padding: 5px 6px 6px; text-align: center; background: #fffdf6;
+  }
+  .cd-stat .cd-label {
+    font-size: 12px; color: #6f675a;
+    display: flex; align-items: center; justify-content: center;
+    gap: 5px; white-space: nowrap;
+  }
+  .cd-stat .cd-value {
+    font-family: "Zen Maru Gothic", "Noto Sans TC", sans-serif;
+    font-weight: 900; font-size: 20px; line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+  .cd-stat .cd-value small { font-size: 13px; font-weight: 700; color: #6f675a; }
+  .cd-coin-dot {
+    display: inline-block; width: 15px; height: 15px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 32%, #ffe89a, #e9a90b 58%, #b97e04);
+    border: 1.5px solid #b97e04; vertical-align: -2px;
+  }
+  .cd-rounds { width: 100%; margin: 8px 0 5px; }
+  .cd-rounds-row {
+    display: grid;
+    grid-template-columns: 18% 32% 32% 18%;
+    align-items: center; margin-top: 5px;
+  }
+  .cd-rounds-row > * { min-width: 0; }
+  .cd-rounds .cd-th {
+    font-family: "Zen Maru Gothic", "Noto Sans TC", sans-serif;
+    font-weight: 700; font-size: 15px; padding: 2px 4px 0;
+    color: #2e2a23; text-align: center;
+  }
+  .cd-rounds .cd-who {
+    display: inline-flex; align-items: center; gap: 5px;
+    border-bottom: 2.5px solid #2e2a23; padding-bottom: 2px;
+  }
+  .cd-rounds svg.cd-cat { width: 22px; height: 22px; vertical-align: middle; flex: 0 0 auto; }
+  .cd-round-no {
+    font-family: "Zen Maru Gothic", "Noto Sans TC", sans-serif;
+    font-weight: 700; font-size: 17px; text-align: center;
+    padding-left: 0; padding-right: 0; color: #6f675a;
+  }
+  .cd-round-row.current .cd-round-no { color: #d6543c; }
+  .cd-bid-cell { padding: 0 4px; }
+  .cd-bid-box {
+    width: 100%; height: 44px;
+    border: 2px solid #b7ab8d; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Zen Maru Gothic", "Noto Sans TC", sans-serif;
+    font-weight: 900; font-size: 22px; font-variant-numeric: tabular-nums;
+    background: #fffdf6; color: #2e2a23;
+  }
+  .cd-bid-box.cd-hidden-bid { color: #6f675a; font-size: 19px; }
+  .cd-bid-box.cd-empty { color: #d9cfb8; }
+  .cd-round-row.current .cd-bid-box { border-color: #b97e04; }
+  .cd-round-row.playing .cd-bid-box.cd-you { background: #fdf3d3; }
+  .cd-result-cell { text-align: center; padding-left: 2px; padding-right: 2px; }
+  .cd-badge {
+    display: inline-block;
+    font-family: "Zen Maru Gothic", "Noto Sans TC", sans-serif;
+    font-weight: 900; font-size: 12px; letter-spacing: 0.06em;
+    padding: 2px 8px; border-radius: 999px;
+    opacity: 0; transform: scale(0.7) rotate(-4deg);
+  }
+  .cd-controls {
+    margin-top: 10px; border-top: 2px dashed #d9cfb8; padding-top: 12px;
+  }
+  .cd-controls .cd-prompt {
+    text-align: center; font-size: 14.5px; font-weight: 500; margin: 0 0 9px;
+  }
+  .cd-controls .cd-prompt strong {
+    font-family: "Zen Maru Gothic", "Noto Sans TC", sans-serif; color: #d6543c;
+  }
+  .cd-stepper {
+    display: flex; align-items: stretch; justify-content: center; gap: 12px;
+  }
+  .cd-step-btn {
+    width: 52px; height: 52px; border-radius: 12px;
+    border: 2px solid #b7ab8d; background: #fffdf6; color: #2e2a23;
+    font-size: 27px; font-weight: 700; line-height: 1; cursor: pointer;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  }
+  .cd-step-btn:disabled { opacity: 0.35; cursor: default; }
+  .cd-bid-display {
+    min-width: 104px; border: 2.5px solid #b97e04; background: #fdf3d3;
+    border-radius: 12px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 3px 10px;
+  }
+  .cd-bid-display .cd-num {
+    font-family: "Zen Maru Gothic", "Noto Sans TC", sans-serif;
+    font-weight: 900; font-size: 28px; line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .cd-bid-display .cd-unit { font-size: 12px; color: #6f675a; }
+  .cd-confirm-btn {
+    display: block; width: 100%; margin-top: 12px; padding: 12px;
+    border: none; border-radius: 12px; background: #d6543c; color: #fff;
+    font-family: "Zen Maru Gothic", "Noto Sans TC", sans-serif;
+    font-weight: 900; font-size: 17px; letter-spacing: 0.08em; cursor: pointer;
+    box-shadow: 0 3px 0 #b23e2a;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  }
+  .cd-confirm-btn:disabled { opacity: 0.45; cursor: default; box-shadow: none; }
+  .cd-finale {
+    margin-top: 10px; border-top: 2px dashed #d9cfb8; padding-top: 13px;
+    text-align: center; display: none;
+  }
+  .cd-finale.show { display: block; }
+  .cd-finale .cd-finale-msg {
+    font-family: "Zen Maru Gothic", "Noto Sans TC", sans-serif;
+    font-weight: 800; font-size: 1.05rem; line-height: 1.6;
+    margin: 12px 0 0; color: #7a5b12; letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+  .cd-sr-only {
+    position: absolute; top: 0; left: 0; width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  @media (max-width: 420px) {
+    .cd-modal { padding: 30px 14px 18px; }
+    .cd-title-emoji { font-size: 22px; }
+    .cd-bid-box { height: 40px; font-size: 20px; }
+    .cd-step-btn { width: 48px; height: 48px; }
+    .cd-result-cell { padding-left: 2px; padding-right: 2px; }
+    .cd-round-no { padding-left: 0; padding-right: 0; }
+    .cd-badge { font-size: 11px; padding: 2px 7px; }
+  }
+  /* 短視口收緊：只收間距與行高，不改文案、不改規則（量度後如仍溢出再收） */
+  @media (max-height: 730px) {
+    .cd-modal { padding: 28px 16px 14px; }
+    .cd-tagline { line-height: 1.4; }
+    .cd-status { margin-top: 10px; }
+    .cd-stat { padding: 4px 6px 4px; }
+    .cd-stat .cd-value { font-size: 18px; }
+    .cd-rounds { margin: 6px 0 4px; }
+    .cd-rounds-row { margin-top: 2px; }
+    .cd-bid-box { height: 38px; }
+    .cd-controls { margin-top: 8px; padding-top: 8px; }
+    .cd-controls .cd-prompt { margin: 0 0 6px; }
+    .cd-step-btn { width: 44px; height: 44px; }
+    .cd-bid-display { padding: 2px 10px; }
+    .cd-bid-display .cd-num { font-size: 24px; line-height: 1; }
+    .cd-bid-display .cd-unit { line-height: 1; }
+    .cd-confirm-btn { margin-top: 8px; padding: 10px; }
+  }
+
+/* ---- 合併保留（建造版，設計片段未定義、JS 必須；逐項列明） ---- */
+.cd-bid-box.hidden-bid { color:#6f675a; font-size:19px; }
+.cd-bid-box.empty { color:#d9cfb8; }
+.cd-round-row.playing .cd-bid-box.you, .cd-round-row.playing .cd-bid-box.cd-you { background:#fdf3d3; }
+.cd-bid-box.reveal-pop { animation:cdpop .35s ease; }
+@keyframes cdpop { 0% { transform:scale(.82); } 60% { transform:scale(1.07); } 100% { transform:scale(1); } }
+.cd-badge.show { animation:cdstamp .3s ease forwards; }
+.cd-badge.win { color:#1e7a4c; background:#e2f3e8; border:2px solid #1e7a4c; }
+.cd-badge.lose { color:#a34a3d; background:#f7e7e2; border:2px solid #a34a3d; }
+@keyframes cdstamp { 0% { opacity:0; transform:scale(1.6) rotate(-10deg); } 100% { opacity:1; transform:scale(1) rotate(-3deg); } }
+.cd-bid-box { transition:background .25s ease, border-color .25s ease, transform .25s ease; }
+.cd-close { transition:background .15s ease, color .15s ease; }
+.cd-close:hover { background:#f7ecd2; color:#8a6508; }
+.cd-step-btn { transition:transform .08s ease, background .15s ease, opacity .15s ease; }
+.cd-step-btn:active { transform:scale(.93); }
+.cd-step-btn:disabled:active { transform:none; }
+.cd-confirm-btn { transition:transform .08s ease, box-shadow .08s ease, opacity .15s ease; }
+.cd-confirm-btn:active { transform:translateY(3px); box-shadow:0 0 0 #b23e2a; }
+.cd-again-btn:active { transform:translateY(3px); box-shadow:0 0 0 #b23e2a; }
+.cd-stat .cd-value { color:#2e2a23; }
+.cd-controls .cd-prompt { color:#2e2a23; }
+.cd-bid-display .cd-num { color:#2e2a23; }
+@media (prefers-reduced-motion: reduce) { .cd-bid-box.reveal-pop, .cd-badge.show, .cd-finale.show { animation:none; } .cd-badge { opacity:1; transform:rotate(-3deg) scale(1); } .cd-badge:not(.show) { opacity:0; } }
+/* ===== COIN DUEL MINIGAME: CSS END ===== */
+
 
 /* ===== 測試版專屬：查詢存檔彈窗（v40.6.beta，2026-10-18 CC 要求）=====
    IS_TEST=false（玩家版）時按鈕不存在，彈窗 HTML 雖在但永不觸發 */
@@ -782,7 +1000,7 @@ body.theme-dark {
 <li><span class="rule-number">2</span><div><strong>自動模式（放貓自動標 X）</strong><span>新玩家預設為關閉，讓您先親手標記、熟習規則；到達第 10 關時，遊戲會提示您一次，可即時開啟。您亦可隨時以關卡名稱旁的 AUTO／OFF 開關切換。開啟後，每次正確放貓，系統會自動在該貓的橫行、直行、周圍八格及其所屬色區的其餘全部格標 X；誤放不會觸發。開關設定會隨進度保存。</span></div></li>
 <li><span class="rule-number">3</span><div><strong>錯放貓咪會扣心</strong><span>若放貓後棋面再沒有合法解，會先顯示剛放的貓，再提示錯誤並扣 1 顆心，最後把該格改標為鎖定的 X；該 X 不可取消，也不能再次放貓。心用完即遊戲結束。</span></div></li>
 <li><span class="rule-number">4</span><div><strong>找貓提示</strong><span>每關可使用 2 次「找貓提示」；提示不扣心；用完後，到下一關會回復 2 次。</span></div></li>
-<li><span class="rule-number">5</span><div><strong>小夥伴</strong><span>第 51 關起，每關有一隻小夥伴<svg class="rule-paw" viewBox="0 0 64 64" aria-hidden="true"><g stroke="rgba(255,255,255,.92)" stroke-width="2.2" stroke-linejoin="round"><ellipse cx="13" cy="27.5" rx="5.6" ry="7.4" transform="rotate(-18 13 27.5)" fill="#f78fb0"/><ellipse cx="23.5" cy="19.5" rx="6" ry="7.9" transform="rotate(-6 23.5 19.5)" fill="#f78fb0"/><ellipse cx="40.5" cy="19.5" rx="6" ry="7.9" transform="rotate(6 40.5 19.5)" fill="#f78fb0"/><ellipse cx="51" cy="27.5" rx="5.6" ry="7.4" transform="rotate(18 51 27.5)" fill="#f78fb0"/><ellipse cx="32" cy="41.5" rx="13.5" ry="10.8" fill="#ef6391"/></g></svg>藏在棋盤的其中一格。放下貓後牠便會藏好；只要您親手在該格標 X，牠便會現身，替您開啟肯定不藏貓的幾格，並以藍色 X 標示。小夥伴每關只幫忙一次，不扣分、不扣心。藍色 X 與普通 X 相同，可以照常清除。</span></div></li><li><span class="rule-number">6</span><div><strong>限時找貓小遊戲</strong><span>第 101 關起，關號尾數為 7 的關卡過關後，可參加一次限時找貓小遊戲。</span></div></li><li><span class="rule-number">7</span><div><strong>限時捉貓小遊戲</strong><span>第 101 關起，關號尾數為 3 的關卡過關後，可參加一次限時捉貓小遊戲。</span></div></li><li><span class="rule-number">8</span><div><strong>積分與補心</strong><span>積分與心數規則如下表。</span>
+<li><span class="rule-number">5</span><div><strong>小夥伴</strong><span>第 51 關起，每關有一隻小夥伴<svg class="rule-paw" viewBox="0 0 64 64" aria-hidden="true"><g stroke="rgba(255,255,255,.92)" stroke-width="2.2" stroke-linejoin="round"><ellipse cx="13" cy="27.5" rx="5.6" ry="7.4" transform="rotate(-18 13 27.5)" fill="#f78fb0"/><ellipse cx="23.5" cy="19.5" rx="6" ry="7.9" transform="rotate(-6 23.5 19.5)" fill="#f78fb0"/><ellipse cx="40.5" cy="19.5" rx="6" ry="7.9" transform="rotate(6 40.5 19.5)" fill="#f78fb0"/><ellipse cx="51" cy="27.5" rx="5.6" ry="7.4" transform="rotate(18 51 27.5)" fill="#f78fb0"/><ellipse cx="32" cy="41.5" rx="13.5" ry="10.8" fill="#ef6391"/></g></svg>藏在棋盤的其中一格。放下貓後牠便會藏好；只要您親手在該格標 X，牠便會現身，替您開啟肯定不藏貓的幾格，並以藍色 X 標示。小夥伴每關只幫忙一次，不扣分、不扣心。藍色 X 與普通 X 相同，可以照常清除。</span></div></li><li><span class="rule-number">6</span><div><strong>限時找貓小遊戲</strong><span>第 101 關起，關號尾數為 7 的關卡過關後，可參加一次限時找貓小遊戲。</span></div></li><li><span class="rule-number">7</span><div><strong>限時捉貓小遊戲</strong><span>第 51 關起，關號尾數為 3 的關卡過關後，可參加一次限時捉貓小遊戲。</span></div></li><li><span class="rule-number">8</span><div><strong>鬥金幣小遊戲</strong><span>第 51 關起，關號尾數為 9 的關卡過關後，可參加一次鬥金幣小遊戲。您和貓咪各有 20 個金幣，共鬥 5 個回合，每回合出幣不少於貓咪便贏這個回合。</span></div></li><li><span class="rule-number">9</span><div><strong>積分與補心</strong><span>積分與心數規則如下表。</span>
 <table class="level-table">
 <tr><th>項目</th><th>規則</th></tr>
 <tr><td>過關</td><td>＋1000 分</td></tr>
@@ -796,10 +1014,10 @@ body.theme-dark {
 <tr><td>積分下限</td><td>最低 0 分</td></tr>
 <tr><td>補心</td><td>每通過十關補回 1 顆心</td></tr>
 <tr><td>心數上限</td><td>5 顆</td></tr>
-<tr><td>限時找貓小遊戲</td><td>每找對一隻貓 ＋300 分，每局最高 ＋2700 分</td></tr><tr><td>限時捉貓小遊戲</td><td>每捉對一隻貓 ＋100 分，每局最高 ＋3000 分</td></tr>
+<tr><td>限時找貓小遊戲</td><td>每找對一隻貓 ＋300 分，每局最高 ＋2700 分</td></tr><tr><td>限時捉貓小遊戲</td><td>每捉對一隻貓 ＋100 分，每局最高 ＋3000 分</td></tr><tr><td>鬥金幣小遊戲</td><td>每勝出一個回合 ＋400 分，每局最高 ＋2000 分</td></tr>
 <tr><td>Combo 連續完美過關</td><td>由501關開始，整關沒有扣心及沒有使用找貓提示會累積 Combo；扣心或使用找貓提示，Combo 即時歸零；Combo連續達 3、5、10、15、20 個時分別加 3,000、5,000、10,000、15,000、20,000 分。20 Combo發獎勵後重置為零。</td></tr>
-</table></div></li><li><span class="rule-number">9</span><div><strong>幸運抽獎</strong><span>每通過 15 關，可參加一次幸運抽獎。</span></div></li><li><span class="rule-number">10</span><div><strong>心用完後可選擇</strong><span>繼續玩：本關重玩、心回滿、扣5000分（最低 0 分）。</span></div></li>
-<li><span class="rule-number">11</span><div><strong>玩家等級與最高積分</strong><span>每次過關後，系統會記下您的最高積分並評定等級（等級晉升順序如下）；等級提升時會有恭喜提示。</span>
+</table></div></li><li><span class="rule-number">10</span><div><strong>幸運抽獎</strong><span>每通過 15 關，可參加一次幸運抽獎。</span></div></li><li><span class="rule-number">11</span><div><strong>心用完後可選擇</strong><span>繼續玩：本關重玩、心回滿、扣5000分（最低 0 分）。</span></div></li>
+<li><span class="rule-number">12</span><div><strong>玩家等級與最高積分</strong><span>每次過關後，系統會記下您的最高積分並評定等級（等級晉升順序如下）；等級提升時會有恭喜提示。</span>
 <div class="lvl-flow" aria-label="玩家等級由低至高晉升順序">
 <span class="lvl-node"><b>新手</b></span><span class="lvl-arrow" aria-hidden="true">→</span>
 <span class="lvl-node"><b>初階</b></span><span class="lvl-arrow" aria-hidden="true">→</span>
@@ -908,6 +1126,44 @@ body.theme-dark {
 <div class="wk-board-shell"><div class="wk-board" id="wkBoard"></div><div class="wk-cover" id="wkCover" aria-hidden="true"></div><button id="wkBeginBtn" class="wk-btn" type="button">開始</button><div class="wk-prep" id="wkPrep">請準備 … 3</div></div>
 <div id="wkResult"></div>
 <div id="wkMissed"></div>
+</div>
+</div>
+
+<!-- 鬥金幣小遊戲彈窗（v47.0.beta，CC 2026-11-04 批准實裝；正式版標題，無示範版說明） -->
+<div class="cd-overlay" id="cdOverlay">
+<div class="cd-modal" role="dialog" aria-modal="true" aria-label="🎮 鬥金幣小遊戲 🎮">
+<button class="cd-close" id="cdClose" type="button" aria-label="關閉">✕</button>
+<div class="cd-title-row"><span class="cd-title-emoji" aria-hidden="true">🎮</span><h1 class="cd-title">鬥金幣小遊戲</h1><span class="cd-title-emoji" aria-hidden="true">🎮</span></div>
+<p class="cd-tagline">您和貓咪各有20個金幣，共鬥5個回合，每回合出幣不少於貓咪，即贏400分。請好好分配！</p>
+<p class="cd-fair-note">貓咪的出幣在您確認前已經決定，不會偷看您的出幣。</p>
+<div class="cd-status" role="status">
+<div class="cd-stat"><div class="cd-label">貓咪剩餘金幣</div><div class="cd-value"><span class="cd-coin-dot" aria-hidden="true"></span> <span id="cdAiLeft">20</span></div></div>
+<div class="cd-stat"><div class="cd-label">目前分數</div><div class="cd-value"><span id="cdScore">0</span><small> 分</small></div></div>
+<div class="cd-stat"><div class="cd-label">您剩餘金幣</div><div class="cd-value"><span class="cd-coin-dot" aria-hidden="true"></span> <span id="cdYouLeft">20</span></div></div>
+</div>
+<div class="cd-rounds" role="table" aria-label="回合紀錄">
+<div class="cd-rounds-row head" role="row">
+<div class="cd-th" role="columnheader"><span class="cd-who">回合</span></div>
+<div class="cd-th" role="columnheader"><span class="cd-who"><svg class="cd-cat" viewBox="0 0 64 64" aria-hidden="true"><g><path d="M14 25 11 8l15 9a27 27 0 0 1 12 0l15-9-3 17c4 4 6 10 6 16 0 11-10 18-24 18S8 52 8 41c0-6 2-12 6-16Z" fill="#fffdf8" stroke="#29474f" stroke-width="2.7"/><path d="m15 13 3 10 7-4Z" fill="#f5b4ae"/><path d="m49 13-3 10-7-4Z" fill="#f5b4ae"/><path d="M21 35h.1M43 35h.1" stroke="#29474f" stroke-width="5" stroke-linecap="round"/><path d="m29 41 3-2 3 2-3 3Z" fill="#ee7b70" stroke="#29474f" stroke-width="1.2"/><path d="M32 44c-1 3-5 3-6 1m6-1c1 3 5 3 6 1" fill="none" stroke="#29474f" stroke-width="2" stroke-linecap="round"/><path d="M19 43 7 40m12 8L8 50m37-7 12-3m-12 8 11 2" fill="none" stroke="#29474f" stroke-width="2" stroke-linecap="round"/></g></svg>貓咪</span></div>
+<div class="cd-th" role="columnheader"><span class="cd-who">您</span></div>
+<div class="cd-th" role="columnheader"><span class="cd-sr-only">結果</span></div>
+</div>
+<div id="cdRoundsBody" role="rowgroup"></div>
+</div>
+<section class="cd-controls" id="cdControls">
+<p class="cd-prompt">第 <strong id="cdPromptRound">1</strong> 回合：您要出多少個金幣？</p>
+<div class="cd-stepper">
+<button class="cd-step-btn" id="cdMinus" type="button" aria-label="減少金幣">−</button>
+<div class="cd-bid-display" aria-live="polite"><span class="cd-num" id="cdBidNum">0</span><span class="cd-unit">個金幣</span></div>
+<button class="cd-step-btn" id="cdPlus" type="button" aria-label="增加金幣">＋</button>
+</div>
+<button class="cd-confirm-btn" id="cdConfirm" type="button">確認出幣</button>
+</section>
+<section class="cd-finale" id="cdFinale" aria-live="polite">
+<p class="cd-finale-msg" id="cdFinaleMsg"></p>
+<button class="cd-again-btn" id="cdAgain" type="button">再玩一次</button>
+</section>
+<p class="cd-sr-only" id="cdAnnouncer" aria-live="assertive"></p>
 </div>
 </div>
 <!-- 測試版專屬：查詢存檔彈窗（v40.6.beta，2026-10-18 CC 要求） -->
@@ -1208,9 +1464,19 @@ fetch('data/boards_126.json').then(function(r){return r.json()}),
 fetch('data/boards_127.json').then(function(r){return r.json()}),
 fetch('data/boards_128.json').then(function(r){return r.json()}),
 fetch('data/boards_129.json').then(function(r){return r.json()}),
-fetch('data/boards_130.json').then(function(r){return r.json()})
+fetch('data/boards_130.json').then(function(r){return r.json()}),
+fetch('data/boards_131.json').then(function(r){return r.json()}),
+fetch('data/boards_132.json').then(function(r){return r.json()}),
+fetch('data/boards_133.json').then(function(r){return r.json()}),
+fetch('data/boards_134.json').then(function(r){return r.json()}),
+fetch('data/boards_135.json').then(function(r){return r.json()}),
+fetch('data/boards_136.json').then(function(r){return r.json()}),
+fetch('data/boards_137.json').then(function(r){return r.json()}),
+fetch('data/boards_138.json').then(function(r){return r.json()}),
+fetch('data/boards_139.json').then(function(r){return r.json()}),
+fetch('data/boards_140.json').then(function(r){return r.json()})
 ]);
-window.VERIFIED_50_DATA=_parts[0].concat(_parts[1],_parts[2],_parts[3],_parts[4],_parts[5],_parts[6],_parts[7],_parts[8],_parts[9],_parts[10],_parts[11],_parts[12],_parts[13],_parts[14],_parts[15],_parts[16],_parts[17],_parts[18],_parts[19],_parts[20],_parts[21],_parts[22],_parts[23],_parts[24],_parts[25],_parts[26],_parts[27],_parts[28],_parts[29],_parts[30],_parts[31],_parts[32],_parts[33],_parts[34],_parts[35],_parts[36],_parts[37],_parts[38],_parts[39],_parts[40],_parts[41],_parts[42],_parts[43],_parts[44],_parts[45],_parts[46],_parts[47],_parts[48],_parts[49],_parts[50],_parts[51],_parts[52],_parts[53],_parts[54],_parts[55],_parts[56],_parts[57],_parts[58],_parts[59],_parts[60],_parts[61],_parts[62],_parts[63],_parts[64],_parts[65],_parts[66],_parts[67],_parts[68],_parts[69],_parts[70],_parts[71],_parts[72],_parts[73],_parts[74],_parts[75],_parts[76],_parts[77],_parts[78],_parts[79],_parts[80],_parts[81],_parts[82],_parts[83],_parts[84],_parts[85],_parts[86],_parts[87],_parts[88],_parts[89],_parts[90],_parts[91],_parts[92],_parts[93],_parts[94],_parts[95],_parts[96],_parts[97],_parts[98],_parts[99],_parts[100],_parts[101],_parts[102],_parts[103],_parts[104],_parts[105],_parts[106],_parts[107],_parts[108],_parts[109],_parts[110],_parts[111],_parts[112],_parts[113],_parts[114],_parts[115],_parts[116],_parts[117],_parts[118],_parts[119],_parts[120],_parts[121],_parts[122],_parts[123],_parts[124],_parts[125],_parts[126],_parts[127],_parts[128],_parts[129]);
+window.VERIFIED_50_DATA=_parts[0].concat(_parts[1],_parts[2],_parts[3],_parts[4],_parts[5],_parts[6],_parts[7],_parts[8],_parts[9],_parts[10],_parts[11],_parts[12],_parts[13],_parts[14],_parts[15],_parts[16],_parts[17],_parts[18],_parts[19],_parts[20],_parts[21],_parts[22],_parts[23],_parts[24],_parts[25],_parts[26],_parts[27],_parts[28],_parts[29],_parts[30],_parts[31],_parts[32],_parts[33],_parts[34],_parts[35],_parts[36],_parts[37],_parts[38],_parts[39],_parts[40],_parts[41],_parts[42],_parts[43],_parts[44],_parts[45],_parts[46],_parts[47],_parts[48],_parts[49],_parts[50],_parts[51],_parts[52],_parts[53],_parts[54],_parts[55],_parts[56],_parts[57],_parts[58],_parts[59],_parts[60],_parts[61],_parts[62],_parts[63],_parts[64],_parts[65],_parts[66],_parts[67],_parts[68],_parts[69],_parts[70],_parts[71],_parts[72],_parts[73],_parts[74],_parts[75],_parts[76],_parts[77],_parts[78],_parts[79],_parts[80],_parts[81],_parts[82],_parts[83],_parts[84],_parts[85],_parts[86],_parts[87],_parts[88],_parts[89],_parts[90],_parts[91],_parts[92],_parts[93],_parts[94],_parts[95],_parts[96],_parts[97],_parts[98],_parts[99],_parts[100],_parts[101],_parts[102],_parts[103],_parts[104],_parts[105],_parts[106],_parts[107],_parts[108],_parts[109],_parts[110],_parts[111],_parts[112],_parts[113],_parts[114],_parts[115],_parts[116],_parts[117],_parts[118],_parts[119],_parts[120],_parts[121],_parts[122],_parts[123],_parts[124],_parts[125],_parts[126],_parts[127],_parts[128],_parts[129],_parts[130],_parts[131],_parts[132],_parts[133],_parts[134],_parts[135],_parts[136],_parts[137],_parts[138],_parts[139]);
 }catch(_e){
 document.body.innerHTML='<div style="padding:40px;text-align:center;font-size:18px;">版圖數據載入失敗，請檢查網路後重新整理。</div>';
 return;
@@ -1219,16 +1485,16 @@ return;
 IS_TEST = true  → 顯示跳關按鈕（測試版專用）
 玩家版構建時改為 false → 跳關按鈕＋全部相關邏輯完全消除，頁面無按鈕、無入口 */
 var IS_TEST = false; // 玩家版構建時改為 false，跳關功能即完全消除
-var CURRENT_VERSION='2026.11.01.46.2'; // v44.20.beta；頁底版本文字由 JS 動態填入 CURRENT_VERSION（CC 硬規則：頁底顯示必須與發佈版本一致） // 過關時版本檢查用；發佈新版本時同步更新 version.txt
+var CURRENT_VERSION='2026.11.04.47.1'; // v44.20.beta；頁底版本文字由 JS 動態填入 CURRENT_VERSION（CC 硬規則：頁底顯示必須與發佈版本一致） // 過關時版本檢查用；發佈新版本時同步更新 version.txt
 /* 2026-10-18 v40.10.beta：頁底版本文字動態填入，確保永遠與發佈版本一致（CC 硬規則） */
 try{var _fvEl=document.querySelector('.footer-note .version');if(_fvEl)_fvEl.textContent='Version '+CURRENT_VERSION;}catch(_fvE){}
-var TOTAL=1300, MAX_HEARTS=5, PUZZLE_SEED=0x43a7c21d;
+var TOTAL=1400, MAX_HEARTS=5, PUZZLE_SEED=0x43a7c21d;
 var paletteLight=['#f3a6a6','#f6c184','#e8da72','#b8db76','#b08968','#7fd6bc','#a7b8c4','#82bde5','#8ea3e1','#aa92dc'],paletteDark=['#eeb7ce','#f1ae77','#ddbc5d','#b5d79b','#a3734f','#67b1b0','#acbed6','#7fbae2','#9179cf','#dc89b5'];
 var first=['暖陽','月光','毛線','紙箱','星夜','清晨','雨聲','魚乾','雲朵','花影'];
 var second=['角落','小徑','迷宮','窗台','走廊','花園','書架','屋頂','庭院','秘境'];
 function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shuffle(a,rand){for(var j=a.length-1;j>0;j--){var k=Math.floor(rand()*(j+1)),v=a[j];a[j]=a[k];a[k]=v}return a}
-var HARDEST_VARIANT=[2,2,1,2,1,2,0,0,1,0,2,2,2,2,2,2,2,2,2,1,1,2,2,2,0,1,2,2,2,1,1,2,2,2,0,1,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,0,0,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1,1,2,0,1,2,2,2,2,2,1,2,2,2,1,0,2,2,2,2,0,1,2,2,2,1,2,2,2,2,1,2,1,2,2,2,2,2,1,1,1,2,1,1,1,2,0,2,2,2,1,1,0,1,2,2,2,2,2,2,1,1,2,2,2,1,2,2,2,2,1,1,0,0,2,1,2,0,2,0,0,0,1,0,0,2,0,2,0,1,1,2,2,2,0,1,1,0,0,0,2,2,1,0,1,2,2,0,1,0,2,1,1,0,0,2,1,0,0,1,0,1,0,2,0,0,1,2,1,0,0,1,2,0,2,1,1,2,1,0,1,0,1,2,1,2,1,0,0,2,2,1,0,1,0,2,1,0,1,2,1,1,2,2,1,0,1,2,2,0,0,1,0,2,1,1,1,1,2,2,0,1,2,2,0,0,0,2,0,2,1,1,2,0,2,0,0,2,0,2,1,0,2,0,1,2,2,2,1,1,0,2,2,1,1,0,2,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,0,2,0,1,0,0,2,0,2,0,1,0,1,1,0,0,2,2,2,0,0,2,2,0,0,0,0,1,0,0,2,0,2,0,1,0,1,0,0,0,0,0,2,0,2,0,0,0,0,1,2,0,0,0,0,1,0,2,0,2,1,1,0,2,0,0,1,0,0,2,0,2,2,1,0,2,0,2,0,2,2,0,0,1,2,1,0,2,1,1,1,2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,0,0,0,0,1,0,0,0,0,0,0,0,2,0,0,2,0,0,2,0,0,0,0,0,2,1,0,0,0,0,0,2,0,0,0,0,2,2,0,0,0,0,2,0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+var HARDEST_VARIANT=[2,2,1,2,1,2,0,0,1,0,2,2,2,2,2,2,2,2,2,1,1,2,2,2,0,1,2,2,2,1,1,2,2,2,0,1,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,0,0,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1,1,2,0,1,2,2,2,2,2,1,2,2,2,1,0,2,2,2,2,0,1,2,2,2,1,2,2,2,2,1,2,1,2,2,2,2,2,1,1,1,2,1,1,1,2,0,2,2,2,1,1,0,1,2,2,2,2,2,2,1,1,2,2,2,1,2,2,2,2,1,1,0,0,2,1,2,0,2,0,0,0,1,0,0,2,0,2,0,1,1,2,2,2,0,1,1,0,0,0,2,2,1,0,1,2,2,0,1,0,2,1,1,0,0,2,1,0,0,1,0,1,0,2,0,0,1,2,1,0,0,1,2,0,2,1,1,2,1,0,1,0,1,2,1,2,1,0,0,2,2,1,0,1,0,2,1,0,1,2,1,1,2,2,1,0,1,2,2,0,0,1,0,2,1,1,1,1,2,2,0,1,2,2,0,0,0,2,0,2,1,1,2,0,2,0,0,2,0,2,1,0,2,0,1,2,2,2,1,1,0,2,2,1,1,0,2,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,0,2,0,1,0,0,2,0,2,0,1,0,1,1,0,0,2,2,2,0,0,2,2,0,0,0,0,1,0,0,2,0,2,0,1,0,1,0,0,0,0,0,2,0,2,0,0,0,0,1,2,0,0,0,0,1,0,2,0,2,1,1,0,2,0,0,1,0,0,2,0,2,2,1,0,2,0,2,0,2,2,0,0,1,2,1,0,2,1,1,1,2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,0,0,0,0,1,0,0,0,0,0,0,0,2,0,0,2,0,0,2,0,0,0,0,0,2,1,0,0,0,0,0,2,0,0,0,0,2,2,0,0,0,0,2,0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 function levelSpec(index){var no=index+1,difficulty=index/(TOTAL-1),isBig=no>50;return{size:isBig?10:9,colors:isBig?10:9,label:no<=10?'入門':no<=30?'初階':no<=50?'中階':'高階',difficulty:difficulty}}
 var VERIFIED_BASES=[{"n":6,"r":"001111011111211111211311255334255444","s":"140352"},{"n":6,"r":"000111241111244444244443444443444455","s":"130524"},{"n":6,"r":"113300113300113322333333433333455333","s":"415302"},{"n":9,"r":"000333333000331112333333322333333333333343333553343333555543663777743333788743333","s":"258640731"},{"n":9,"r":"440000113444444113442444443442444443444444444444455555644447778644447778444447888","s":"362814057"},{"n":9,"r":"211100885221188885228888885448888385848888385888888885888668885887788888888888888","s":"530618427"},{"n":9,"r":"111444400111444444224444444224444334244444444244445444664445744664488744644488444","s":"820735164"},{"n":11,"r":"aa000aa3344aa0011a3344aaa111a3224aaa56aa3224aaa56aaaa44a5556aaaaaaaaa66aaaaaaaaa8aaaa7aaaaa8aaaa7aa99aaaaaaaaaaaaaaaaaaaa","s":"2597a148306"},{"n":11,"r":"11117700000222117000002227777777755777777773557777774737577777746677777777766777777777777777777877777797778777aa997777777","s":"642a8195730"},{"n":11,"r":"110000666661116006666246663366662466633666664666666666666666655666666666666666686676666666866796666666667966666666699aa66","s":"31a40795268"},{"n":11,"r":"000004444410002244444133442444444334444444443344444444488444444555884444665778844444447788944444444999444444449994444aaaa","s":"3a415869027"},{"n":11,"r":"33333111000333332211003333322333333333333333443533333333335333333333333663333377333333333393338833333933388aa33333338aaa3","s":"a8640351729"},{"n":11,"r":"221100aaaaa2211aaaaaaa22aaaaaaaaa55533aa44445553aaa44445557aaaa666aaa7aaaa666aaa7aaaaaaaaaaaaaaaa88aaaaaaaa998aaaaaaaaaaa","s":"52047193a86"},{"n":11,"r":"1100000666611330026666113336266661133366666655533666644555566666666667666666686676666666866666666696666666666966666666aa9","s":"516492730a8"}];
 function transformVerified(base,turn){
@@ -1536,7 +1802,7 @@ if(p.size!==levelSpec(level).size||!balanced||!regionsConnected(p.regions,p.size
 }
 }
 function buildVariantPuzzles(){
-if(!Array.isArray(window.VERIFIED_50_DATA)||window.VERIFIED_50_DATA.length!==2700)throw new Error('已驗證版圖資料不完整'); // 候選總數 2600＝第 1–700 關各 3 幅（2100）＋第 701–1300 關各 1 幅（600）
+if(!Array.isArray(window.VERIFIED_50_DATA)||window.VERIFIED_50_DATA.length!==2800)throw new Error('已驗證版圖資料不完整'); // 候選總數 2800＝第 1–700 關各 3 幅（2100）＋第 701–1400 關各 1 幅（700）
 var out=[],seen={};
 for(var level=0,cumIdx=0;level<TOTAL;level++){
 var variants=[],spec=levelSpec(level),candCount=level<700?3:1;
@@ -1561,7 +1827,7 @@ out.push(variants);
 return out;
 }
 var puzzles=buildVariantPuzzles();validateFirstFive(puzzles);
-var state={level:0,variant:0,cells:[],lockedXs:{},history:[],hearts:MAX_HEARTS,hintsRemaining:2,mistakes:0,hintsUsed:0,moves:0,catsRemaining:0,score:0,best:undefined,maxCompleted:0,pendingLevelUp:false,pendingLevelUpName:'',hadBest:false,mode:'x',start:Date.now(),activeMs:0,lastResume:Date.now(),locked:false,pendingCells:{},resultShown:false,levelAwarded:false,focus:0,milestoneRewards:{},maxLotteryLevel:0,pendingLottery:0,maxMinigameLevel:0,pendingMinigame:0,maxWhackLevel:0,pendingWhack:0,openingAvailable:true,openingGuide:null,restoredEntry:false,buddyCell:-1,buddyDone:false,buddyBlue:{},buddyPaw:-1,buddyAnim:false,combo:0,comboDirty:false,comboDirtyLevel:null};
+var state={level:0,variant:0,cells:[],lockedXs:{},history:[],hearts:MAX_HEARTS,hintsRemaining:2,mistakes:0,hintsUsed:0,moves:0,catsRemaining:0,score:0,best:undefined,maxCompleted:0,pendingLevelUp:false,pendingLevelUpName:'',hadBest:false,mode:'x',start:Date.now(),activeMs:0,lastResume:Date.now(),locked:false,pendingCells:{},resultShown:false,levelAwarded:false,focus:0,milestoneRewards:{},maxLotteryLevel:0,pendingLottery:0,maxMinigameLevel:0,pendingMinigame:0,maxWhackLevel:0,pendingWhack:0,maxCoinLevel:0,pendingCoin:0,openingAvailable:true,openingGuide:null,restoredEntry:false,buddyCell:-1,buddyDone:false,buddyBlue:{},buddyPaw:-1,buddyAnim:false,combo:0,comboDirty:false,comboDirtyLevel:null};
 /* ===== 計時器後台暫停（2026-10-17 CC 批准，v39.23.beta）：Page Visibility API，頁面隱藏時凍結累計 */ function getActiveMs(){try{if(typeof state==='undefined'||!state)return 0;var b=state.activeMs||0;if(document.hidden)return b;return b+(Date.now()-(state.lastResume||state.start||Date.now()));}catch(_){return 0;}} document.addEventListener('visibilitychange',function(){try{if(typeof state==='undefined'||!state)return;if(document.hidden){state.activeMs=(state.activeMs||0)+(Date.now()-(state.lastResume||state.start||Date.now()));}else{state.lastResume=Date.now();}if(typeof updateGameTimer==='function'){try{updateGameTimer();}catch(_){}}}catch(_){}});
 /* 遊戲計時器永久顯示（2026-10-17 CC 指示，v39.26.beta）：置於原開局指引位置，靠右對齊；格式為 xx分xx秒；使用 getActiveMs()，後台暫停。 */
 window.updateGameTimer=function(){try{var tt=document.getElementById('gameTimerText');if(!tt)return;var ms=getActiveMs(),s=Math.floor(ms/1000),m=Math.floor(s/60);s=s%60;tt.textContent=(m>0?m+'分':'')+s+'秒';}catch(_){}};
@@ -2030,7 +2296,7 @@ tick();
 }
 
 /* ===== 限時找貓小遊戲（v45.4.beta，CC 2026-10-30 批准實裝；題池重用正式遊戲 puzzles 及 HARDEST_VARIANT，不內嵌版圖數據）=====
-   觸發：第 101 關起、關號尾數為 7 的關卡過關後（首個為第 107 關）；只檢查有否玩過，不檢查是否重玩（仿抽獎，CC 2026-10-30 21:19 定奪）。
+   觸發：第 101 關起、關號尾數為 7 的關卡過關後（首個為第 107 關），至第 1100 關共 100 次；只檢查有否玩過，不檢查是否重玩（仿抽獎，CC 2026-10-30 21:19 定奪）。
    防刷：彈窗開啟即時先標記最高已玩關數並同步落盤（仿抽獎先標記後開始），即使得 0 分、倒數完結或中途重新整理皆算玩過。（CC 2026-10-30 18:26 定奪：維持開局標記為最終做法，防重玩刷分。）
  */
 var MG_KEY='meowdoku-minigame-v1'+_storeSfx;
@@ -2201,7 +2467,7 @@ if(isNewBest){try{lbFireSubmit();}catch(_){}}
 
 /* ===== WHACK MINIGAME: JS START ===== */
 /* 限時捉貓小遊戲（v45.8.beta，CC 2026-11-01 批准實裝；仿限時找貓小遊戲模式，差別只在觸發）
-   觸發：第 101 關起、關號尾數為 3 的關卡過關後（首個為第 103 關），只檢查有否玩過，不檢查是否重玩。
+   觸發：第 51 關起、關號尾數為 3 的關卡過關後（首個為第 53 關），只檢查有否玩過，不檢查是否重玩。
    防刷：彈窗開啟即時先標記最高已玩關數並同步落盤，即使得 0 分或中途重新整理皆算玩過。
    棋盤：9×9，顏色照搬 Demo 的 81 格，不取正解、不內嵌版圖數據；遊戲貓用主遊戲內聯 SVG。
    計分：每捉一隻貓加 100 分，最多 3000 分，不扣分不扣心，得分只增不減；結算順序仿 mgSettle。 */
@@ -2236,7 +2502,7 @@ return n;
 }catch(e){return null}
 }
 function whackShouldTrigger(completed){
-if(completed<103)return false;
+if(completed<53)return false;
 if(completed%10!==3)return false;
 if(completed<=(state.maxWhackLevel||0))return false;
 return true;
@@ -2532,6 +2798,186 @@ if(e.target===document.getElementById('wkOverlay'))wkCloseModal();
 });
 if(wkBoardEl)wkBoardEl.addEventListener('click',wkOnBoardPress);
 /* ===== WHACK MINIGAME: JS END ===== */
+
+/* ===== COIN DUEL MINIGAME: JS START ===== */
+/* 鬥金幣小遊戲（v47.0.beta，CC 2026-11-04 批准實裝，仿限時捉貓模式）：
+   觸發：完成 51 關起、尾數 9 的關卡後，只檢查有否玩過；過關彈窗「下一關」後呈現，另設載入承接。
+   規則：沿用原型（均分加大隨機、末回合用盡、打和算玩家勝、揭曉停頓 1 秒／減少動態 0.5 秒）。 */
+var CD_KEY='meowdoku-coin-v1'+_storeSfx;
+var CD_ROUNDS=5,CD_START_COINS=20,CD_POINTS=400;
+var _cd=null;
+function saveCoinProgress(){
+try{
+if(!window.localStorage)return;
+var data=String(Math.max(0,Math.floor(state.maxCoinLevel||0)));
+var sum=sha256hexSync(data+'|'+LS_SECRET);
+if(!sum)return;
+try{localStorage.setItem(CD_KEY,JSON.stringify({v:2,data:data,sum:sum}))}catch(e){}
+}catch(e){}
+}
+function loadCoinProgress(){
+try{
+if(!window.localStorage)return null;
+var raw=null;
+try{raw=localStorage.getItem(CD_KEY)}catch(e){return null}
+if(!raw)return null;
+var d;
+try{d=JSON.parse(raw)}catch(e){return null}
+if(!d||d.v!==2||typeof d.data!=='string'||typeof d.sum!=='string')return null;
+var sum=sha256hexSync(d.data+'|'+LS_SECRET);
+if(!sum||sum!==d.sum)return null;
+var n=parseInt(d.data,10);
+if(!isFinite(n)||n<0)return null;
+return n;
+}catch(e){return null}
+}
+function coinShouldTrigger(completed){
+if(completed<51)return false;
+if(completed%10!==9)return false;
+if(completed<=(state.maxCoinLevel||0))return false;
+return true;
+}
+function decideCdAiBids(){
+var bids=[],remaining=CD_START_COINS;
+for(var i=0;i<CD_ROUNDS;i++){
+var bid;
+if(i===CD_ROUNDS-1){bid=remaining;}
+else{var roundsLeft=CD_ROUNDS-i;var maxBid=Math.min(remaining,Math.floor((2*remaining)/roundsLeft));bid=Math.floor(Math.random()*(maxBid+1));}
+bids.push(bid);remaining-=bid;
+}
+return bids;
+}
+function cdBuildRows(){
+var body=document.getElementById('cdRoundsBody');
+body.innerHTML='';
+for(var i=0;i<CD_ROUNDS;i++){
+var tr=document.createElement('div');tr.className='cd-rounds-row cd-round-row';tr.setAttribute('role','row');tr.id='cd-row-'+i;
+var no=document.createElement('div');no.className='cd-round-no';no.setAttribute('role','cell');no.textContent=String(i+1);tr.appendChild(no);
+var catCell=document.createElement('div');catCell.className='cd-bid-cell';catCell.setAttribute('role','cell');
+var catBox=document.createElement('div');catBox.className='cd-bid-box empty';catBox.id='cd-cat-'+i;catBox.textContent='·';catCell.appendChild(catBox);tr.appendChild(catCell);
+var youCell=document.createElement('div');youCell.className='cd-bid-cell';youCell.setAttribute('role','cell');
+var youBox=document.createElement('div');youBox.className='cd-bid-box empty';youBox.id='cd-you-'+i;youBox.textContent='·';youCell.appendChild(youBox);tr.appendChild(youCell);
+var resCell=document.createElement('div');resCell.className='cd-result-cell';resCell.setAttribute('role','cell');
+var badge=document.createElement('span');badge.className='cd-badge';badge.id='cd-badge-'+i;resCell.appendChild(badge);tr.appendChild(resCell);
+body.appendChild(tr);
+}
+}
+function coinOpenModal(level,practice,onDone){
+/* 正式觸發先標記後開始：彈窗開啟即時把最高值改為當次觸發關號並同步寫入存檔；測試局不標記、不計分、不寫存檔。 */
+if(!practice){state.maxCoinLevel=level;saveCoinProgress();}
+_cd={round:0,youCoins:CD_START_COINS,aiCoins:CD_START_COINS,score:0,wins:0,bid:0,aiBids:decideCdAiBids(),phase:'pick',done:false,practice:!!practice,onDone:(typeof onDone==='function')?onDone:null};
+document.getElementById('cdOverlay').classList.add('open');
+document.getElementById('cdClose').classList.remove('visible');
+document.getElementById('cdFinale').classList.remove('show');
+document.getElementById('cdControls').style.display='';
+document.getElementById('cdAgain').style.display='none';
+cdBuildRows();
+cdRefresh();
+}
+function cdRefresh(){
+document.getElementById('cdAiLeft').textContent=String(_cd.aiCoins);
+document.getElementById('cdYouLeft').textContent=String(_cd.youCoins);
+document.getElementById('cdScore').textContent=String(_cd.score);
+document.getElementById('cdBidNum').textContent=String(_cd.bid);
+document.getElementById('cdPromptRound').textContent=String(Math.min(_cd.round+1,CD_ROUNDS));
+var picking=_cd.phase==='pick';
+document.getElementById('cdMinus').disabled=!picking||_cd.bid<=0;
+document.getElementById('cdPlus').disabled=!picking||_cd.bid>=_cd.youCoins;
+document.getElementById('cdConfirm').disabled=!picking;
+for(var r=0;r<CD_ROUNDS;r++){
+var row=document.getElementById('cd-row-'+r);
+if(!row)continue;
+row.classList.toggle('current',picking&&r===_cd.round);
+row.classList.toggle('playing',picking&&r===_cd.round);
+}
+if(picking){
+var youBox=document.getElementById('cd-you-'+_cd.round);
+youBox.textContent=String(_cd.bid);youBox.classList.remove('empty');
+var catBox=document.getElementById('cd-cat-'+_cd.round);
+catBox.textContent='？';catBox.classList.add('hidden-bid');catBox.classList.remove('empty');
+}
+}
+function cdSetBid(n){
+if(!_cd||_cd.phase!=='pick')return;
+_cd.bid=Math.max(0,Math.min(_cd.youCoins,n));
+cdRefresh();
+}
+function cdConfirmBid(){
+if(!_cd||_cd.phase!=='pick')return;
+_cd.phase='reveal';
+var i=_cd.round,youBid=_cd.bid,aiBid=_cd.aiBids[i],win=youBid>=aiBid;
+_cd.youCoins-=youBid;_cd.aiCoins-=aiBid;
+if(win){_cd.score+=CD_POINTS;_cd.wins++;}
+var catBox=document.getElementById('cd-cat-'+i);
+catBox.textContent=String(aiBid);catBox.classList.remove('hidden-bid');catBox.classList.add('reveal-pop');
+var youBox=document.getElementById('cd-you-'+i);
+youBox.textContent=String(youBid);youBox.classList.add('reveal-pop');
+var badge=document.getElementById('cd-badge-'+i);
+badge.className='cd-badge show '+(win?'win':'lose');badge.textContent=win?'WIN':'LOSE';
+document.getElementById('cdAnnouncer').textContent='第 '+(i+1)+' 回合：貓咪出 '+aiBid+' 個金幣，您出 '+youBid+' 個金幣，'+(win?'您贏了，得 400 分。':'您沒有贏，這回合 0 分。');
+cdRefresh();
+var delay=window.matchMedia('(prefers-reduced-motion: reduce)').matches?500:1000;
+setTimeout(function(){
+if(!_cd)return;
+if(_cd.round>=CD_ROUNDS-1){cdFinishGame();}
+else{_cd.round++;_cd.bid=0;_cd.phase='pick';cdRefresh();}
+},delay);
+}
+function cdFinishGame(){
+_cd.phase='done';_cd.done=true;
+document.getElementById('cdControls').style.display='none';
+if(!_cd.practice){
+/* 計分順序仿 wkSettle：①發放（加分＋最佳積分）②即時寫入本機主存檔 ③等 saveLocalProgress 完成後觸發雲端上傳（fire-and-forget）④新最佳積分時觸發排行榜提交；0 分時無加分、無排行榜提交，仍做寫入及上傳。心數、提示、Combo、最高完成關數皆不觸動。 */
+var pts=_cd.wins*CD_POINTS,isNewBest=false;
+if(pts>0){
+state.score=Math.max(0,state.score+pts);paintScore();
+if(state.best===undefined||state.best===null||state.score>state.best){state.best=Math.floor(state.score);isNewBest=true;paintLevelChip();}
+}
+persistProgress();
+var _cdSlp=null;
+try{_cdSlp=saveLocalProgress();}catch(e){_cdSlp=null;}
+function _cdDoUpload(){try{backupFireUpload();}catch(_){}}
+if(_cdSlp&&_cdSlp.then){_cdSlp.then(_cdDoUpload);}else{_cdDoUpload();}
+if(isNewBest){try{lbFireSubmit();}catch(_){}}
+}
+var w=_cd.wins,msg;
+if(w>=1){msg='🎉恭喜！您勝出'+w+'個回合，+'+_cd.score+'分。';}
+else{msg='您沒有勝出任何回合，下次再來挑戰！';}
+document.getElementById('cdFinaleMsg').textContent=msg;
+document.getElementById('cdFinale').classList.add('show');
+document.getElementById('cdAnnouncer').textContent='遊戲結束。'+msg;
+document.getElementById('cdClose').classList.add('visible');
+document.getElementById('cdAgain').style.display=_cd.practice?'inline-block':'none';
+}
+function cdCloseModal(){
+if(!_cd||!_cd.done)return;
+document.getElementById('cdOverlay').classList.remove('open');
+document.getElementById('cdClose').classList.remove('visible');
+var cb=_cd.onDone;_cd.onDone=null;
+if(cb)cb();
+}
+document.getElementById('cdMinus').onclick=function(){if(_cd)cdSetBid(_cd.bid-1);};
+document.getElementById('cdPlus').onclick=function(){if(_cd)cdSetBid(_cd.bid+1);};
+(function(){
+var holdTimer=null,holdInterval=null;
+function startHold(btn,step){
+var start=function(){holdTimer=setTimeout(function(){holdInterval=setInterval(function(){if(_cd)cdSetBid(_cd.bid+step);},70);},380);};
+var stop=function(){clearTimeout(holdTimer);clearInterval(holdInterval);holdTimer=null;holdInterval=null;};
+btn.addEventListener('pointerdown',start);
+btn.addEventListener('pointerup',stop);
+btn.addEventListener('pointerleave',stop);
+btn.addEventListener('pointercancel',stop);
+}
+startHold(document.getElementById('cdMinus'),-1);
+startHold(document.getElementById('cdPlus'),1);
+})();
+document.getElementById('cdConfirm').onclick=function(){cdConfirmBid();};
+document.getElementById('cdAgain').onclick=function(){if(!_cd)return;var cb=_cd.onDone;coinOpenModal(0,true,cb);};
+document.getElementById('cdClose').onclick=function(){cdCloseModal();};
+document.getElementById('cdOverlay').addEventListener('click',function(e){
+if(e.target===document.getElementById('cdOverlay'))cdCloseModal();
+});
+/* ===== COIN DUEL MINIGAME: JS END ===== */
 
 var audioCtx=null,masterGain=null,muted=false,audioQueueTime=0,meowBufferPromise=null;
 var MEOW_AUDIO_URI='data:audio/mpeg;base64,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';
@@ -3010,9 +3456,13 @@ state.pendingLottery=completed;
 if(win&&minigameShouldTrigger(completed)){
 state.pendingMinigame=completed;
 }
-/* v45.8.beta 限時捉貓小遊戲觸發（CC 2026-11-01 批准，仿找貓）：第 101 關起、關號尾數為 3 的關卡過關後，只檢查有否玩過，不檢查是否重玩；首個為第 103 關。 */
+/* v45.8.beta 限時捉貓小遊戲觸發（CC 2026-11-01 批准，仿找貓）：第 51 關起、關號尾數為 3 的關卡過關後，只檢查有否玩過，不檢查是否重玩；首個為第 53 關。 */
 if(win&&whackShouldTrigger(completed)){
 state.pendingWhack=completed;
+}
+/* v47.0.beta 鬥金幣小遊戲觸發（CC 2026-11-04 批准，仿捉貓）：第 51 關起、關號尾數為 9 的關卡過關後，只檢查有否玩過，不檢查是否重玩；首個為第 59 關。 */
+if(win&&coinShouldTrigger(completed)){
+state.pendingCoin=completed;
 }
 var d=document.getElementById('resultDialog'),elapsed=Math.max(1,Math.floor(getActiveMs()/1000)),nextBtn=document.getElementById('nextBtn'),retryBtn=document.getElementById('retryBtn');document.getElementById('timeStat').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');document.getElementById('mistakeStat').textContent=state.mistakes;document.getElementById('hintStat').textContent=state.hintsUsed;document.getElementById('moveStat').textContent=state.moves;document.getElementById('scoreStat').textContent=state.score.toLocaleString('zh-Hant');var crownEl=document.getElementById('scoreCrown');if(crownEl){crownEl.style.display=(win&&state.best!==undefined&&state.best!==null&&Math.floor(state.score)>=Math.floor(state.best))?'block':'none'}document.getElementById('levelStat').textContent=currentLevelName();document.getElementById('resultTitle').textContent=win?(state.level===TOTAL-1?'階段完成':'完成第 '+completed+' 關'):'遊戲完結';var rtEl=document.getElementById('resultText');if(win){rtEl.style.display='none'}else{rtEl.style.display='block';rtEl.textContent='5 顆心已用完；你來到第 '+completed+' 關，累計 '+state.score.toLocaleString('zh-Hant')+' 分。繼續玩：本關重玩、心回滿、扣5000分（最低 0 分）。';}var bdEl=document.getElementById('scoreBreakdown');if(win&&earned&&typeof scoreBreakdown!=='undefined'){bdEl.innerHTML='計分明細<br>'+scoreBreakdown.lines.join('<br>')+'<br><b>本關合計 ＋'+scoreBreakdown.total+'</b>';bdEl.style.display='block'}else{bdEl.style.display='none'}var bsEl=document.getElementById('bestStat');if(win&&bsEl){var bTxt=(state.best===undefined||state.best===null)?'–':Math.floor(state.best).toLocaleString('zh-Hant');bsEl.textContent='個人紀錄：累計最高積分 '+bTxt;bsEl.style.display='block'}else if(bsEl){bsEl.style.display='none'}if(win){var finishedAll=state.level===TOTAL-1;nextBtn.textContent=finishedAll?'完成':'下一關';nextBtn.style.display='block';nextBtn.className='primary';nextBtn.autofocus=true;retryBtn.style.display='none';retryBtn.autofocus=false;nextBtn.parentNode.insertBefore(nextBtn,retryBtn)}else{nextBtn.style.display='none';nextBtn.autofocus=false;retryBtn.textContent='繼續玩';retryBtn.style.display='block';retryBtn.className='primary';retryBtn.autofocus=true;nextBtn.parentNode.insertBefore(retryBtn,nextBtn)}d.dataset.win=win?'1':'0';
 (function(){
@@ -3198,19 +3648,20 @@ function backupGetRecoveryCode(){
 }
 function backupFireUpload(){
   try{
-    var v3raw=null,hintsraw=null,lotteryraw=null,minigameraw=null,maxcompletedraw=null,combraw=null,whackraw=null;
+    var v3raw=null,hintsraw=null,lotteryraw=null,minigameraw=null,maxcompletedraw=null,combraw=null,whackraw=null,coinraw=null;
     try{v3raw=localStorage.getItem(LS_KEY)}catch(_){}
     try{hintsraw=localStorage.getItem(HINTS_KEY)}catch(_){}
     try{lotteryraw=localStorage.getItem(LOTTERY_KEY)}catch(_){}
     try{minigameraw=localStorage.getItem(MG_KEY)}catch(_){}
     try{whackraw=localStorage.getItem(WK_KEY)}catch(_){}
+    try{coinraw=localStorage.getItem(CD_KEY)}catch(_){}
     try{maxcompletedraw=localStorage.getItem(MAXCOMP_KEY)}catch(_){}
     try{combraw=comboCloudField()}catch(_){}
     if(!v3raw)return;
     var v3d=null,hd=null;
     try{v3d=JSON.parse(v3raw)}catch(_){}
     try{hd=JSON.parse(hintsraw)}catch(_){}
-    var payload={board:(IS_TEST?'test':'prod'),player_id:backupGetPlayerId(),recovery_code:backupGetRecoveryCode(),nickname:lbGetNickname(),save_json:JSON.stringify({v3:v3raw,hints:hintsraw,lottery:lotteryraw,minigame:minigameraw,maxcompleted:maxcompletedraw,combo:combraw,whack:whackraw}),
+    var payload={board:(IS_TEST?'test':'prod'),player_id:backupGetPlayerId(),recovery_code:backupGetRecoveryCode(),nickname:lbGetNickname(),save_json:JSON.stringify({v3:v3raw,hints:hintsraw,lottery:lotteryraw,minigame:minigameraw,maxcompleted:maxcompletedraw,combo:combraw,whack:whackraw,coin:coinraw}),
       max_level:v3d?(v3d.level+1):null,hearts:v3d?v3d.hearts:null,score:v3d?v3d.score:null,best:(v3d&&v3d.best!==undefined)?v3d.best:null,theme:v3d?v3d.theme:null,
       hints:hd?hd.hints:null};
     var sentNick=payload.nickname;
@@ -3254,18 +3705,19 @@ function backupNickTakenNotice(nick){
    存檔可能尚未寫入；比照過關上傳「先存檔、後上傳」的既有次序）。 */
 function backupRegisterNickname(nick){
   var assemble=function(){
-    var v3raw=null,hintsraw=null,lotteryraw=null,minigameraw=null,maxcompletedraw=null,combraw=null,whackraw=null;
+    var v3raw=null,hintsraw=null,lotteryraw=null,minigameraw=null,maxcompletedraw=null,combraw=null,whackraw=null,coinraw=null;
     try{v3raw=localStorage.getItem(LS_KEY)}catch(_){}
     try{hintsraw=localStorage.getItem(HINTS_KEY)}catch(_){}
     try{lotteryraw=localStorage.getItem(LOTTERY_KEY)}catch(_){}
     try{minigameraw=localStorage.getItem(MG_KEY)}catch(_){}
     try{whackraw=localStorage.getItem(WK_KEY)}catch(_){}
+    try{coinraw=localStorage.getItem(CD_KEY)}catch(_){}
     try{maxcompletedraw=localStorage.getItem(MAXCOMP_KEY)}catch(_){}
     try{combraw=comboCloudField()}catch(_){}
     var v3d=null,hd=null;
     try{v3d=JSON.parse(v3raw)}catch(_){}
     try{hd=JSON.parse(hintsraw)}catch(_){}
-    return {board:(IS_TEST?'test':'prod'),player_id:backupGetPlayerId(),recovery_code:backupGetRecoveryCode(),nickname:nick,save_json:JSON.stringify({v3:v3raw,hints:hintsraw,lottery:lotteryraw,minigame:minigameraw,maxcompleted:maxcompletedraw,combo:combraw,whack:whackraw}),
+    return {board:(IS_TEST?'test':'prod'),player_id:backupGetPlayerId(),recovery_code:backupGetRecoveryCode(),nickname:nick,save_json:JSON.stringify({v3:v3raw,hints:hintsraw,lottery:lotteryraw,minigame:minigameraw,maxcompleted:maxcompletedraw,combo:combraw,whack:whackraw,coin:coinraw}),
       max_level:v3d?(v3d.level+1):null,hearts:v3d?v3d.hearts:null,score:v3d?v3d.score:null,best:(v3d&&v3d.best!==undefined)?v3d.best:null,theme:v3d?v3d.theme:null,
       hints:hd?hd.hints:null};
   };
@@ -3314,6 +3766,7 @@ function backupDownload(code,onProgress){
       try{if(outer.lottery)localStorage.setItem(LOTTERY_KEY,outer.lottery)}catch(e){}
       try{if(outer.minigame)localStorage.setItem(MG_KEY,outer.minigame)}catch(e){}
       try{if(outer.whack)localStorage.setItem(WK_KEY,outer.whack)}catch(e){}
+      try{if(outer.coin)localStorage.setItem(CD_KEY,outer.coin)}catch(e){}
       if(outer.maxcompleted){try{localStorage.setItem(MAXCOMP_KEY,outer.maxcompleted)}catch(_){}}else{try{localStorage.removeItem(MAXCOMP_KEY)}catch(_){}}
       /* v44.1.beta Combo 雲端恢復（CC 2026-10-24 定案）：只取雲端 combo 值，標記一律清除且不上雲；save_json 無 combo 欄位或 combo 無效時當為 0 個 Combo 值處理，兼容舊版本（恢復落在關卡邊界，進行中的嘗試已經作廢） */
       try{var _cc=null;if(outer.combo&&typeof outer.combo==='string'){try{_cc=JSON.parse(outer.combo)}catch(_){}}if(typeof _cc==='number'&&_cc>=0&&_cc<=20&&Math.floor(_cc)===_cc){state.combo=_cc;state.comboDirtyLevel=null;comboSave();}else if(_cc&&(_cc.v===1||_cc.v===2)&&typeof _cc.combo==='number'&&_cc.combo>=0&&_cc.combo<=20&&Math.floor(_cc.combo)===_cc.combo){state.combo=_cc.combo;state.comboDirtyLevel=null;comboSave();}else{state.combo=0;state.comboDirtyLevel=null;comboSave();}}catch(_){}
@@ -3547,8 +4000,8 @@ document.getElementById('mgOverlay').addEventListener('click',function(e){
 if(e.target===document.getElementById('mgOverlay'))mgCloseModal();
 });
 /* v40.7.beta：移除此處的 lsq 接線（lsqCloseModal 定義在下方 IS_TEST IIFE 內，此處引用會 ReferenceError；接線已移至 IIFE 內） */
-document.getElementById('nextBtn').onclick=function(){var won=result.dataset.win==='1',finishedAll=won&&state.level===TOTAL-1;if(finishedAll){closeResultDialog();/* v44.11.beta：全破分支先檢查 pendingLottery，末關抽獎不得被全破路徑略過；抽獎關閉後再呈現全關完成彈窗，防刷順序不變 */if(state.pendingLottery){var lv=state.pendingLottery;state.pendingLottery=0;lotteryOpenModal(lv,function(){if(state.pendingMinigame){var mv=state.pendingMinigame;state.pendingMinigame=0;minigameOpenModal(mv,false,function(){showFinaleDialog();});return}if(state.pendingWhack){var wv=state.pendingWhack;state.pendingWhack=0;whackOpenModal(wv,false,function(){showFinaleDialog();});return}showFinaleDialog();});return}if(state.pendingMinigame){var mv=state.pendingMinigame;state.pendingMinigame=0;minigameOpenModal(mv,false,function(){showFinaleDialog();});return}if(state.pendingWhack){var wv=state.pendingWhack;state.pendingWhack=0;whackOpenModal(wv,false,function(){showFinaleDialog();});return}showFinaleDialog();return}if(!won)return;closeResultDialog();
-function proceedAfterLottery(){if(state.pendingMinigame){var mv=state.pendingMinigame;state.pendingMinigame=0;minigameOpenModal(mv,false,function(){proceedAfterLottery();});return}if(state.pendingWhack){var wv=state.pendingWhack;state.pendingWhack=0;whackOpenModal(wv,false,function(){proceedAfterLottery();});return}function lbProceedNext(){if(state.pendingLevelUp){state.pendingLevelUp=false;showLevelUpVeil(state.pendingLevelUpName);return}checkVersionThen(function(){newLevel(state.level+1);saveLocalProgress()})}if(lbAutoPending){lbAutoPending=false;lbOpenAuto(lbProceedNext);return}lbProceedNext()}
+document.getElementById('nextBtn').onclick=function(){var won=result.dataset.win==='1',finishedAll=won&&state.level===TOTAL-1;if(finishedAll){closeResultDialog();/* v44.11.beta：全破分支先檢查 pendingLottery，末關抽獎不得被全破路徑略過；抽獎關閉後再呈現全關完成彈窗，防刷順序不變 */if(state.pendingLottery){var lv=state.pendingLottery;state.pendingLottery=0;lotteryOpenModal(lv,function(){if(state.pendingMinigame){var mv=state.pendingMinigame;state.pendingMinigame=0;minigameOpenModal(mv,false,function(){showFinaleDialog();});return}if(state.pendingWhack){var wv=state.pendingWhack;state.pendingWhack=0;whackOpenModal(wv,false,function(){showFinaleDialog();});return}if(state.pendingCoin){var cv=state.pendingCoin;state.pendingCoin=0;coinOpenModal(cv,false,function(){showFinaleDialog();});return}showFinaleDialog();});return}if(state.pendingMinigame){var mv=state.pendingMinigame;state.pendingMinigame=0;minigameOpenModal(mv,false,function(){showFinaleDialog();});return}if(state.pendingWhack){var wv=state.pendingWhack;state.pendingWhack=0;whackOpenModal(wv,false,function(){showFinaleDialog();});return}if(state.pendingCoin){var cv=state.pendingCoin;state.pendingCoin=0;coinOpenModal(cv,false,function(){showFinaleDialog();});return}showFinaleDialog();return}if(!won)return;closeResultDialog();
+function proceedAfterLottery(){if(state.pendingMinigame){var mv=state.pendingMinigame;state.pendingMinigame=0;minigameOpenModal(mv,false,function(){proceedAfterLottery();});return}if(state.pendingWhack){var wv=state.pendingWhack;state.pendingWhack=0;whackOpenModal(wv,false,function(){proceedAfterLottery();});return}if(state.pendingCoin){var cv=state.pendingCoin;state.pendingCoin=0;coinOpenModal(cv,false,function(){proceedAfterLottery();});return}function lbProceedNext(){if(state.pendingLevelUp){state.pendingLevelUp=false;showLevelUpVeil(state.pendingLevelUpName);return}checkVersionThen(function(){newLevel(state.level+1);saveLocalProgress()})}if(lbAutoPending){lbAutoPending=false;lbOpenAuto(lbProceedNext);return}lbProceedNext()}
 /* v40.5.beta：抽獎輪盤——點擊「下一關」時如有待領抽獎，先彈抽獎彈窗，完成後再繼續。
    v40.13.beta：順序保證——抽獎必在排行榜（lbAutoPending）之前。proceedAfterLottery
    在抽獎關閉後才檢查 lbAutoPending，確保重疊關先抽獎、後看榜。 */
@@ -3738,6 +4191,15 @@ wkTestBtn.textContent='試玩捉貓小遊戲（測試・不計分）';
 wkTestBtn.onclick=function(){whackOpenModal(0,true,function(){if(typeof showToast==='function')showToast('測試捉貓小遊戲完成');});};
 (function(){var __fz=document.getElementById('testBtnZone');if(!__fz){__fz=document.createElement('div');__fz.id='testBtnZone';__fz.setAttribute('aria-label','測試專用按鈕區');var __ff=document.querySelector('.footer-note');if(__ff){if(__ff.nextSibling){__ff.parentNode.insertBefore(__fz,__ff.nextSibling);}else{__ff.parentNode.appendChild(__fz);}}}__fz.appendChild(wkTestBtn);})();
 /* WHACK TEST BUTTON END */
+var cdTestBtn=document.createElement('button');
+cdTestBtn.className='jump-bottom-btn';
+cdTestBtn.type='button';
+cdTestBtn.id='cdTestBtn';
+cdTestBtn.setAttribute('aria-label','試玩鬥金幣小遊戲（測試專用）');
+cdTestBtn.textContent='試玩鬥金幣小遊戲（測試・不計分）';
+cdTestBtn.onclick=function(){coinOpenModal(0,true,function(){if(typeof showToast==='function')showToast('測試鬥金幣小遊戲完成');});};
+(function(){var __fz=document.getElementById('testBtnZone');if(!__fz){__fz=document.createElement('div');__fz.id='testBtnZone';__fz.setAttribute('aria-label','測試專用按鈕區');var __ff=document.querySelector('.footer-note');if(__ff){if(__ff.nextSibling){__ff.parentNode.insertBefore(__fz,__ff.nextSibling);}else{__ff.parentNode.appendChild(__fz);}}}__fz.appendChild(cdTestBtn);})();
+/* COIN DUEL TEST BUTTON END */
 /* v40.9.beta：測試按鈕移至頁底測試區（恢復我的資料＋版本號下方），每行兩欄 */
 /* v40.9.beta：測試按鈕移至頁底測試區（恢復我的資料＋版本號下方），每行兩欄 */
 /* v40.17.beta 測試版專屬：清除抽獎、最高關數及 Combo 值紀錄（2026-10-18 CC 要求；v44.2.beta 按鈕改名為「清除抽獎+Max關+Combo值」；v45.3.beta 加入清除小遊戲紀錄，CC 2026-10-30 要求；v46.0.beta 加入清除捉貓紀錄（CC 2026-11-01 指示補回））。
@@ -3747,18 +4209,19 @@ var lotClearBtn=document.createElement('button');
 lotClearBtn.className='jump-bottom-btn';
 lotClearBtn.type='button';
 lotClearBtn.id='lotClearBtn';
-lotClearBtn.setAttribute('aria-label','清除抽獎+Max關+Combo值+小遊戲+捉貓（測試專用）');
-lotClearBtn.textContent='清除抽獎+Max關+Combo值+小遊戲+捉貓';
+lotClearBtn.setAttribute('aria-label','清除抽獎+Max關+Combo值+小遊戲+捉貓+鬥金幣（測試專用）');
+lotClearBtn.textContent='清除抽獎+Max關+Combo值+小遊戲+捉貓+鬥金幣';
 lotClearBtn.onclick=function(){
 try{if(typeof LOTTERY_KEY!=='undefined')localStorage.removeItem(LOTTERY_KEY)}catch(_){}
 try{if(typeof MAXCOMP_KEY!=='undefined')localStorage.removeItem(MAXCOMP_KEY)}catch(_){}
 try{if(typeof MG_KEY!=='undefined')localStorage.removeItem(MG_KEY)}catch(_){}
 try{if(typeof WK_KEY!=='undefined')localStorage.removeItem(WK_KEY)}catch(_){}
-if(typeof state!=='undefined'){state.maxLotteryLevel=0;state.maxCompleted=state.level;state.maxMinigameLevel=0;state.maxWhackLevel=0;state.pendingWhack=0;}
+try{if(typeof CD_KEY!=='undefined')localStorage.removeItem(CD_KEY)}catch(_){}
+if(typeof state!=='undefined'){state.maxLotteryLevel=0;state.maxCompleted=state.level;state.maxMinigameLevel=0;state.maxWhackLevel=0;state.pendingWhack=0;state.maxCoinLevel=0;state.pendingCoin=0;}
 if(typeof state!=='undefined'){state.combo=0;state.comboDirty=false;state.comboDirtyLevel=null;}
 try{if(typeof COMBO_KEY!=='undefined')localStorage.removeItem(COMBO_KEY)}catch(_){}
 if(typeof paintCombo==='function')paintCombo();
-if(typeof showToast==='function')showToast('已清除抽獎、最高關數、小遊戲及捉貓紀錄');
+if(typeof showToast==='function')showToast('已清除抽獎、最高關數、小遊戲、捉貓及鬥金幣紀錄');
 };
 (function(){var __fz=document.getElementById('testBtnZone');if(!__fz){__fz=document.createElement('div');__fz.id='testBtnZone';__fz.setAttribute('aria-label','測試專用按鈕區');var __ff=document.querySelector('.footer-note');if(__ff){if(__ff.nextSibling){__ff.parentNode.insertBefore(__fz,__ff.nextSibling);}else{__ff.parentNode.appendChild(__fz);}}}__fz.appendChild(lotClearBtn);})();/* v40.9.beta：測試按鈕移至頁底測試區（恢復我的資料＋版本號下方），每行兩欄 */
 /* v40.6.beta 測試版專屬：查詢存檔按鈕（2026-10-18 CC 要求）。
@@ -3787,6 +4250,7 @@ function lsqOpenModal(){
     ['抽獎記錄（maxLotteryLevel）','meowdoku-lottery-v1'+sfx],
     ['小遊戲記錄（maxMinigameLevel）','meowdoku-minigame-v1'+sfx],
     ['捉貓小遊戲記錄（maxWhackLevel）','meowdoku-whack-v1'+sfx],
+    ['鬥金幣小遊戲記錄（maxCoinLevel）','meowdoku-coin-v1'+sfx],
     ['最高過關關數','meowdoku-maxcompleted-v1'+sfx],
     ['找貓提示次數','meowdoku-hints-v1'+sfx],
     ['Combo 值（獨立儲存）','meowdoku-combo-v1'+sfx],
@@ -3889,8 +4353,8 @@ clearDialog.innerHTML='<div class="sheet">'+
 '<button class="secondary" id="clearSaveCancel" type="button">取消</button>'+
 '</div></div>';
 document.body.appendChild(clearDialog);
-var TEST_KEYS=['meowdoku-progress-v1-test','meowdoku-theme-v1-test','meowdoku-automode-v1-test','meowdoku-hints-v1-test','meowdoku-recovery-code-v1-test','meowdoku-player-id-v1-test','meowdoku-lottery-v1-test','meowdoku-maxcompleted-v1-test','meowdoku-combo-v1-test','meowdoku-defaults-migrated-v40_25-test','meowdoku-whack-v1-test'];
-var PLAYER_KEYS=['meowdoku-progress-v1','meowdoku-theme-v1','meowdoku-automode-v1','meowdoku-recovery-code-v1','meowdoku-player-id-v1','meowdoku-lottery-v1','meowdoku-maxcompleted-v1','meowdoku-hints-v1','meowdoku-combo-v1','meowdoku-defaults-migrated-v40_25','meowdoku-whack-v1'];
+var TEST_KEYS=['meowdoku-progress-v1-test','meowdoku-theme-v1-test','meowdoku-automode-v1-test','meowdoku-hints-v1-test','meowdoku-recovery-code-v1-test','meowdoku-player-id-v1-test','meowdoku-lottery-v1-test','meowdoku-maxcompleted-v1-test','meowdoku-combo-v1-test','meowdoku-defaults-migrated-v40_25-test','meowdoku-whack-v1-test','meowdoku-coin-v1-test'];
+var PLAYER_KEYS=['meowdoku-progress-v1','meowdoku-theme-v1','meowdoku-automode-v1','meowdoku-recovery-code-v1','meowdoku-player-id-v1','meowdoku-lottery-v1','meowdoku-maxcompleted-v1','meowdoku-hints-v1','meowdoku-combo-v1','meowdoku-defaults-migrated-v40_25','meowdoku-whack-v1','meowdoku-coin-v1'];
 function doClearSave(keys,label){
 try{for(var i=0;i<keys.length;i++){localStorage.removeItem(keys[i]);}}catch(e){}
 clearProgress();
@@ -4305,6 +4769,94 @@ acpBtn.onclick=acpOpenMain;
 (function(){var __fz=document.getElementById('testBtnZone');if(!__fz){__fz=document.createElement('div');__fz.id='testBtnZone';__fz.setAttribute('aria-label','測試專用按鈕區');var __ff=document.querySelector('.footer-note');if(__ff){if(__ff.nextSibling){__ff.parentNode.insertBefore(__fz,__ff.nextSibling);}else{__ff.parentNode.appendChild(__fz);}}}__fz.appendChild(acpBtn);})();
 })();
 
+/* 測試專用：列出正式玩家資料（2026-11-02 設計；資料來源見下方常數註解） */
+var PROD_PLAYERS_URL=LB_API+'/player_list';
+/* 正式玩家資料列表讀取端點（Worker GET /player_list；固定查詢正式表 player_info，唯讀五欄，updated_at 降序，上限 100 筆） */
+var prodPlayersDialog=document.createElement('dialog');
+prodPlayersDialog.id='prodPlayersDialog';
+prodPlayersDialog.setAttribute('aria-labelledby','prodPlayersTitle');
+prodPlayersDialog.innerHTML=
+'<div class="sheet">'+
+'<div class="sheet-head"><h2 id="prodPlayersTitle">正式玩家資料（測試）</h2>'+
+'<button class="close-btn" id="prodPlayersClose" type="button" aria-label="關閉">×</button></div>'+
+'<p id="prodPlayersLoading" hidden>載入中…</p>'+
+'<p class="lb-error" id="prodPlayersError" hidden>暫時未能載入</p>'+
+'<table id="prodPlayersTable" hidden><thead><tr><th>updated_at</th><th>nickname</th><th>max_level</th><th>best</th><th>combo</th></tr></thead><tbody id="prodPlayersBody"></tbody></table>'+
+'<div class="lb-actions"><button class="secondary" id="prodPlayersCloseBtn" type="button">關閉</button></div>'+
+'</div>';
+document.body.appendChild(prodPlayersDialog);
+/* 正式玩家資料表格專屬字體（只限此彈窗，不影響其他彈窗及列表） */
+var prodPlayersStyle=document.createElement('style');
+prodPlayersStyle.textContent='#prodPlayersDialog #prodPlayersTable{font-size:0.82rem;line-height:1.45}#prodPlayersDialog #prodPlayersTable th{font-weight:700}';
+document.head.appendChild(prodPlayersStyle);
+/* 列表行渲染（只取五欄，資料值一律以 textContent 填入，不以 innerHTML 拼接） */
+/* 顯示格式化：去掉 updated_at 尾部時區後綴（只改顯示，不改資料及排序鍵） */
+function prodPlayersFmtTime(v){
+  if(v==null||v==='')return '';
+  return String(v).replace(/([+-]\d{2}:\d{2}|[+-]\d{4}|Z)$/,'').replace(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}).*$/,'$1');
+}
+function prodPlayersRenderRows(body,rows){
+  body.innerHTML='';
+  if(!rows.length){
+    var empty=document.createElement('tr');
+    var cell=document.createElement('td');cell.colSpan=5;cell.textContent='仍未有玩家資料';
+    empty.appendChild(cell);body.appendChild(empty);return;
+  }
+  rows.forEach(function(row){
+    var tr=document.createElement('tr');
+    var c1=document.createElement('td');c1.textContent=prodPlayersFmtTime(row.updated_at);
+    var c2=document.createElement('td');c2.textContent=row.nickname==null?'':String(row.nickname);
+    var lv=(row.max_level==null||row.max_level==='')?NaN:Number(row.max_level);var c3=document.createElement('td');c3.textContent=Number.isFinite(lv)?lv.toLocaleString('zh-Hant'):'';
+    var bs=(row.best==null||row.best==='')?NaN:Number(row.best);var c4=document.createElement('td');c4.textContent=Number.isFinite(bs)?bs.toLocaleString('zh-Hant'):'';
+    var cb=(row.combo==null||row.combo==='')?NaN:Number(row.combo);var c5=document.createElement('td');c5.textContent=Number.isInteger(cb)?String(cb):'—';
+    tr.appendChild(c1);tr.appendChild(c2);tr.appendChild(c3);tr.appendChild(c4);tr.appendChild(c5);
+    body.appendChild(tr);
+  });
+}
+/* 載入（10 秒超時，沿用 lbFetchJson；失敗只顯示失敗狀態，不阻塞主遊戲） */
+function prodPlayersLoad(){
+  var loading=document.getElementById('prodPlayersLoading'),
+      err=document.getElementById('prodPlayersError'),
+      table=document.getElementById('prodPlayersTable'),
+      body=document.getElementById('prodPlayersBody');
+  if(!body)return;
+  loading.hidden=false;err.hidden=true;table.hidden=true;body.innerHTML='';
+  lbFetchJson(PROD_PLAYERS_URL,10000).then(function(res){
+    var rows=(res&&res.players)?res.players:[];
+    rows=rows.slice().sort(function(a,b){
+      var ta=a&&a.updated_at?String(a.updated_at):'',tb=b&&b.updated_at?String(b.updated_at):'';
+      if(ta<tb)return 1;if(ta>tb)return -1;return 0;
+    }).slice(0,100);
+    loading.hidden=true;
+    prodPlayersRenderRows(body,rows);
+    table.hidden=false;
+  }).catch(function(){
+    loading.hidden=true;table.hidden=true;err.hidden=false;
+  });
+}
+/* 開關對話框（沿用 dualLbDialog 的捲動鎖模式） */
+function prodPlayersOpen(){
+  if(prodPlayersDialog.open)return;
+  lockPageScroll();
+  prodPlayersDialog.showModal();prodPlayersDialog.scrollTop=0;
+  prodPlayersLoad();
+}
+function prodPlayersClose(){
+  if(prodPlayersDialog.open)prodPlayersDialog.close();
+}
+document.getElementById('prodPlayersClose').onclick=prodPlayersClose;
+document.getElementById('prodPlayersCloseBtn').onclick=prodPlayersClose;
+prodPlayersDialog.addEventListener('click',function(e){if(e.target===prodPlayersDialog)prodPlayersClose()});
+prodPlayersDialog.addEventListener('close',function(){unlockPageScroll()});
+/* 創建按鈕並置於 #testBtnZone（沿用 v40.9.beta 測試按鈕模式） */
+var prodPlayersBtn=document.createElement('button');
+prodPlayersBtn.className='jump-bottom-btn';
+prodPlayersBtn.type='button';
+prodPlayersBtn.id='prodPlayersBtn';
+prodPlayersBtn.setAttribute('aria-label','列出正式玩家資料（測試專用）');
+prodPlayersBtn.textContent='列出正式玩家資料（測試）';
+prodPlayersBtn.onclick=prodPlayersOpen;
+(function(){var __fz=document.getElementById('testBtnZone');if(!__fz){__fz=document.createElement('div');__fz.id='testBtnZone';__fz.setAttribute('aria-label','測試專用按鈕區');var __ff=document.querySelector('.footer-note');if(__ff){if(__ff.nextSibling){__ff.parentNode.insertBefore(__fz,__ff.nextSibling);}else{__ff.parentNode.appendChild(__fz);}}}__fz.appendChild(prodPlayersBtn);})();
 }
 /* 雲端備份 UI（全版本適用，2026-10-17 CC 明令；設計貓，v39.9.beta） */
 var bkStyle=document.createElement('style');
@@ -4704,7 +5256,7 @@ if(aon)aon.addEventListener('click',function(){setAutoMode(true)});
 if(aoff)aoff.addEventListener('click',function(){setAutoMode(false)});
 })();
 (async function boot(){
-var lsDone=false,bootLotteryLevel=0,bootMinigameLevel=0;
+var lsDone=false,bootLotteryLevel=0,bootMinigameLevel=0,bootCoinLevel=0;
 try{
 var saved=await loadLocalProgress();
 if(saved){
@@ -4714,6 +5266,7 @@ try{hs=await loadHintsProgress();}catch(e){hs=null}
 try{var lott=loadLotteryProgress();if(typeof lott==='number'&&lott>0)state.maxLotteryLevel=lott;}catch(e){}
 try{var _mgL=loadMinigameProgress();if(typeof _mgL==='number'&&_mgL>0)state.maxMinigameLevel=_mgL;}catch(e){}
 try{var _wkL=loadWhackProgress();if(typeof _wkL==='number'&&_wkL>0)state.maxWhackLevel=_wkL;}catch(e){}
+try{var _cdL=loadCoinProgress();if(typeof _cdL==='number'&&_cdL>0)state.maxCoinLevel=_cdL;}catch(e){}
 state.hearts=saved.hearts;state.score=saved.score;
 if(saved.best!==undefined&&saved.best!==null)state.best=Math.floor(saved.best);
 state.maxCompleted=saved.level;
@@ -4743,7 +5296,8 @@ setTimeout(function(){showToast('已恢復上次進度：第 '+(saved.level+1)+'
 升級彈窗於自動前進時略過（純顯示；提交及升級判定數據已於 finish 時完成）。 */
 bootLotteryLevel=(autoFwd&&state.maxCompleted%15===0&&state.maxCompleted>state.maxLotteryLevel)?state.maxCompleted:0;
 bootMinigameLevel=(autoFwd&&state.maxCompleted%10===7&&state.maxCompleted>=107&&state.maxCompleted>state.maxMinigameLevel)?state.maxCompleted:0;
-bootWhackLevel=(autoFwd&&state.maxCompleted%10===3&&state.maxCompleted>=103&&state.maxCompleted>state.maxWhackLevel)?state.maxCompleted:0;
+bootWhackLevel=(autoFwd&&state.maxCompleted%10===3&&state.maxCompleted>=53&&state.maxCompleted>state.maxWhackLevel)?state.maxCompleted:0;
+bootCoinLevel=(autoFwd&&state.maxCompleted%10===9&&state.maxCompleted>=59&&state.maxCompleted>state.maxCoinLevel)?state.maxCompleted:0;
 lsDone=true;
 }
 }catch(e){lsDone=false}
@@ -4763,6 +5317,10 @@ else{lbOpenNicknameDialog(function(){try{if(typeof state!=='undefined'&&state){s
 var presentBootWhack=function(){try{whackOpenModal(bootWhackLevel,false,function(){});}catch(_){}};
 if(lbGetNickname()){lbCheckNicknameOnBoot();presentBootWhack();}
 else{lbOpenNicknameDialog(function(){try{if(typeof state!=='undefined'&&state){state.start=Date.now();state.activeMs=0;state.lastResume=Date.now();}}catch(_){}presentBootWhack();});}
+}else if(bootCoinLevel>0){
+var presentBootCoin=function(){try{coinOpenModal(bootCoinLevel,false,function(){});}catch(_){}};
+if(lbGetNickname()){lbCheckNicknameOnBoot();presentBootCoin();}
+else{lbOpenNicknameDialog(function(){try{if(typeof state!=='undefined'&&state){state.start=Date.now();state.activeMs=0;state.lastResume=Date.now();}}catch(_){}presentBootCoin();});}
 }else{lbCheckNicknameOnBoot();}
 return;
 }
